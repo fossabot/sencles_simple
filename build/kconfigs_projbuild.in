@@ -1,6 +1,0 @@
-source "C:/Espressif/esp-idf/components/app_update/Kconfig.projbuild"
-source "C:/Espressif/esp-idf/components/bootloader/Kconfig.projbuild"
-source "C:/Espressif/esp-idf/components/esp_rom/Kconfig.projbuild"
-source "C:/Espressif/esp-idf/components/esptool_py/Kconfig.projbuild"
-source "C:/Espressif/esp-idf/components/partition_table/Kconfig.projbuild"
-source "C:/Users/38326/Desktop/esp32_tgi/components/sensor_hub/Kconfig.projbuild"
