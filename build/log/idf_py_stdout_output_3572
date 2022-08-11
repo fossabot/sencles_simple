@@ -1,0 +1,62 @@
+-- Found Git: D:/Git/cmd/git.exe (found version "2.36.1.windows.1") 
+-- ccache will be used for faster recompilation
+-- The C compiler identification is GNU 11.2.0
+-- The CXX compiler identification is GNU 11.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: C:/Users/38326/.espressif/tools/xtensa-esp32-elf/esp-2022r1-RC1-11.2.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc.exe
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Users/38326/.espressif/tools/xtensa-esp32-elf/esp-2022r1-RC1-11.2.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Users/38326/.espressif/tools/xtensa-esp32-elf/esp-2022r1-RC1-11.2.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-g++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Project is not inside a git repository, or git repository has no commits; will not use 'git describe' to determine PROJECT_VER.
+-- Building ESP-IDF components for target esp32
+-- Project sdkconfig file C:/Users/38326/Desktop/esp32_tgi/sdkconfig
+C:/Users/38326/Desktop/esp32_tgi/sdkconfig:344 CONFIG_ESP32_DEFAULT_CPU_FREQ_240 was replaced with CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240
+C:/Users/38326/Desktop/esp32_tgi/sdkconfig:345 CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ was replaced with CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ
+C:/Users/38326/Desktop/esp32_tgi/sdkconfig:350 CONFIG_ESP32_ULP_COPROC_RESERVE_MEM was replaced with CONFIG_ULP_COPROC_RESERVE_MEM
+C:/Users/38326/Desktop/esp32_tgi/sdkconfig:351 CONFIG_ESP32_DEBUG_OCDAWARE was replaced with CONFIG_ESP_DEBUG_OCDAWARE
+C:/Users/38326/Desktop/esp32_tgi/sdkconfig:352 CONFIG_ESP32_BROWNOUT_DET was replaced with CONFIG_ESP_BROWNOUT_DET
+C:/Users/38326/Desktop/esp32_tgi/sdkconfig:353 CONFIG_ESP32_BROWNOUT_DET_LVL_SEL_0 was replaced with CONFIG_ESP_BROWNOUT_DET_LVL_SEL_0
+C:/Users/38326/Desktop/esp32_tgi/sdkconfig:361 CONFIG_ESP32_BROWNOUT_DET_LVL was replaced with CONFIG_ESP_BROWNOUT_DET_LVL
+C:/Users/38326/Desktop/esp32_tgi/sdkconfig:362 CONFIG_ESP32_TIME_SYSCALL_USE_RTC_FRC1 was replaced with CONFIG_NEWLIB_TIME_SYSCALL_USE_RTC_HRT
+C:/Users/38326/Desktop/esp32_tgi/sdkconfig:366 CONFIG_ESP32_RTC_CLK_SRC_INT_RC was replaced with CONFIG_RTC_CLK_SRC_INT_RC
+C:/Users/38326/Desktop/esp32_tgi/sdkconfig:370 CONFIG_ESP32_RTC_CLK_CAL_CYCLES was replaced with CONFIG_RTC_CLK_CAL_CYCLES
+C:/Users/38326/Desktop/esp32_tgi/sdkconfig:371 CONFIG_ESP32_DEEP_SLEEP_WAKEUP_DELAY was replaced with CONFIG_ESP_SLEEP_DEEP_SLEEP_WAKEUP_DELAY
+C:/Users/38326/Desktop/esp32_tgi/sdkconfig:372 CONFIG_ESP32_XTAL_FREQ_40 was replaced with CONFIG_XTAL_FREQ_40
+C:/Users/38326/Desktop/esp32_tgi/sdkconfig:375 CONFIG_ESP32_XTAL_FREQ was replaced with CONFIG_XTAL_FREQ
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for stdint.h
+-- Looking for stdint.h - found
+-- Looking for stddef.h
+-- Looking for stddef.h - found
+-- Check size of time_t
+-- Check size of time_t - done
+-- Found Python3: C:/Users/38326/.espressif/python_env/idf5.1_py3.10_env/Scripts/python.exe (found version "3.10.5") found components: Interpreter 
+-- Performing Test C_COMPILER_SUPPORTS_WFORMAT_SIGNEDNESS
+-- Performing Test C_COMPILER_SUPPORTS_WFORMAT_SIGNEDNESS - Success
+Hardlink created for C:\Users\38326\Desktop\esp32_tgi\build\esp-idf\mbedtls\mbedtls\library\error.c <<===>> C:\Espressif\esp-idf\components\mbedtls\mbedtls\library\error.c
+Hardlink created for C:\Users\38326\Desktop\esp32_tgi\build\esp-idf\mbedtls\mbedtls\library\version_features.c <<===>> C:\Espressif\esp-idf\components\mbedtls\mbedtls\library\version_features.c
+Hardlink created for C:\Users\38326\Desktop\esp32_tgi\build\esp-idf\mbedtls\mbedtls\library\ssl_debug_helpers_generated.c <<===>> C:\Espressif\esp-idf\components\mbedtls\mbedtls\library\ssl_debug_helpers_generated.c
+Hardlink created for C:\Users\38326\Desktop\esp32_tgi\build\esp-idf\mbedtls\mbedtls\library\ssl_debug_helpers_generated.h <<===>> C:\Espressif\esp-idf\components\mbedtls\mbedtls\library\ssl_debug_helpers_generated.h
+-- App "esp32_tgi" version: 1
+-- Adding linker script C:/Users/38326/Desktop/esp32_tgi/build/esp-idf/esp_system/ld/memory.ld
+-- Adding linker script C:/Espressif/esp-idf/components/esp_system/ld/esp32/sections.ld.in
+-- Adding linker script C:/Espressif/esp-idf/components/esp_rom/esp32/ld/esp32.rom.ld
+-- Adding linker script C:/Espressif/esp-idf/components/esp_rom/esp32/ld/esp32.rom.api.ld
+-- Adding linker script C:/Espressif/esp-idf/components/esp_rom/esp32/ld/esp32.rom.libgcc.ld
+-- Adding linker script C:/Espressif/esp-idf/components/esp_rom/esp32/ld/esp32.rom.newlib-data.ld
+-- Adding linker script C:/Espressif/esp-idf/components/esp_rom/esp32/ld/esp32.rom.syscalls.ld
+-- Adding linker script C:/Espressif/esp-idf/components/esp_rom/esp32/ld/esp32.rom.newlib-funcs.ld
+-- Adding linker script C:/Espressif/esp-idf/components/soc/esp32/ld/esp32.peripherals.ld
+-- Components: LinkSDK app_trace app_update bootloader bootloader_support bt bus cmock console cxx driver efuse esp-tls esp_adc esp_common esp_eth esp_event esp_gdbstub esp_hid esp_http_client esp_http_server esp_https_ota esp_https_server esp_hw_support esp_lcd esp_local_ctrl esp_netif esp_phy esp_pm esp_psram esp_ringbuf esp_rom esp_serial_slave_link esp_system esp_timer esp_wifi espcoredump esptool_py fatfs freertos hal heap http_parser idf_test ieee802154 json log lvgl lvgl_app lvgl_hw lwip main mbedtls mqtt newlib nvs_flash openthread partition_table perfmon protobuf-c protocomm pthread sdmmc sensor_hub sht3x sht4x smart_config soc spi_flash spiffs tcp_transport tinyusb ulp unity usb vfs wear_levelling wifi_provisioning wpa_supplicant xtensa
+-- Component paths: C:/Users/38326/Desktop/esp32_tgi/components/LinkSDK C:/Espressif/esp-idf/components/app_trace C:/Espressif/esp-idf/components/app_update C:/Espressif/esp-idf/components/bootloader C:/Espressif/esp-idf/components/bootloader_support C:/Espressif/esp-idf/components/bt C:/Users/38326/Desktop/esp32_tgi/components/bus C:/Espressif/esp-idf/components/cmock C:/Espressif/esp-idf/components/console C:/Espressif/esp-idf/components/cxx C:/Espressif/esp-idf/components/driver C:/Espressif/esp-idf/components/efuse C:/Espressif/esp-idf/components/esp-tls C:/Espressif/esp-idf/components/esp_adc C:/Espressif/esp-idf/components/esp_common C:/Espressif/esp-idf/components/esp_eth C:/Espressif/esp-idf/components/esp_event C:/Espressif/esp-idf/components/esp_gdbstub C:/Espressif/esp-idf/components/esp_hid C:/Espressif/esp-idf/components/esp_http_client C:/Espressif/esp-idf/components/esp_http_server C:/Espressif/esp-idf/components/esp_https_ota C:/Espressif/esp-idf/components/esp_https_server C:/Espressif/esp-idf/components/esp_hw_support C:/Espressif/esp-idf/components/esp_lcd C:/Espressif/esp-idf/components/esp_local_ctrl C:/Espressif/esp-idf/components/esp_netif C:/Espressif/esp-idf/components/esp_phy C:/Espressif/esp-idf/components/esp_pm C:/Espressif/esp-idf/components/esp_psram C:/Espressif/esp-idf/components/esp_ringbuf C:/Espressif/esp-idf/components/esp_rom C:/Espressif/esp-idf/components/esp_serial_slave_link C:/Espressif/esp-idf/components/esp_system C:/Espressif/esp-idf/components/esp_timer C:/Espressif/esp-idf/components/esp_wifi C:/Espressif/esp-idf/components/espcoredump C:/Espressif/esp-idf/components/esptool_py C:/Espressif/esp-idf/components/fatfs C:/Espressif/esp-idf/components/freertos C:/Espressif/esp-idf/components/hal C:/Espressif/esp-idf/components/heap C:/Espressif/esp-idf/components/http_parser C:/Espressif/esp-idf/components/idf_test C:/Espressif/esp-idf/components/ieee802154 C:/Espressif/esp-idf/components/json C:/Espressif/esp-idf/components/log C:/Users/38326/Desktop/esp32_tgi/components/lvgl C:/Users/38326/Desktop/esp32_tgi/components/lvgl_app C:/Users/38326/Desktop/esp32_tgi/components/lvgl_hw C:/Espressif/esp-idf/components/lwip C:/Users/38326/Desktop/esp32_tgi/main C:/Espressif/esp-idf/components/mbedtls C:/Espressif/esp-idf/components/mqtt C:/Espressif/esp-idf/components/newlib C:/Espressif/esp-idf/components/nvs_flash C:/Espressif/esp-idf/components/openthread C:/Espressif/esp-idf/components/partition_table C:/Espressif/esp-idf/components/perfmon C:/Espressif/esp-idf/components/protobuf-c C:/Espressif/esp-idf/components/protocomm C:/Espressif/esp-idf/components/pthread C:/Espressif/esp-idf/components/sdmmc C:/Users/38326/Desktop/esp32_tgi/components/sensor_hub C:/Users/38326/Desktop/esp32_tgi/components/sht3x C:/Users/38326/Desktop/esp32_tgi/components/sht4x C:/Users/38326/Desktop/esp32_tgi/components/smart_config C:/Espressif/esp-idf/components/soc C:/Espressif/esp-idf/components/spi_flash C:/Espressif/esp-idf/components/spiffs C:/Espressif/esp-idf/components/tcp_transport C:/Espressif/esp-idf/components/tinyusb C:/Espressif/esp-idf/components/ulp C:/Espressif/esp-idf/components/unity C:/Espressif/esp-idf/components/usb C:/Espressif/esp-idf/components/vfs C:/Espressif/esp-idf/components/wear_levelling C:/Espressif/esp-idf/components/wifi_provisioning C:/Espressif/esp-idf/components/wpa_supplicant C:/Espressif/esp-idf/components/xtensa
+-- Configuring done
+-- Generating done
+-- Build files have been written to: C:/Users/38326/Desktop/esp32_tgi/build
