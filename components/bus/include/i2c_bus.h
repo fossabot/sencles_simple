@@ -30,6 +30,23 @@ extern "C"
 #define portTICK_RATE_MS portTICK_PERIOD_MS
 #endif
 
+
+typedef struct {
+    i2c_port_t i2c_port;    /*!<I2C port number */
+    bool is_init;   /*if bus is initialized*/
+    i2c_config_t conf_active;    /*!<I2C active configuration */
+    SemaphoreHandle_t mutex;    /* mutex to achive thread-safe*/
+    int32_t ref_counter;    /*reference count*/
+} i2c_bus_t;
+
+
+typedef struct {
+    uint8_t dev_addr;   /*device address*/
+    i2c_config_t conf;    /*!<I2C active configuration */
+    i2c_bus_t *i2c_bus;    /*!<I2C bus*/
+} i2c_bus_device_t;
+
+
 /**************************************** Public Functions (Application level)*********************************************/
 
 /**

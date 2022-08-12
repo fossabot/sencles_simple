@@ -11,8 +11,8 @@ const char *TAG = "main";
 
 void app_main(void)
 {
-    xTaskCreatePinnedToCore(initialise_wifi_task, "initialise_wifi", 4096, NULL, 0, NULL, 1);
-    xTaskCreatePinnedToCore(gui_task, "gui", 4096*2, NULL, 0, NULL, 0);
+    //xTaskCreatePinnedToCore(initialise_wifi_task, "initialise_wifi", 4096, NULL, 0, NULL, 1);
+    //xTaskCreatePinnedToCore(gui_task, "gui", 4096*2, NULL, 0, NULL, 0);
     xTaskCreatePinnedToCore(sensor_task, "sensor_hub", 4096, NULL, 0, NULL, 0);
     return;
 }

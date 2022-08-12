@@ -15,9 +15,9 @@
 
 #include "esp_log.h"
 #include "iot_sensor_hub.h"
-#include "freertos/queue.h"
 #include "freertos/FreeRTOS.h"
-#include "driver/i2c.h"
+#include "freertos/queue.h"
+#include "sensor_main_task.h"
 
 #define SENSOR_PERIOD_MS 5000 
 
@@ -92,21 +92,21 @@ static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_
     }
 }
 
-_Noreturn void sensor_task(void *args)
+void sensor_task(void *args)
 {
     (void) args;
 
     xQueueHumi = xQueueCreate(1, sizeof(float));
     xQueueTemp = xQueueCreate(1, sizeof(float));
-
+    ESP_LOGI(TAG,"HELLO");
     /*create the i2c0 bus handle with a resource ID*/
     i2c_config_t i2c_conf;
-
+    
     i2c_conf.mode = I2C_MODE_MASTER;
-    i2c_conf.sda_io_num = GPIO_NUM_6;
-    i2c_conf.scl_io_num = GPIO_NUM_7;
-    i2c_conf.sda_pullup_en = false;
-    i2c_conf.scl_pullup_en = false;
+    i2c_conf.sda_io_num = GPIO_NUM_16;
+    i2c_conf.scl_io_num = GPIO_NUM_17;
+    i2c_conf.sda_pullup_en = true;
+    i2c_conf.scl_pullup_en = true;
     i2c_conf.master.clk_speed = 40000;
 
     bus_handle_t i2c0_bus_handle = i2c_bus_create(I2C_NUM_0, &i2c_conf);

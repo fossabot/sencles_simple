@@ -56,7 +56,7 @@ static esp_err_t sht4x_write_cmd(sht4x_handle_t sensor, sht4x_cmd_measure_t sht4
     sht4x_sensor_t *sens = (sht4x_sensor_t *) sensor;
     uint8_t cmd_buffer;
     cmd_buffer = sht4x_cmd;
-    esp_err_t ret = i2c_bus_write_bytes(sens->i2c_dev, NULL_I2C_MEM_ADDR, 1, cmd_buffer);
+    esp_err_t ret = i2c_bus_write_bytes(sens->i2c_dev, NULL_I2C_MEM_ADDR, 1, &cmd_buffer);
     return ret;
 }
 
@@ -87,41 +87,41 @@ static uint8_t CheckCrc8(uint8_t *const message, uint8_t initial_value)
     return crc;
 }
 
-esp_err_t sht4x_measure_period(sht4x_measure_mode mode, uint16_t *min_delay_us)
+int64_t sht4x_measure_period(sht4x_measure_mode mode)
 {
     //set value
     switch (mode) {
         case SHT4x_WITHOUT_HEATER_HIGH_PRE:
-            *min_delay_us = 6900;
+            return (6900);
             break;
         case SHT4x_WITHOUT_HEATER_MEDIUM_PRE:
-            *min_delay_us = 3700;
+            return (3700);
             break;
         case SHT4x_WITHOUT_HEATER_LOW_PRE:
-            *min_delay_us = 1300;
+            return (1300);
             break;
         case SHT4x_WITH_HEATER_200mW_1S:
-            *min_delay_us = 1006900;
+            return (1006900);
             break;
         case SHT4x_WITH_HEATER_200mW_01S:
-            *min_delay_us = 106900;
+            return (106900);
             break;
         case SHT4x_WITH_HEATER_110mW_1S:
-            *min_delay_us = 1006900;
+            return (1006900);
             break;        
         case SHT4x_WITH_HEATER_110mW_01S:
-            *min_delay_us = 106900;
+            return (106900);
             break;        
         case SHT4x_WITH_HEATER_20mW_1S:
-            *min_delay_us = 1006900;
+            return (1006900);
             break;        
         case SHT4x_WITH_HEATER_20mW_01S:
-            *min_delay_us = 106900;
+            return (106900);
             break;
         default:
+            return (6900);
             break;
     }
-    return ESP_OK;
 }
 
 
@@ -133,8 +133,7 @@ esp_err_t sht4x_get_single_shot(sht4x_handle_t sensor, sht4x_measure_mode mode, 
     static float Humidity = 0;
     static int64_t last_shot_time = 0;
     int64_t current_time = esp_timer_get_time();
-    int64_t min_delay_us = 0;
-    sht4x_measure_period(mode, &min_delay_us);
+    int64_t min_delay_us = sht4x_measure_period(mode);
 
     if ((current_time - last_shot_time) < min_delay_us) {
         *Tem_val = Temperature;
@@ -171,13 +170,6 @@ esp_err_t sht4x_soft_reset(sht4x_handle_t sensor)
     return ret;
 }
 
-esp_err_t sht4x_power_down(sht4x_handle_t sensor)
-{
-    sht4x_sensor_t *sens = (sht4x_sensor_t *) sensor;
-    esp_err_t ret = i2c_set_pin(i2c_port_t i2c_num, int sda_io_num, int scl_io_num,
-                      bool sda_pullup_en, bool scl_pullup_en, i2c_mode_t mode);
-    return ret;
-}
 
 
 #ifdef CONFIG_SENSOR_HUMITURE_INCLUDED_SHT4X
@@ -194,12 +186,6 @@ esp_err_t humiture_sht4x_init(i2c_bus_handle_t i2c_bus)
     sht4x = sht4x_create(i2c_bus, SHT4x_ADDR_PIN);
 
     if (!sht4x) {
-        return ESP_FAIL;
-    }
-
-    esp_err_t ret = sht4x_set_measure_mode(sht4x, SHT4x_PER_4_MEDIUM); /**medium accuracy/repeatability with 250ms period (1000ms/4)**/
-
-    if (ret != ESP_OK) {
         return ESP_FAIL;
     }
 
@@ -232,7 +218,7 @@ esp_err_t humiture_sht4x_test(void)
     return ESP_OK;
 }
 
-esp_err_t humiture_sht4x_acquire_humidity(float *h, float *t)
+esp_err_t humiture_sht4x_acquire_humiture(float *h, float *t)
 {
     if (!is_init) {
         return ESP_FAIL;
@@ -240,22 +226,15 @@ esp_err_t humiture_sht4x_acquire_humidity(float *h, float *t)
 
     float temperature = 0;
     float humidity = 0;
-    esp_err_t ret = sht4x_get_single_shot(sht4x, &temperature, &humidity);
+    esp_err_t ret = sht4x_get_single_shot(sht4x, SHT4x_WITHOUT_HEATER_HIGH_PRE, &temperature, &humidity);
 
     if (ret == ESP_OK) {
         *h = humidity;
         *t = temperature;
         return ESP_OK;
     }
-
-    *h = 0;
     return ESP_FAIL;
 }
 
-esp_err_t humiture_sht4x_sleep(void)
-{
-    esp_err_t ret = sht4x_power_down(sht4x);
-    return ret;
-}
 
 #endif

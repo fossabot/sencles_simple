@@ -293,8 +293,6 @@ esp_err_t humiture_sht3x_acquire_humiture(float *h, float *t)
         *t = temperature;
         return ESP_OK;
     }
-
-    *h = 0;
     return ESP_FAIL;
 }
 

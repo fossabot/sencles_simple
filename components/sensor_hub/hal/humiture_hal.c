@@ -44,7 +44,7 @@ typedef struct {
     esp_err_t (*init)(bus_handle_t);
     esp_err_t (*deinit)(void);
     esp_err_t (*test)(void);
-    esp_err_t (*acquire_humiture)(float *,float *);
+    esp_err_t (*acquire_humiture)(float *, float *);
     esp_err_t (*sleep)(void);
     esp_err_t (*wakeup)(void);
 } humiture_impl_t;
@@ -75,7 +75,7 @@ static const humiture_impl_t humiture_implementations[] = {
         .deinit = humiture_sht4x_deinit,
         .test = humiture_sht4x_test,
         .acquire_humiture = humiture_sht4x_acquire_humiture,
-        .sleep = humiture_sht4x_sleep,
+        .sleep = null_function,
         .wakeup = null_function,
     },
 #endif

@@ -7,11 +7,14 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "esp_event.h"
+#include "driver/i2c.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+
 
 void sensor_task(void *args);
 

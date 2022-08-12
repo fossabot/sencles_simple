@@ -374,8 +374,7 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
             res = mbedtls_pk_parse_key(&network_handle->mbedtls.x509_client_pk,
                                        (const unsigned char *)network_handle->cred->x509_client_privkey,
                                        (size_t)network_handle->cred->x509_client_privkey_len + 1, 
-                                       NULL, 0, 
-                                       NULL, NULL);
+                                       NULL, 0);
             if (res < 0) {
                 printf("mbedtls_pk_parse_key client pk error, res: -0x%04X\n", -res);
                 return STATE_PORT_TLS_INVALID_CLIENT_KEY;

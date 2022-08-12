@@ -1,6 +1,8 @@
 ﻿#include "lvgl_app.h"
+#include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "math.h"
+#include "time.h"
 
 
 static void data_anim(lv_obj_t * obj, int32_t value);
@@ -55,7 +57,7 @@ void ui_Screen1_screen_init(void) {
                       LV_OBJ_FLAG_GESTURE_BUBBLE);
 
     lv_arc_set_range(ui_humiArc, 0, 100);
-    lv_arc_set_value(ui_humiArc, 20);
+    //lv_arc_set_value(ui_humiArc, 20);
     lv_arc_set_bg_angles(ui_humiArc, 90, 9);
 
     lv_obj_set_style_arc_color(ui_humiArc, lv_color_hex(0x00FF68), LV_PART_INDICATOR | LV_STATE_DEFAULT);
@@ -75,14 +77,16 @@ void ui_Screen1_screen_init(void) {
     lv_obj_set_width(ui_tempArc, 210);
     lv_obj_set_height(ui_tempArc, 210);
 
-    lv_obj_set_x(ui_tempArc, -1);
+    lv_obj_set_x(ui_tempArc, 0);
     lv_obj_set_y(ui_tempArc, 0);
 
     lv_obj_set_align(ui_tempArc, LV_ALIGN_CENTER);
 
-    lv_obj_clear_flag(ui_tempArc, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE);
+    lv_obj_clear_flag(ui_tempArc, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE |
+                      LV_OBJ_FLAG_GESTURE_BUBBLE);
 
     lv_arc_set_range(ui_tempArc, -25, 60);
+    //lv_arc_set_value(ui_tempArc, 20);
     lv_arc_set_bg_angles(ui_tempArc, 100, 0);
 
     lv_obj_set_style_arc_color(ui_tempArc, lv_color_hex(0x00D3FF), LV_PART_INDICATOR | LV_STATE_DEFAULT);
@@ -103,7 +107,7 @@ void ui_Screen1_screen_init(void) {
     lv_obj_set_height(ui_humiLabel, LV_SIZE_CONTENT);
 
     lv_obj_set_x(ui_humiLabel, 41);
-    lv_obj_set_y(ui_humiLabel, -44);
+    lv_obj_set_y(ui_humiLabel, -45);
 
     lv_obj_set_align(ui_humiLabel, LV_ALIGN_CENTER);
 
@@ -145,7 +149,7 @@ void ui_Screen1_screen_init(void) {
 
     lv_obj_set_align(ui_tempLabelnum, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_tempLabelnum, "20.000");
+    //lv_label_set_text(ui_tempLabelnum, "20.000");
 
     lv_obj_clear_flag(ui_tempLabelnum, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
                       LV_OBJ_FLAG_SNAPPABLE);
@@ -164,7 +168,7 @@ void ui_Screen1_screen_init(void) {
 
     lv_obj_set_align(ui_humiLabelnum, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_humiLabelnum, "50.000");
+    //lv_label_set_text(ui_humiLabelnum, "50.000");
 
     lv_obj_set_style_text_font(ui_humiLabelnum, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -204,7 +208,7 @@ void ui_Screen1_screen_init(void) {
     lv_obj_set_height(ui_btempLabel, LV_SIZE_CONTENT);
 
     lv_obj_set_x(ui_btempLabel, 0);
-    lv_obj_set_y(ui_btempLabel, 31);
+    lv_obj_set_y(ui_btempLabel, 30);
 
     lv_obj_set_align(ui_btempLabel, LV_ALIGN_CENTER);
 
@@ -222,7 +226,7 @@ void ui_Screen1_screen_init(void) {
 
     lv_obj_set_align(ui_btempLabelnum, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_btempLabelnum, "25.000");
+    //lv_label_set_text(ui_btempLabelnum, "25.000");
 
     lv_obj_set_style_text_font(ui_btempLabelnum, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -238,7 +242,7 @@ void ui_Screen1_screen_init(void) {
 
     lv_obj_set_align(ui_timeLabel, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_timeLabel, "hr:mi:se");
+    //lv_label_set_text(ui_timeLabel, "hr:mi:se");
 
     lv_obj_set_style_text_font(ui_timeLabel, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -268,7 +272,7 @@ void ui_Screen1_screen_init(void) {
 
     lv_obj_set_align(ui_count, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_count, "00000000");
+    //lv_label_set_text(ui_count, "00000000");
 
     // ui_countss
 
@@ -284,12 +288,24 @@ void ui_Screen1_screen_init(void) {
 
     lv_label_set_text(ui_countss, "sec");
 
+
+
+    //aim to change key
+
     lv_anim_t anim;
     lv_anim_init(&anim);
 
-    lv_anim_set_var(&anim, label_temp_index);
-    lv_anim_set_var(&anim, label_humi_index);
-    lv_anim_set_var(&anim, label_body_index);
+    lv_anim_set_var(&anim, ui_humiArc);
+    lv_anim_set_var(&anim, ui_tempArc);
+    lv_anim_set_var(&anim, ui_tempLabelnum);
+    lv_anim_set_var(&anim, ui_humiLabelnum); 
+    lv_anim_set_var(&anim, ui_btempLabelnum);
+    lv_anim_set_var(&anim, ui_timeLabel);
+    lv_anim_set_var(&anim, ui_count);
+    
+
+
+
     lv_anim_set_exec_cb(&anim, (lv_anim_exec_xcb_t)data_anim);
     lv_anim_set_values(&anim, 0, 1);
     lv_anim_set_time(&anim, 510);
@@ -316,7 +332,7 @@ static void data_anim(lv_obj_t * obj, int32_t value) {
     temp_body = 1.07*temp_rx + 0.2*(humi_rx/100.0)*6.105*exp((17.27*temp_rx)/(237.7+temp_rx)) - 2.7;
 
 
-    if (temp_rx > 18 && temp_rx <= 26) {
+ /*   if (temp_rx > 18 && temp_rx <= 26) {
         lv_label_set_text_fmt(label_temp_index, "%f", temp_rx);
         lv_style_set_text_color(&color_style_temp, lv_palette_main(LV_PALETTE_GREEN));
     } else if (temp_rx >= 26) {
@@ -338,5 +354,5 @@ static void data_anim(lv_obj_t * obj, int32_t value) {
         lv_label_set_text_fmt(label_humi_index, "%f", humi_rx);
         lv_style_set_text_color(&color_style_humi, lv_palette_main(LV_PALETTE_RED));
     }
-    lv_label_set_text_fmt(label_body_index, "%f", temp_body);
+    lv_label_set_text_fmt(label_body_index, "%f", temp_body);*/
 }

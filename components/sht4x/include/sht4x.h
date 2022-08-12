@@ -167,8 +167,6 @@ esp_err_t humiture_sht4x_test(void);
  */
 esp_err_t humiture_sht4x_acquire_humiture(float *h, float *t);
 
-esp_err_t humiture_sht4x_sleep(void);
-
 #endif
 
 #ifdef __cplusplus
