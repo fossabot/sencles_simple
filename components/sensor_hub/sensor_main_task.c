@@ -16,6 +16,8 @@
 #include "esp_log.h"
 #include "iot_sensor_hub.h"
 #include "freertos/queue.h"
+#include "freertos/FreeRTOS.h"
+#include "driver/i2c.h"
 
 #define SENSOR_PERIOD_MS 5000 
 
