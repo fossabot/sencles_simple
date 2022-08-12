@@ -123,6 +123,8 @@ esp_err_t sht4x_get_single_shot(sht4x_handle_t sensor, sht4x_measure_mode mode, 
  */
 esp_err_t sht4x_soft_reset(sht4x_handle_t sensor);
 
+esp_err_t sht4x_power_down(sht4x_handle_t sensor);
+
 
 /***implements of humiture hal interface****/
 #ifdef CONFIG_SENSOR_HUMITURE_INCLUDED_SHT4X
@@ -163,17 +165,9 @@ esp_err_t humiture_sht4x_test(void);
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  */
-esp_err_t humiture_sht4x_acquire_humidity(float *h);
+esp_err_t humiture_sht4x_acquire_humiture(float *h, float *t);
 
-/**
- * @brief acquire temperature result one time.
- *
- * @param t point to result data (unit:dCelsius)
- * @return esp_err_t
- *     - ESP_OK Success
- *     - ESP_FAIL Fail
- */
-esp_err_t humiture_sht4x_acquire_temperature(float *t);
+esp_err_t humiture_sht4x_sleep(void);
 
 #endif
 

@@ -55,7 +55,7 @@ extern const char *SENSOR_MODE_STRING[];
 typedef enum {
 #ifdef CONFIG_SENSOR_INCLUDED_HUMITURE
     SENSOR_SHT3X_ID = (HUMITURE_ID << SENSOR_ID_OFFSET) | SHT3X_ID, /*!< sht3x sensor id*/
-    SENSOR_HTS221_ID = (HUMITURE_ID << SENSOR_ID_OFFSET) | HTS221_ID, /*!< hts221 sensor id*/
+    SENSOR_SHT4X_ID = (HUMITURE_ID << SENSOR_ID_OFFSET) | SHT4X_ID, /*!< sht4X sensor id*/
 #endif
 #ifdef CONFIG_SENSOR_INCLUDED_IMU
     SENSOR_MPU6050_ID = ((IMU_ID << SENSOR_ID_OFFSET) | MPU6050_ID), /*!< mpu6050 sensor id*/

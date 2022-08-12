@@ -23,15 +23,13 @@
 #ifdef CONFIG_SENSOR_HUMITURE_INCLUDED_SHT3X
 #include "sht3x.h"
 #endif
-#ifdef CONFIG_SENSOR_HUMITURE_INCLUDED_HTS221
-#include "hts221.h"
+#ifdef CONFIG_SENSOR_HUMITURE_INCLUDED_SHT4X
+#include "sht4x.h"
 #endif
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 static esp_err_t null_function(void){return ESP_ERR_NOT_SUPPORTED;}
-static esp_err_t null_acquire_humidity_function(float *h){return ESP_ERR_NOT_SUPPORTED;}
-static esp_err_t null_acquire_temperature_function(float *t){return ESP_ERR_NOT_SUPPORTED;}
 #pragma GCC diagnostic pop
 
 static const char *TAG = "HUMITURE|TEMPERATURE";
@@ -46,8 +44,7 @@ typedef struct {
     esp_err_t (*init)(bus_handle_t);
     esp_err_t (*deinit)(void);
     esp_err_t (*test)(void);
-    esp_err_t (*acquire_humidity)(float *);
-    esp_err_t (*acquire_temperature)(float *);
+    esp_err_t (*acquire_humiture)(float *,float *);
     esp_err_t (*sleep)(void);
     esp_err_t (*wakeup)(void);
 } humiture_impl_t;
@@ -66,22 +63,20 @@ static const humiture_impl_t humiture_implementations[] = {
         .init = humiture_sht3x_init,
         .deinit = humiture_sht3x_deinit,
         .test = humiture_sht3x_test,
-        .acquire_humidity = humiture_sht3x_acquire_humidity,
-        .acquire_temperature = humiture_sht3x_acquire_temperature,
+        .acquire_humiture = humiture_sht3x_acquire_humiture,
         .sleep = null_function,
         .wakeup = null_function,
     },
 #endif
-#ifdef CONFIG_SENSOR_HUMITURE_INCLUDED_HTS221
+#ifdef CONFIG_SENSOR_HUMITURE_INCLUDED_SHT4X
     {
-        .id = HTS221_ID,
-        .init = humiture_hts221_init,
-        .deinit = humiture_hts221_deinit,
-        .test = humiture_hts221_test,
-        .acquire_humidity = humiture_hts221_acquire_humidity,
-        .acquire_temperature = humiture_hts221_acquire_temperature,
-        .sleep = humiture_hts221_sleep,
-        .wakeup = humiture_hts221_wakeup,
+        .id = SHT4X_ID,
+        .init = humiture_sht4x_init,
+        .deinit = humiture_sht4x_deinit,
+        .test = humiture_sht4x_test,
+        .acquire_humiture = humiture_sht4x_acquire_humiture,
+        .sleep = humiture_sht4x_sleep,
+        .wakeup = null_function,
     },
 #endif
 };
@@ -163,21 +158,14 @@ esp_err_t humiture_test(sensor_humiture_handle_t sensor)
     return ret;
 }
 
-esp_err_t humiture_acquire_humidity(sensor_humiture_handle_t sensor, float *humidity)
+esp_err_t humiture_acquire_humiture(sensor_humiture_handle_t sensor, float *humidity, float *temperature)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
-    esp_err_t ret = p_sensor->impl->acquire_humidity(humidity);
+    esp_err_t ret = p_sensor->impl->acquire_humiture(humidity, temperature);
     return ret;
 }
 
-esp_err_t humiture_acquire_temperature(sensor_humiture_handle_t sensor, float *temperature)
-{
-    SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
-    sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
-    esp_err_t ret = p_sensor->impl->acquire_temperature(temperature);
-    return ret;
-}
 
 esp_err_t humiture_sleep(sensor_humiture_handle_t sensor)
 {
@@ -221,14 +209,9 @@ esp_err_t humiture_acquire(sensor_humiture_handle_t sensor, sensor_data_group_t 
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
     esp_err_t ret;
     int i = 0;
-    ret = p_sensor->impl->acquire_temperature(&data_group->sensor_data[i].temperature);
+    ret = p_sensor->impl->acquire_humiture(&data_group->sensor_data[i].humidity, &data_group->sensor_data[i].temperature);
     if (ESP_OK == ret) {
-        data_group->sensor_data[i].event_id = SENSOR_TEMP_DATA_READY;
-        i++;
-    }
-    ret = p_sensor->impl->acquire_humidity(&data_group->sensor_data[i].humidity);
-    if (ESP_OK == ret) {
-        data_group->sensor_data[i].event_id = SENSOR_HUMI_DATA_READY;
+        data_group->sensor_data[i].event_id = SENSOR_TEMP_HUMI_DATA_READY;
         i++;
     }
     data_group->number = i;

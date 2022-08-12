@@ -77,7 +77,7 @@ static uint8_t CheckCrc8(uint8_t *const message, uint8_t initial_value)
         crc ^= message[j];
         for (i = 0; i < 8; i++) {
             if (crc & 0x80) {
-                crc = (crc << 1) ^ 0x41;         /*!< 0x31 is Polynomial for 8-bit CRC checksum*/
+                crc = (crc << 1) ^ 0x31;         /*!< 0x31 is Polynomial for 8-bit CRC checksum*/
             } else {
                 crc = (crc << 1);
             }
@@ -87,39 +87,36 @@ static uint8_t CheckCrc8(uint8_t *const message, uint8_t initial_value)
     return crc;
 }
 
-esp_err_t sht3x_measure_period(sht4x_measure_mode mode, uint16_t *min_delay_us)
+esp_err_t sht4x_measure_period(sht4x_measure_mode mode, uint16_t *min_delay_us)
 {
     //set value
     switch (mode) {
         case SHT4x_WITHOUT_HEATER_HIGH_PRE:
-            *min_delay_us = 2000;
+            *min_delay_us = 6900;
             break;
         case SHT4x_WITHOUT_HEATER_MEDIUM_PRE:
-            *min_delay_us = 1000;
+            *min_delay_us = 3700;
             break;
-        case 2:
-            *min_delay_us = 500;
+        case SHT4x_WITHOUT_HEATER_LOW_PRE:
+            *min_delay_us = 1300;
             break;
-        case 3:
-            *min_delay_us = 250;
+        case SHT4x_WITH_HEATER_200mW_1S:
+            *min_delay_us = 1006900;
             break;
-        case 4:
-            *min_delay_us = 100;
+        case SHT4x_WITH_HEATER_200mW_01S:
+            *min_delay_us = 106900;
             break;
-        case 5:
-            *min_delay_us = 100;
+        case SHT4x_WITH_HEATER_110mW_1S:
+            *min_delay_us = 1006900;
             break;        
-        case 6:
-            *min_delay_us = 100;
+        case SHT4x_WITH_HEATER_110mW_01S:
+            *min_delay_us = 106900;
             break;        
-        case 7:
-            *min_delay_us = 100;
+        case SHT4x_WITH_HEATER_20mW_1S:
+            *min_delay_us = 1006900;
             break;        
-        case 8:
-            *min_delay_us = 100;
-            break;
-        case 9:
-            *min_delay_us = 100;
+        case SHT4x_WITH_HEATER_20mW_01S:
+            *min_delay_us = 106900;
             break;
         default:
             break;
@@ -128,7 +125,7 @@ esp_err_t sht3x_measure_period(sht4x_measure_mode mode, uint16_t *min_delay_us)
 }
 
 
-esp_err_t sht3x_get_single_shot(sht4x_handle_t sensor, sht4x_measure_mode mode, float *Tem_val, float *Hum_val)
+esp_err_t sht4x_get_single_shot(sht4x_handle_t sensor, sht4x_measure_mode mode, float *Tem_val, float *Hum_val)
 {
     uint8_t buff[6];
     uint16_t tem, hum;
@@ -137,7 +134,7 @@ esp_err_t sht3x_get_single_shot(sht4x_handle_t sensor, sht4x_measure_mode mode, 
     static int64_t last_shot_time = 0;
     int64_t current_time = esp_timer_get_time();
     int64_t min_delay_us = 0;
-    sht4x_measure_period(false, &min_delay_us);
+    sht4x_measure_period(mode, &min_delay_us);
 
     if ((current_time - last_shot_time) < min_delay_us) {
         *Tem_val = Temperature;
@@ -174,6 +171,13 @@ esp_err_t sht4x_soft_reset(sht4x_handle_t sensor)
     return ret;
 }
 
+esp_err_t sht4x_power_down(sht4x_handle_t sensor)
+{
+    sht4x_sensor_t *sens = (sht4x_sensor_t *) sensor;
+    esp_err_t ret = i2c_set_pin(i2c_port_t i2c_num, int sda_io_num, int scl_io_num,
+                      bool sda_pullup_en, bool scl_pullup_en, i2c_mode_t mode);
+    return ret;
+}
 
 
 #ifdef CONFIG_SENSOR_HUMITURE_INCLUDED_SHT4X
@@ -228,7 +232,7 @@ esp_err_t humiture_sht4x_test(void)
     return ESP_OK;
 }
 
-esp_err_t humiture_sht4x_acquire_humidity(float *h)
+esp_err_t humiture_sht4x_acquire_humidity(float *h, float *t)
 {
     if (!is_init) {
         return ESP_FAIL;
@@ -240,6 +244,7 @@ esp_err_t humiture_sht4x_acquire_humidity(float *h)
 
     if (ret == ESP_OK) {
         *h = humidity;
+        *t = temperature;
         return ESP_OK;
     }
 
@@ -247,23 +252,10 @@ esp_err_t humiture_sht4x_acquire_humidity(float *h)
     return ESP_FAIL;
 }
 
-esp_err_t humiture_sht4x_acquire_temperature(float *t)
+esp_err_t humiture_sht4x_sleep(void)
 {
-    if (!is_init) {
-        return ESP_FAIL;
-    }
-
-    float temperature = 0;
-    float humidity = 0;
-    esp_err_t ret = sht4x_get_single_shot(sht4x, &temperature, &humidity);
-
-    if (ret == ESP_OK) {
-        *t = temperature;
-        return ESP_OK;
-    }
-
-    *t = 0;
-    return ESP_FAIL;
+    esp_err_t ret = sht4x_power_down(sht4x);
+    return ret;
 }
 
 #endif

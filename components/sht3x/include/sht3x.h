@@ -205,24 +205,16 @@ esp_err_t humiture_sht3x_deinit(void);
 esp_err_t humiture_sht3x_test(void);
 
 /**
- * @brief acquire relative humidity result one time.
+ * @brief acquire relative humiture result one time.
  *
  * @param h point to result data (unit:percentage)
  * @return esp_err_t
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  */
-esp_err_t humiture_sht3x_acquire_humidity(float *h);
+esp_err_t humiture_sht3x_acquire_humiture(float *h, float *t);
 
-/**
- * @brief acquire temperature result one time.
- *
- * @param t point to result data (unit:dCelsius)
- * @return esp_err_t
- *     - ESP_OK Success
- *     - ESP_FAIL Fail
- */
-esp_err_t humiture_sht3x_acquire_temperature(float *t);
+
 
 #endif
 
