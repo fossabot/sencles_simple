@@ -15,6 +15,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "freertos/event_groups.h"
 #include "esp_log.h"
 
 #include "aiot_state_api.h"
@@ -29,6 +30,8 @@
 
 extern QueueHandle_t xQueueHumi;
 extern QueueHandle_t xQueueTemp;
+extern EventGroupHandle_t all_event;
+
 
 const char client_cert[] = {
     "-----BEGIN CERTIFICATE-----\r\n" \
@@ -632,6 +635,7 @@ void link_main(void *args)
     vTaskDelay(2000/portTICK_PERIOD_MS);
     aiot_mqtt_setopt(mqtt_handle, AIOT_MQTTOPT_PRODUCT_KEY, (void *)g_product_key);
     aiot_mqtt_setopt(mqtt_handle, AIOT_MQTTOPT_DEVICE_NAME, (void *)g_device_name);
+    xEventGroupSetBits(all_event, BIT3);
 
 
     while (1) {

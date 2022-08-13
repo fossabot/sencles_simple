@@ -242,7 +242,7 @@ void ui_Screen1_screen_init(void) {
 
     lv_obj_set_align(ui_timeLabel, LV_ALIGN_CENTER);
 
-    //lv_label_set_text(ui_timeLabel, "hr:mi:se");
+    lv_label_set_text(ui_timeLabel, "hr:mi:se");
 
     lv_obj_set_style_text_font(ui_timeLabel, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -272,7 +272,7 @@ void ui_Screen1_screen_init(void) {
 
     lv_obj_set_align(ui_count, LV_ALIGN_CENTER);
 
-    //lv_label_set_text(ui_count, "00000000");
+    lv_label_set_text(ui_count, "00000000");
 
     // ui_countss
 
@@ -330,8 +330,7 @@ static void data_anim(lv_obj_t * obj, int32_t value) {
     xQueuePeekFromISR(xQueueTemp, &temp_rx);
     xQueuePeekFromISR(xQueueHumi, &humi_rx);
     temp_body = 1.07*temp_rx + 0.2*(humi_rx/100.0)*6.105*exp((17.27*temp_rx)/(237.7+temp_rx)) - 2.7;
-
-
+ 
  /*   if (temp_rx > 18 && temp_rx <= 26) {
         lv_label_set_text_fmt(label_temp_index, "%f", temp_rx);
         lv_style_set_text_color(&color_style_temp, lv_palette_main(LV_PALETTE_GREEN));

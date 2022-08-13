@@ -133,7 +133,7 @@ sensor_light_handle_t light_sensor_create(bus_handle_t bus, int id)
         return NULL;
     }
 
-    sensor_light_t* p_sensor = (sensor_light_t*)malloc(sizeof(sensor_light_t));
+    sensor_light_t* p_sensor = (sensor_light_t*)pvPortMalloc(sizeof(sensor_light_t));
     SENSOR_CHECK(p_sensor != NULL, "light sensor creat failed", NULL);
     p_sensor->id = id;
     p_sensor->bus = bus;

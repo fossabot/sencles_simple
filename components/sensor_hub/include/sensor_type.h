@@ -131,7 +131,8 @@ typedef enum {
     SENSOR_ACCE_DATA_READY = 10,    /*!< Accelerometer data ready */
     SENSOR_GYRO_DATA_READY,         /*!< Gyroscope data ready */
     SENSOR_MAG_DATA_READY,          /*!< Magnetometer data ready */
-    SENSOR_TEMP_HUMI_DATA_READY,    /*!< Temperature data ready */
+    SENSOR_TEMP_DATA_READY,         /*!< Temperature data ready */
+    SENSOR_HUMI_DATA_READY,         /*!< Relative humidity data ready */
     SENSOR_BARO_DATA_READY,         /*!< Pressure data ready */
     SENSOR_LIGHT_DATA_READY,        /*!< Light data ready */
     SENSOR_RGBW_DATA_READY,         /*!< Color data ready */

@@ -72,7 +72,7 @@ static void *_core_mbedtls_calloc(size_t n, size_t size)
     }
 
     /* 此处若使用pvPortMalloc, 在esp8266上有mbedtls内存分配失败问题 */
-    buf = malloc(n * size);
+    buf = pvPortMalloc(n * size);
     if (NULL == buf) {
         return NULL;
     } else {

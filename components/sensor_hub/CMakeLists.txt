@@ -9,4 +9,4 @@ list(APPEND requires sht3x sht4x)
 
 idf_component_register(SRC_DIRS "." "hal"
                         INCLUDE_DIRS "include"
-                        REQUIRES "${requires}" esp_timer esp_event)
+                        REQUIRES "${requires}" esp_timer esp_event lvgl_app)

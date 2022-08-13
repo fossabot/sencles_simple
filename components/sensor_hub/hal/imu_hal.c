@@ -120,7 +120,7 @@ sensor_imu_handle_t imu_create(bus_handle_t bus, int imu_id)
         return NULL;
     }
 
-    sensor_imu_t *p_sensor = (sensor_imu_t *)malloc(sizeof(sensor_imu_t));
+    sensor_imu_t *p_sensor = (sensor_imu_t *)pvPortMalloc(sizeof(sensor_imu_t));
     SENSOR_CHECK(p_sensor != NULL, "imu sensor creat failed", NULL);
     p_sensor->id = imu_id;
     p_sensor->bus = bus;

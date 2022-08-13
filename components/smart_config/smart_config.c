@@ -8,14 +8,13 @@
 */
 
 #include "smart_config.h"
-#include "link_main.h"
-#include "esp_sntp.h"
-#include "time.h"
+
+extern EventGroupHandle_t all_event;
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t s_wifi_event_group;
 static bool wifi_flag ;
-static int s_retry_num = 0;
+//static int s_retry_num = 0;
 static const char *NVS_CUSTOMER = "customer data";
 static const char *DATA1 = "param 1";
 
@@ -25,8 +24,6 @@ static const char *DATA1 = "param 1";
 static const int CONNECTED_BIT = BIT0;
 static const int ESPTOUCH_DONE_BIT = BIT1;
 static const char *TAG = "smartconfig";
-
-static void smartconfig_task(void * parm);
 
 static void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
@@ -55,11 +52,11 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         if(wifi_flag == true)
         {
-            if (s_retry_num < 5) {
+            /*if (s_retry_num < 5) {
                 esp_wifi_connect();
                 s_retry_num++;
                 ESP_LOGI(TAG, "retry to connect to the AP");
-            }
+            }*/
             ESP_ERROR_CHECK(nvs_open( NVS_CUSTOMER, NVS_READWRITE, &handle));
             ESP_ERROR_CHECK(nvs_erase_key(handle,DATA1));
             vTaskDelay(5000/portTICK_PERIOD_MS);
@@ -76,14 +73,12 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         if(wifi_flag == true){
             ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
             ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
-            s_retry_num = 0;
-            xTaskCreatePinnedToCore(link_main, "aliyun", 4096, NULL, 0, NULL, 0);
+            //s_retry_num = 0;
             xEventGroupSetBits(s_wifi_event_group, CONNECTED_BIT);
-            sntp_setoperatingmode(SNTP_OPMODE_POLL);
-            sntp_setservername(0, "ntp.aliyun.com");
-            sntp_init();
+            xEventGroupSetBits(all_event, CONNECTED_BIT);
         }else{
             xEventGroupSetBits(s_wifi_event_group, CONNECTED_BIT);
+            xEventGroupSetBits(all_event, CONNECTED_BIT);
             }
     } else if (event_base == SC_EVENT && event_id == SC_EVENT_SCAN_DONE) {
         ESP_LOGI(TAG, "Scan done");
@@ -124,7 +119,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-void initialise_wifi_task(void *arg)
+void initialise_wifi_task(void* arg)
 {
     (void) arg;
     ESP_ERROR_CHECK(esp_netif_init());
@@ -167,8 +162,9 @@ void initialise_wifi_task(void *arg)
     vTaskDelete(NULL);
 }
 
-static void smartconfig_task(void * parm)
+void smartconfig_task(void* parm)
 {
+    (void) parm;
     EventBits_t uxBits;
     ESP_ERROR_CHECK( esp_smartconfig_set_type(SC_TYPE_ESPTOUCH) );
     smartconfig_start_config_t cfg = SMARTCONFIG_START_CONFIG_DEFAULT()
@@ -177,15 +173,13 @@ static void smartconfig_task(void * parm)
         uxBits = xEventGroupWaitBits(s_wifi_event_group, CONNECTED_BIT | ESPTOUCH_DONE_BIT, true, false, portMAX_DELAY);
         if(uxBits & CONNECTED_BIT) {
             ESP_LOGI(TAG, "WiFi Connected to ap");
+            xEventGroupSetBits(all_event, CONNECTED_BIT);
         }
         if(uxBits & ESPTOUCH_DONE_BIT) {
             ESP_LOGI(TAG, "smartconfig over");
             esp_smartconfig_stop();
-            sntp_setoperatingmode(SNTP_OPMODE_POLL);
-            sntp_setservername(0, "pool.ntp.org");
-            sntp_init();
-            xTaskCreatePinnedToCore(link_main, "aliyun", 4096, NULL, 0, NULL, 0);
-            vTaskDelete(NULL);
+            xEventGroupSetBits(all_event, ESPTOUCH_DONE_BIT);
+
         }
     }
 }

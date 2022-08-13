@@ -17,8 +17,8 @@
 #include "i2c_bus.h"
 #include "esp_log.h"
 #include "esp_system.h"
-#include "sht3x.h"
 #include "esp_timer.h"
+#include "sht3x.h"
 
 typedef struct {
     i2c_bus_device_handle_t i2c_dev;
@@ -278,7 +278,7 @@ esp_err_t humiture_sht3x_test(void)
     return ESP_OK;
 }
 
-esp_err_t humiture_sht3x_acquire_humiture(float *h, float *t)
+esp_err_t humiture_sht3x_acquire_humidity(float *h)
 {
     if (!is_init) {
         return ESP_FAIL;
@@ -290,9 +290,29 @@ esp_err_t humiture_sht3x_acquire_humiture(float *h, float *t)
 
     if (ret == ESP_OK) {
         *h = humidity;
+        return ESP_OK;
+    }
+
+    *h = 0;
+    return ESP_FAIL;
+}
+
+esp_err_t humiture_sht3x_acquire_temperature(float *t)
+{
+    if (!is_init) {
+        return ESP_FAIL;
+    }
+
+    float temperature = 0;
+    float humidity = 0;
+    esp_err_t ret = sht3x_get_single_shot(sht3x, &temperature, &humidity);
+
+    if (ret == ESP_OK) {
         *t = temperature;
         return ESP_OK;
     }
+
+    *t = 0;
     return ESP_FAIL;
 }
 

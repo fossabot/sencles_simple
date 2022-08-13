@@ -19,7 +19,8 @@
 
 
 
-void initialise_wifi_task(void *arg);
+void initialise_wifi_task(void* arg);
+void smartconfig_task(void* parm);
 
 
 

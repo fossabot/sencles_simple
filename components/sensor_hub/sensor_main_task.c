@@ -18,10 +18,18 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "sensor_main_task.h"
+#include "lvgl_app.h"
 
 #define SENSOR_PERIOD_MS 5000 
 
 #define TAG "Sensors Monitor"
+
+extern lv_obj_t * ui_humiArc;
+extern lv_obj_t * ui_tempArc;
+extern lv_obj_t * ui_tempLabelnum;
+extern lv_obj_t * ui_humiLabelnum;
+extern lv_obj_t * ui_btempLabelnum;
+
 
 QueueHandle_t xQueueHumi;
 QueueHandle_t xQueueTemp;
@@ -47,14 +55,10 @@ static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_
                      SENSOR_TYPE_STRING[sensor_type]);
             break;
         case SENSOR_TEMP_HUMI_DATA_READY:
-            ESP_LOGI(TAG, "Timestamp = %llu - SENSOR_TEMP_DATA_READY - "
-                     "temperature=%.2f"
-                     "humidity=%.2f",
-                     sensor_data->timestamp,
-                     sensor_data->temperature,
-                     sensor_data->humidity);
-            xQueueOverwriteFromISR(xQueueTemp, (void *)&sensor_data->temperature, (BaseType_t)pdFALSE);
-            xQueueOverwriteFromISR(xQueueHumi, (void *)&sensor_data->humidity, (BaseType_t)pdFALSE);
+            //xQueueOverwriteFromISR(xQueueTemp, (void *)&sensor_data->temperature, (BaseType_t)pdFALSE);
+            //xQueueOverwriteFromISR(xQueueHumi, (void *)&sensor_data->humidity, (BaseType_t)pdFALSE);
+            //lv_label_set_text_fmt(ui_tempLabelnum, "%0.3f", sensor_data->temperature);
+            //lv_label_set_text_fmt(ui_humiLabelnum, "%0.3f", sensor_data->humidity);
             break;
         case SENSOR_ACCE_DATA_READY:
             ESP_LOGI(TAG, "Timestamp = %llu - SENSOR_ACCE_DATA_READY - "
@@ -103,8 +107,8 @@ void sensor_task(void *args)
     i2c_config_t i2c_conf;
     
     i2c_conf.mode = I2C_MODE_MASTER;
-    i2c_conf.sda_io_num = GPIO_NUM_16;
-    i2c_conf.scl_io_num = GPIO_NUM_17;
+    i2c_conf.sda_io_num = GPIO_NUM_25;
+    i2c_conf.scl_io_num = GPIO_NUM_26;
     i2c_conf.sda_pullup_en = true;
     i2c_conf.scl_pullup_en = true;
     i2c_conf.master.clk_speed = 40000;

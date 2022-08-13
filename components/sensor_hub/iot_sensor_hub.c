@@ -134,7 +134,7 @@ static iot_sensor_impl_t s_sensor_impls[] = {
 static sensor_info_t s_sensor_info[] = {
 #ifdef CONFIG_SENSOR_INCLUDED_HUMITURE
     { "SHT31", "Humi/Temp sensor", SENSOR_SHT3X_ID, (const uint8_t *)"\x44\x45" },
-    { "SHT40", "Humi/Temp sensor", SENSOR_SHT4X_ID, (const uint8_t *)"\x44" },
+    { "SHT40", "Humi/Temp sensor", SENSOR_SHT4X_ID, (const uint8_t *)"\x46" },
 #endif
 #ifdef CONFIG_SENSOR_INCLUDED_IMU
     { "MPU6050", "Gyro/Acce sensor", SENSOR_MPU6050_ID, (const uint8_t *)"\x69\x68" },
@@ -790,12 +790,17 @@ static void sensor_default_event_handler(void *handler_args, esp_event_base_t ba
                      SENSOR_TYPE_STRING[sensor_type]);
             break;
 
-        case SENSOR_TEMP_HUMI_DATA_READY:
+        case SENSOR_HUMI_DATA_READY:
             ESP_LOGI(TAG, "Timestamp = %llu - SENSOR_HUMI_DATA_READY - "
-                     "humiture=%.2f" 
-                     "temperature=%.2f",
+                     "humiture=%.2f",
                      sensor_data->timestamp,
-                     sensor_data->humidity,
+                     sensor_data->humidity);
+            break;
+
+        case SENSOR_TEMP_DATA_READY:
+            ESP_LOGI(TAG, "Timestamp = %llu - SENSOR_TEMP_DATA_READY - "
+                     "temperature=%.2f\n",
+                     sensor_data->timestamp,
                      sensor_data->temperature);
             break;
 
