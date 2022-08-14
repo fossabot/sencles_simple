@@ -46,8 +46,7 @@ typedef struct {
     esp_err_t (*init)(bus_handle_t);
     esp_err_t (*deinit)(void);
     esp_err_t (*test)(void);
-    esp_err_t (*acquire_humidity)(float *);
-    esp_err_t (*acquire_temperature)(float *);
+    esp_err_t (*acquire_humiture)(float *, float *);
     esp_err_t (*sleep)(void);
     esp_err_t (*wakeup)(void);
 } humiture_impl_t;
@@ -66,8 +65,7 @@ static const humiture_impl_t humiture_implementations[] = {
         .init = humiture_sht3x_init,
         .deinit = humiture_sht3x_deinit,
         .test = humiture_sht3x_test,
-        .acquire_humidity = humiture_sht3x_acquire_humidity,
-        .acquire_temperature = humiture_sht3x_acquire_temperature,
+        .acquire_humiture = humiture_sht3x_acquire_humiture,
         .sleep = null_function,
         .wakeup = null_function,
     },
@@ -78,8 +76,7 @@ static const humiture_impl_t humiture_implementations[] = {
         .init = humiture_sht4x_init,
         .deinit = humiture_sht4x_deinit,
         .test = humiture_sht4x_test,
-        .acquire_humiture = humiture_sht4x_acquire_humidity,
-        .acquire_temperature = humiture_sht4x_acquire_temperature,
+        .acquire_humiture = humiture_sht4x_acquire_humiture,
         .sleep = null_function,
         .wakeup = null_function,
     },
@@ -163,19 +160,11 @@ esp_err_t humiture_test(sensor_humiture_handle_t sensor)
     return ret;
 }
 
-esp_err_t humiture_acquire_humidity(sensor_humiture_handle_t sensor, float *humidity)
+esp_err_t humiture_acquire_humiture(sensor_humiture_handle_t sensor, humiture_t* humiture)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
-    esp_err_t ret = p_sensor->impl->acquire_humidity(humidity);
-    return ret;
-}
-
-esp_err_t humiture_acquire_temperature(sensor_humiture_handle_t sensor, float *temperature)
-{
-    SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
-    sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
-    esp_err_t ret = p_sensor->impl->acquire_temperature(temperature);
+    esp_err_t ret = p_sensor->impl->acquire_humiture(&humiture->humidity, &humiture->temperature);
     return ret;
 }
 
@@ -221,14 +210,9 @@ esp_err_t humiture_acquire(sensor_humiture_handle_t sensor, sensor_data_group_t 
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
     esp_err_t ret;
     int i = 0;
-    ret = p_sensor->impl->acquire_temperature(&data_group->sensor_data[i].temperature);
+    ret = p_sensor->impl->acquire_humiture(&data_group->sensor_data[i].humiture.humidity, &data_group->sensor_data[i].humiture.temperature);
     if (ESP_OK == ret) {
-        data_group->sensor_data[i].event_id = SENSOR_TEMP_DATA_READY;
-        i++;
-    }
-    ret = p_sensor->impl->acquire_humidity(&data_group->sensor_data[i].humidity);
-    if (ESP_OK == ret) {
-        data_group->sensor_data[i].event_id = SENSOR_HUMI_DATA_READY;
+        data_group->sensor_data[i].event_id = SENSOR_TEMP_HUMI_DATA_READY;
         i++;
     }
     data_group->number = i;

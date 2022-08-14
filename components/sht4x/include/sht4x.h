@@ -61,20 +61,9 @@ typedef enum {
 } sht4x_cmd_measure_t;
 
 typedef enum {
-    SHT4x_ADDR_PIN = 0x44, /*!< set address PIN select VSS  */
+    SHT4x_ADDR_PIN = 0x44, /*!< set address PIN   */
 } sht4x_set_address_t;
 
-typedef enum {
-    SHT4x_WITHOUT_HEATER_HIGH_PRE = 0,
-    SHT4x_WITHOUT_HEATER_MEDIUM_PRE ,
-    SHT4x_WITHOUT_HEATER_LOW_PRE ,
-    SHT4x_WITH_HEATER_200mW_1S   ,
-    SHT4x_WITH_HEATER_200mW_01S  ,
-    SHT4x_WITH_HEATER_110mW_1S   ,
-    SHT4x_WITH_HEATER_110mW_01S  ,
-    SHT4x_WITH_HEATER_20mW_1S    ,
-    SHT4x_WITH_HEATER_20mW_01S   ,
-} sht4x_measure_mode;
 
 typedef void *sht4x_handle_t;
 
@@ -110,7 +99,7 @@ esp_err_t sht4x_delete(sht4x_handle_t *sensor);
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  */
-esp_err_t sht4x_get_single_shot(sht4x_handle_t sensor, sht4x_measure_mode mode, float *Tem_val, float *Hum_val);
+esp_err_t sht4x_get_single_shot(sht4x_handle_t sensor, sht4x_cmd_measure_t mode, float *Tem_val, float *Hum_val);
 
 /**
  * @brief Soft reset for sht4x
@@ -122,8 +111,8 @@ esp_err_t sht4x_get_single_shot(sht4x_handle_t sensor, sht4x_measure_mode mode, 
  *     - ESP_FAIL Fail
  */
 esp_err_t sht4x_soft_reset(sht4x_handle_t sensor);
+esp_err_t humiture_sht4x_test(void);
 
-esp_err_t sht4x_power_down(sht4x_handle_t sensor);
 
 
 /***implements of humiture hal interface****/
@@ -149,18 +138,10 @@ esp_err_t humiture_sht4x_init(i2c_bus_handle_t handle);
 esp_err_t humiture_sht4x_deinit(void);
 
 /**
- * @brief test if sht4x is active
- *
- * @return
- *     - ESP_OK Success
- *     - ESP_FAIL Fail
- */
-esp_err_t humiture_sht4x_test(void);
-
-/**
  * @brief acquire relative humidity result one time.
  *
  * @param h point to result data (unit:percentage)
+ * @param t point to result data (unit:dce)
  * @return esp_err_t
  *     - ESP_OK Success
  *     - ESP_FAIL Fail

@@ -70,7 +70,7 @@ static void count_dtimer_callback(void* arg)
     (void) arg;
     time(&curtime);
     uint32_t difft = (uint32_t)difftime(examtime, curtime);
-    //lv_label_set_text_fmt(ui_timeLabel, "%s", ctime(&curtime));
-    //lv_label_set_text_fmt(ui_count, "%f", difft);
+    lv_label_set_text_fmt(ui_timeLabel, "%s", ctime(&curtime));
+    lv_label_set_text_fmt(ui_count, "%d", difft);
 }
 

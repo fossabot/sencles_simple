@@ -640,10 +640,6 @@ void link_main(void *args)
 
     while (1) {
 
-        xQueuePeek(xQueueTemp, (void *)&temp_rx, 0);
-	    xQueuePeek(xQueueHumi, (void *)&humi_rx, 0);
-
-        temp_body = 1.07*temp_rx + 0.2*(humi_rx/100.0)*6.105*exp((17.27*temp_rx)/(237.7+temp_rx)) - 2.7;
 
         send_property_post(dm_handle, cJSON_phase(temp_rx,humi_rx, temp_body));
         

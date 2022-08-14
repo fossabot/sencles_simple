@@ -5,11 +5,6 @@
 #include "time.h"
 
 
-static void data_anim(lv_obj_t * obj, int32_t value);
-
-extern QueueHandle_t xQueueHumi;
-extern QueueHandle_t xQueueTemp;
-
 ///////////////////// VARIABLES ////////////////////
 lv_obj_t * ui_Screen1;
 lv_obj_t * ui_humiArc;
@@ -26,10 +21,6 @@ lv_obj_t * ui_timeLabel;
 lv_obj_t * ui_btempLabeldegree;
 lv_obj_t * ui_count;
 lv_obj_t * ui_countss;
-
-
-static float temp_rx, humi_rx, temp_body;
-
 
 
 
@@ -57,13 +48,14 @@ void ui_Screen1_screen_init(void) {
                       LV_OBJ_FLAG_GESTURE_BUBBLE);
 
     lv_arc_set_range(ui_humiArc, 0, 100);
-    //lv_arc_set_value(ui_humiArc, 20);
-    lv_arc_set_bg_angles(ui_humiArc, 90, 9);
+    lv_arc_set_value(ui_humiArc, 10);
+    lv_arc_set_bg_angles(ui_humiArc, 270, 90);
 
-    lv_obj_set_style_arc_color(ui_humiArc, lv_color_hex(0x00FF68), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_spread(ui_humiArc, 120, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    //lv_obj_set_style_arc_color(ui_humiArc, lv_color_hex(0x00FF68), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_arc_opa(ui_humiArc, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
-    lv_obj_set_style_bg_color(ui_humiArc, lv_color_hex(0x000000), LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_humiArc, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_humiArc, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_humiArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_humiArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
@@ -74,8 +66,8 @@ void ui_Screen1_screen_init(void) {
 
     ui_tempArc = lv_arc_create(ui_Screen1);
 
-    lv_obj_set_width(ui_tempArc, 210);
-    lv_obj_set_height(ui_tempArc, 210);
+    lv_obj_set_width(ui_tempArc, 240);
+    lv_obj_set_height(ui_tempArc, 240);
 
     lv_obj_set_x(ui_tempArc, 0);
     lv_obj_set_y(ui_tempArc, 0);
@@ -86,8 +78,8 @@ void ui_Screen1_screen_init(void) {
                       LV_OBJ_FLAG_GESTURE_BUBBLE);
 
     lv_arc_set_range(ui_tempArc, -25, 60);
-    //lv_arc_set_value(ui_tempArc, 20);
-    lv_arc_set_bg_angles(ui_tempArc, 100, 0);
+    lv_arc_set_value(ui_tempArc, -20);
+    lv_arc_set_bg_angles(ui_tempArc, 90, 270);
 
     lv_obj_set_style_arc_color(ui_tempArc, lv_color_hex(0x00D3FF), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_arc_opa(ui_tempArc, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
@@ -149,7 +141,7 @@ void ui_Screen1_screen_init(void) {
 
     lv_obj_set_align(ui_tempLabelnum, LV_ALIGN_CENTER);
 
-    //lv_label_set_text(ui_tempLabelnum, "20.000");
+    lv_label_set_text(ui_tempLabelnum, "20.000");
 
     lv_obj_clear_flag(ui_tempLabelnum, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
                       LV_OBJ_FLAG_SNAPPABLE);
@@ -168,7 +160,7 @@ void ui_Screen1_screen_init(void) {
 
     lv_obj_set_align(ui_humiLabelnum, LV_ALIGN_CENTER);
 
-    //lv_label_set_text(ui_humiLabelnum, "50.000");
+    lv_label_set_text(ui_humiLabelnum, "50.000");
 
     lv_obj_set_style_text_font(ui_humiLabelnum, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -226,7 +218,7 @@ void ui_Screen1_screen_init(void) {
 
     lv_obj_set_align(ui_btempLabelnum, LV_ALIGN_CENTER);
 
-    //lv_label_set_text(ui_btempLabelnum, "25.000");
+    lv_label_set_text(ui_btempLabelnum, "25.000");
 
     lv_obj_set_style_text_font(ui_btempLabelnum, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -234,17 +226,17 @@ void ui_Screen1_screen_init(void) {
 
     ui_timeLabel = lv_label_create(ui_Screen1);
 
-    lv_obj_set_width(ui_timeLabel, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_timeLabel, LV_SIZE_CONTENT);
+    lv_obj_set_width(ui_timeLabel, 100);
+    lv_obj_set_height(ui_timeLabel, 50);
 
-    lv_obj_set_x(ui_timeLabel, 2);
+    lv_obj_set_x(ui_timeLabel, 3);
     lv_obj_set_y(ui_timeLabel, -66);
 
     lv_obj_set_align(ui_timeLabel, LV_ALIGN_CENTER);
 
     lv_label_set_text(ui_timeLabel, "hr:mi:se");
 
-    lv_obj_set_style_text_font(ui_timeLabel, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_timeLabel, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // ui_btempLabeldegree
 
@@ -290,28 +282,6 @@ void ui_Screen1_screen_init(void) {
 
 
 
-    //aim to change key
-
-    lv_anim_t anim;
-    lv_anim_init(&anim);
-
-    lv_anim_set_var(&anim, ui_humiArc);
-    lv_anim_set_var(&anim, ui_tempArc);
-    lv_anim_set_var(&anim, ui_tempLabelnum);
-    lv_anim_set_var(&anim, ui_humiLabelnum); 
-    lv_anim_set_var(&anim, ui_btempLabelnum);
-    lv_anim_set_var(&anim, ui_timeLabel);
-    lv_anim_set_var(&anim, ui_count);
-    
-
-
-
-    lv_anim_set_exec_cb(&anim, (lv_anim_exec_xcb_t)data_anim);
-    lv_anim_set_values(&anim, 0, 1);
-    lv_anim_set_time(&anim, 510);
-    lv_anim_set_repeat_count(&anim, LV_ANIM_REPEAT_INFINITE);
-    lv_anim_start(&anim);
-
 }
 
 void ui_init(void)
@@ -324,34 +294,3 @@ void ui_init(void)
     lv_disp_load_scr(ui_Screen1);
 }
 
-
-static void data_anim(lv_obj_t * obj, int32_t value) {
-
-    xQueuePeekFromISR(xQueueTemp, &temp_rx);
-    xQueuePeekFromISR(xQueueHumi, &humi_rx);
-    temp_body = 1.07*temp_rx + 0.2*(humi_rx/100.0)*6.105*exp((17.27*temp_rx)/(237.7+temp_rx)) - 2.7;
- 
- /*   if (temp_rx > 18 && temp_rx <= 26) {
-        lv_label_set_text_fmt(label_temp_index, "%f", temp_rx);
-        lv_style_set_text_color(&color_style_temp, lv_palette_main(LV_PALETTE_GREEN));
-    } else if (temp_rx >= 26) {
-        lv_label_set_text_fmt(label_temp_index, "%f", temp_rx);
-        lv_style_set_text_color(&color_style_temp, lv_palette_main(LV_PALETTE_RED));
-    } else {
-        lv_label_set_text_fmt(label_temp_index, "%f", temp_rx);
-        lv_style_set_text_color(&color_style_temp, lv_palette_main(LV_PALETTE_BLUE));
-    }
-
-
-    if (humi_rx > 40 && humi_rx <= 60) {
-        lv_label_set_text_fmt(label_humi_index, "%f", humi_rx);
-        lv_style_set_text_color(&color_style_humi, lv_palette_main(LV_PALETTE_GREEN));
-    } else if (humi_rx > 60) {
-        lv_label_set_text_fmt(label_humi_index, "%f", humi_rx);
-        lv_style_set_text_color(&color_style_humi, lv_palette_main(LV_PALETTE_LIGHT_BLUE));
-    } else {
-        lv_label_set_text_fmt(label_humi_index, "%f", humi_rx);
-        lv_style_set_text_color(&color_style_humi, lv_palette_main(LV_PALETTE_RED));
-    }
-    lv_label_set_text_fmt(label_body_index, "%f", temp_body);*/
-}

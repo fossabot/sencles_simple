@@ -12,6 +12,22 @@ typedef void *bus_handle_t; /*!< i2c/spi bus handle */
 #define SENSOR_ID_OFFSET 4
 #define SENSOR_DATA_GROUP_MAX_NUM 6 /*default number of sensor_data_t in a group */
 
+
+/**
+ * @brief humiture sensor type
+ * 
+ */
+#ifndef HUMITURE_T
+typedef union {
+    struct {
+        float temperature; /*!< temp */
+        float humidity;    /*!< humi */
+    };
+    float humiture[3];
+} humiture_t;
+#define HUMITURE_T humiture_t
+#endif
+
 /**
  * @brief imu sensor type
  * 
@@ -131,8 +147,7 @@ typedef enum {
     SENSOR_ACCE_DATA_READY = 10,    /*!< Accelerometer data ready */
     SENSOR_GYRO_DATA_READY,         /*!< Gyroscope data ready */
     SENSOR_MAG_DATA_READY,          /*!< Magnetometer data ready */
-    SENSOR_TEMP_DATA_READY,         /*!< Temperature data ready */
-    SENSOR_HUMI_DATA_READY,         /*!< Relative humidity data ready */
+    SENSOR_TEMP_HUMI_DATA_READY,    /*!< Temperature && Relative humidity data ready */
     SENSOR_BARO_DATA_READY,         /*!< Pressure data ready */
     SENSOR_LIGHT_DATA_READY,        /*!< Light data ready */
     SENSOR_RGBW_DATA_READY,         /*!< Color data ready */
@@ -161,8 +176,7 @@ typedef struct {
         axis3_t              acce;          /*!< Accelerometer.       unit: G           */
         axis3_t              gyro;          /*!< Gyroscope.           unit: dps         */
         axis3_t              mag;           /*!< Magnetometer.        unit: Gauss       */
-        float                temperature;   /*!< Temperature.         unit: dCelsius     */
-        float                humidity;      /*!< Relative humidity.   unit: percentage   */
+        humiture_t           humiture;      /*!< Temperature & Relative humidity.    unit:percent/decgree   */
         float                baro;          /*!< Pressure.            unit: pascal (Pa)  */
         float                light;         /*!< Light.               unit: lux          */
         rgbw_t               rgbw;          /*!< Color.               unit: lux          */

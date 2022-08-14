@@ -54,8 +54,7 @@ esp_err_t sht4x_delete(sht4x_handle_t *sensor)
 static esp_err_t sht4x_write_cmd(sht4x_handle_t sensor, sht4x_cmd_measure_t sht4x_cmd)
 {
     sht4x_sensor_t *sens = (sht4x_sensor_t *) sensor;
-    uint8_t cmd_buffer;
-    cmd_buffer = sht4x_cmd;
+    uint8_t cmd_buffer = sht4x_cmd;
     esp_err_t ret = i2c_bus_write_bytes(sens->i2c_dev, NULL_I2C_MEM_ADDR, 1, &cmd_buffer);
     return ret;
 }
@@ -87,68 +86,62 @@ static uint8_t CheckCrc8(uint8_t *const message, uint8_t initial_value)
     return crc;
 }
 
-int64_t sht4x_measure_period(sht4x_measure_mode mode)
+int16_t sht4x_measure_period(sht4x_cmd_measure_t mode)
 {
     //set value
     switch (mode) {
-        case SHT4x_WITHOUT_HEATER_HIGH_PRE:
-            return (6900);
+        case SHT4x_MEASURE_HIGH_PRECISION:
+            return (11);
             break;
-        case SHT4x_WITHOUT_HEATER_MEDIUM_PRE:
-            return (3700);
+        case SHT4x_MEASURE_MEDIUM_PRECISION:
+            return (5);
             break;
-        case SHT4x_WITHOUT_HEATER_LOW_PRE:
-            return (1300);
+        case SHT4x_MEASURE_LOW_PRECISION:
+            return (3);
             break;
-        case SHT4x_WITH_HEATER_200mW_1S:
-            return (1006900);
+        case SHT4x_MEASURE_HIGH_PRECISION_200mW_1s:
+            return (1007);
             break;
-        case SHT4x_WITH_HEATER_200mW_01S:
-            return (106900);
+        case SHT4x_MEASURE_HIGH_PRECISION_200mW_01s:
+            return (107);
             break;
-        case SHT4x_WITH_HEATER_110mW_1S:
-            return (1006900);
+        case SHT4x_MEASURE_HIGH_PRECISION_110mW_1s:
+            return (1007);
             break;        
-        case SHT4x_WITH_HEATER_110mW_01S:
-            return (106900);
+        case SHT4x_MEASURE_HIGH_PRECISION_110mW_01s:
+            return (107);
             break;        
-        case SHT4x_WITH_HEATER_20mW_1S:
-            return (1006900);
+        case SHT4x_MEASURE_HIGH_PRECISION_20mW_1s:
+            return (1007);
             break;        
-        case SHT4x_WITH_HEATER_20mW_01S:
-            return (106900);
+        case SHT4x_MEASURE_HIGH_PRECISION_20mW_01s:
+            return (107);
             break;
         default:
-            return (6900);
+            return (6.9);
             break;
     }
 }
 
 
-esp_err_t sht4x_get_single_shot(sht4x_handle_t sensor, sht4x_measure_mode mode, float *Tem_val, float *Hum_val)
+esp_err_t sht4x_get_single_shot(sht4x_handle_t sensor, sht4x_cmd_measure_t mode, float *Tem_val, float *Hum_val)
 {
     uint8_t buff[6];
+    esp_err_t ret = ESP_OK;
     uint16_t tem, hum;
     static float Temperature = 0;
     static float Humidity = 0;
-    static int64_t last_shot_time = 0;
-    int64_t current_time = esp_timer_get_time();
-    int64_t min_delay_us = sht4x_measure_period(mode);
+    
+    ret = sht4x_write_cmd(sensor, mode);
 
-    if ((current_time - last_shot_time) < min_delay_us) {
-        *Tem_val = Temperature;
-        *Hum_val = Humidity;
-        return ESP_OK;
-    }
-
-    esp_err_t ret = sht4x_get_data(sensor, 6, buff);
-
+    vTaskDelay(pdMS_TO_TICKS(sht4x_measure_period(mode)));
+    ret = sht4x_get_data(sensor, 6, buff);
+ 
     /* check crc */
     if (ret != ESP_OK || CheckCrc8(buff, 0xFF) != buff[2] || CheckCrc8(&buff[3], 0xFF) != buff[5]) {
         return ESP_FAIL;
     }
 
-    last_shot_time = current_time;
     tem = (((uint16_t)buff[0] << 8) | buff[1]);
     Temperature = (175.0 * (float)tem / 65535.0 - 45.0) ;  /*!< T = -45 + 175 * tem / (2^16-1), this temperature conversion formula is for Celsius °C */
     //Temperature= (315.0*(float)tem/65535.0-49.0) ;     /*!< T = -45 + 175 * tem / (2^16-1), this temperature conversion formula is for Fahrenheit °F */
@@ -226,13 +219,17 @@ esp_err_t humiture_sht4x_acquire_humiture(float *h, float *t)
 
     float temperature = 0;
     float humidity = 0;
-    esp_err_t ret = sht4x_get_single_shot(sht4x, SHT4x_WITHOUT_HEATER_HIGH_PRE, &temperature, &humidity);
+    esp_err_t ret = sht4x_get_single_shot(sht4x, SHT4x_MEASURE_HIGH_PRECISION, &temperature, &humidity);
+    ESP_LOGE("test", "%f, %f", temperature, humidity);
 
     if (ret == ESP_OK) {
         *h = humidity;
         *t = temperature;
         return ESP_OK;
     }
+
+    *h = 0;
+    *t = 0;
     return ESP_FAIL;
 }
 

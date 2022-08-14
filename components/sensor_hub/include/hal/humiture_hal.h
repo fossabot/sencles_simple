@@ -26,7 +26,7 @@ typedef void *sensor_humiture_handle_t; /*!< humiture sensor handle*/
  */
 typedef enum {
     SHT3X_ID = 0x01, /*!< sht3x humiture sensor id*/
-    HTS221_ID, /*!< hts221 humiture sensor id*/
+    SHT4X_ID, /*!< hts221 humiture sensor id*/
     HUMITURE_MAX_ID, /*!< max humiture sensor id*/
 } humiture_id_t;
 
@@ -75,19 +75,7 @@ esp_err_t humiture_test(sensor_humiture_handle_t sensor);
  *     - ESP_FAIL Fail
  *     - ESP_ERR_NOT_SUPPORTED Function not supported on this sensor
 */
-esp_err_t humiture_acquire_humidity(sensor_humiture_handle_t sensor, float *humidity);
-
-/**
- * @brief Acquire humiture sensor temperature result one time.
- *
- * @param sensor humiture sensor handle to operate.
- * @param sensor_data result data (unit:dCelsius)
- * @return esp_err_t
- *     - ESP_OK Success
- *     - ESP_FAIL Fail
- *     - ESP_ERR_NOT_SUPPORTED Function not supported on this sensor
-*/
-esp_err_t humiture_acquire_temperature(sensor_humiture_handle_t sensor, float *sensor_data);
+esp_err_t humiture_acquire_humiture(sensor_humiture_handle_t sensor, humiture_t* humiture);
 
 /**
  * @brief Set sensor to sleep mode.

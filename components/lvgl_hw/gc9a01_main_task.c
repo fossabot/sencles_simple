@@ -20,6 +20,7 @@
 #include "gc9a01.h"
 #include "lvgl.h"
 #include "lvgl_app.h"
+#include "driver/gpio.h"
 
 static const char *TAG = "gui_task";
 
@@ -32,12 +33,12 @@ static const char *TAG = "gui_task";
 #define LCD_PIXEL_CLOCK_HZ     (40 * 1000 * 1000)
 #define LCD_BK_LIGHT_ON_LEVEL  1
 #define LCD_BK_LIGHT_OFF_LEVEL !LCD_BK_LIGHT_ON_LEVEL
-#define PIN_NUM_DATA0          19
-#define PIN_NUM_PCLK           18
-#define PIN_NUM_CS             16
-#define PIN_NUM_DC             17
-#define PIN_NUM_RST            5
-#define PIN_NUM_BK_LIGHT       4
+#define PIN_NUM_DATA0          GPIO_NUM_16
+#define PIN_NUM_PCLK           GPIO_NUM_15
+#define PIN_NUM_CS             GPIO_NUM_8
+#define PIN_NUM_DC             GPIO_NUM_18
+#define PIN_NUM_RST            GPIO_NUM_17
+#define PIN_NUM_BK_LIGHT       GPIO_NUM_19
 
 // The pixel number in horizontal and vertical
 #define LCD_H_RES              240
