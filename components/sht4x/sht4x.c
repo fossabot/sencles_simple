@@ -220,7 +220,6 @@ esp_err_t humiture_sht4x_acquire_humiture(float *h, float *t)
     float temperature = 0;
     float humidity = 0;
     esp_err_t ret = sht4x_get_single_shot(sht4x, SHT4x_MEASURE_HIGH_PRECISION, &temperature, &humidity);
-    ESP_LOGE("test", "%f, %f", temperature, humidity);
 
     if (ret == ESP_OK) {
         *h = humidity;

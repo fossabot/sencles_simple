@@ -121,7 +121,16 @@ typedef struct {
 */
 led_strip_t *led_strip_new_rmt_ws2812(const led_strip_config_t *config);
 
+typedef enum{
+    red = 0,
+    green = 1,
+    blue = 2,
+} led_strip_color_t;
+
+extern led_strip_t *strip ;
+
 void led_task(void* arg);
+esp_err_t color_breathe(led_strip_t *strip, led_strip_color_t led_strip_color, uint8_t min_lighten, uint8_t max_lighten, uint8_t light_step, uint8_t chase_speed_ms, uint8_t loop_num, uint32_t *time_minus);
 
 #ifdef __cplusplus
 }

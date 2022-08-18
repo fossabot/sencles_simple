@@ -161,7 +161,7 @@ void gui_task(void* arg)
     if( NULL != (void*)disp )  ESP_LOGI(TAG, "Registered display driver to LVGL");
 
     ESP_LOGI(TAG, "Install LVGL tick timer");
-    // Tick interface for LVGL (using esp_timer to generate 2ms periodic event)
+    // Tick interface for LVGL (using esp_timer to generate 1ms periodic event)
     const esp_timer_create_args_t lvgl_tick_timer_args = {
         .callback = &increase_lvgl_tick,
         .name = "lvgl_tick"

@@ -16,12 +16,15 @@
 #include "esp_log.h"
 #include "iot_sensor_hub.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
 #include "freertos/queue.h"
 #include "sensor_main_task.h"
 #include "lvgl_app.h"
 #include "math.h"
 
-#define SENSOR_PERIOD_MS 5000 
+#define SENSOR_PERIOD_MS 1000 
+
+sensor_data_t *sensor_data;
 
 #define TAG "Sensors Monitor"
 
@@ -31,10 +34,12 @@ extern lv_obj_t * ui_tempLabelnum;
 extern lv_obj_t * ui_humiLabelnum;
 extern lv_obj_t * ui_btempLabelnum;
 
+extern EventGroupHandle_t all_event;
+
 
 static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
 {
-    sensor_data_t *sensor_data = (sensor_data_t *)event_data;
+    sensor_data = (sensor_data_t *)event_data;
     sensor_type_t sensor_type = (sensor_type_t)((sensor_data->sensor_id) >> 4 & SENSOR_ID_MASK);
 
     if (sensor_type >= SENSOR_TYPE_MAX) {
@@ -55,8 +60,6 @@ static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_
         case SENSOR_TEMP_HUMI_DATA_READY:
             lv_label_set_text_fmt(ui_tempLabelnum, "%0.3f", sensor_data->humiture.temperature);
             lv_label_set_text_fmt(ui_humiLabelnum, "%0.3f", sensor_data->humiture.humidity);
-            //sensor_data->humiture.temperature
-            //sensor_data->humiture.humidity
             lv_arc_set_value(ui_tempArc, (int)sensor_data->humiture.temperature);
             lv_arc_set_value(ui_humiArc, (int)sensor_data->humiture.humidity);
 
@@ -97,6 +100,13 @@ static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_
     }
     float temp_body = 1.07*(sensor_data->humiture.temperature) + 0.2*((sensor_data->humiture.humidity)/100.0)*6.105*exp((17.27*(sensor_data->humiture.temperature))/(237.7+(sensor_data->humiture.temperature))) - 2.7;
     lv_label_set_text_fmt(ui_btempLabelnum, "%0.3f", temp_body);
+    if (sensor_data->humiture.temperature > 28)
+    {
+        xEventGroupSetBitsFromISR(all_event, BIT4,  NULL);
+    }else{
+        xEventGroupClearBitsFromISR(all_event, BIT4);
+    }
+    
 }
 
 void sensor_task(void *args)
@@ -104,15 +114,17 @@ void sensor_task(void *args)
     (void) args;
 
     ESP_LOGI(TAG,"HELLO");
+
     /*create the i2c0 bus handle with a resource ID*/
-    i2c_config_t i2c_conf;
+    i2c_config_t i2c_conf = {
+    .mode = I2C_MODE_MASTER,
+    .sda_io_num = GPIO_NUM_35,
+    .scl_io_num = GPIO_NUM_36,
+    .sda_pullup_en = true,
+    .scl_pullup_en = true,
+    .master.clk_speed = 40000,
+    };
     
-    i2c_conf.mode = I2C_MODE_MASTER;
-    i2c_conf.sda_io_num = GPIO_NUM_35;
-    i2c_conf.scl_io_num = GPIO_NUM_36;
-    i2c_conf.sda_pullup_en = true;
-    i2c_conf.scl_pullup_en = true;
-    i2c_conf.master.clk_speed = 40000;
 
     bus_handle_t i2c0_bus_handle = i2c_bus_create(I2C_NUM_0, &i2c_conf);
     if (i2c0_bus_handle == NULL) {

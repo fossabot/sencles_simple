@@ -8,15 +8,17 @@
 #include "freertos/semphr.h"
 #include "esp_event.h"
 #include "driver/i2c.h"
+#include "iot_sensor_hub.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-
+extern sensor_data_t *sensor_data;
 
 void sensor_task(void *args);
+
 
 
 #ifdef __cplusplus
