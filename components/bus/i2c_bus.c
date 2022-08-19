@@ -79,7 +79,7 @@ i2c_bus_handle_t i2c_bus_create(i2c_port_t port, const i2c_config_t *conf)
     if (s_i2c_bus[port].is_init) {
         /**if i2c_bus has been inited and configs not changed, return the handle directly**/
         if (i2c_config_compare(port, conf)) {
-            ESP_LOGW(TAG, "i2c%d has been inited, return handle directly, ref_counter=%d", port, s_i2c_bus[port].ref_counter);
+            //ESP_LOGW(TAG, "i2c%d has been inited, return handle directly, ref_counter=%d", port, s_i2c_bus[port].ref_counter);
             return (i2c_bus_handle_t)&s_i2c_bus[port];
         }
     } else {
@@ -104,7 +104,7 @@ esp_err_t i2c_bus_delete(i2c_bus_handle_t *p_bus)
 
     /** if ref_counter == 0, de-init the bus**/
     if ((i2c_bus->ref_counter) > 0) {
-        ESP_LOGW(TAG, "i2c%d is also handled by others ref_counter=%u, won't be de-inited", i2c_bus->i2c_port, i2c_bus->ref_counter);
+        //ESP_LOGW(TAG, "i2c%d is also handled by others ref_counter=%u, won't be de-inited", i2c_bus->i2c_port, i2c_bus->ref_counter);
         return ESP_OK;
     }
 
