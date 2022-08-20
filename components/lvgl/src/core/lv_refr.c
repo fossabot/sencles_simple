@@ -17,10 +17,10 @@
 #include "../misc/lv_gc.h"
 #include "../draw/lv_draw.h"
 #include "../font/lv_font_fmt_txt.h"
-#include "../others/snapshot/lv_snapshot.h"
+#include "../extra/others/snapshot/lv_snapshot.h"
 
 #if LV_USE_PERF_MONITOR || LV_USE_MEM_MONITOR
-    #include "../widgets/label/lv_label.h"
+    #include "../widgets/lv_label.h"
 #endif
 
 /*********************
@@ -319,11 +319,6 @@ void _lv_disp_refr_timer(lv_timer_t * tmr)
         return;
     }
 
-    if(disp_refr->driver->direct_mode && disp_refr->driver->draw_ctx->color_format != LV_COLOR_FORMAT_NATIVE) {
-        LV_LOG_WARN("In direct_mode only LV_COLOR_FORMAT_NATIVE color format is supported");
-        return;
-    }
-
     lv_refr_join_area();
 
     refr_invalid_areas();
@@ -339,8 +334,8 @@ void _lv_disp_refr_timer(lv_timer_t * tmr)
         }
 
         /*Clean up*/
-        lv_memzero(disp_refr->inv_areas, sizeof(disp_refr->inv_areas));
-        lv_memzero(disp_refr->inv_area_joined, sizeof(disp_refr->inv_area_joined));
+        lv_memset_00(disp_refr->inv_areas, sizeof(disp_refr->inv_areas));
+        lv_memset_00(disp_refr->inv_area_joined, sizeof(disp_refr->inv_area_joined));
         disp_refr->inv_p = 0;
 
         elaps = lv_tick_elaps(start);
@@ -351,9 +346,10 @@ void _lv_disp_refr_timer(lv_timer_t * tmr)
         }
     }
 
+    lv_mem_buf_free_all();
     _lv_font_clean_up_fmt_txt();
 
-#if LV_USE_DRAW_MASKS
+#if LV_DRAW_COMPLEX
     _lv_draw_mask_cleanup();
 #endif
 
@@ -389,7 +385,7 @@ void _lv_disp_refr_timer(lv_timer_t * tmr)
             fps_limit = 1000 / disp_refr->refr_timer->period;
         }
         else {
-            fps_limit = 1000 / 33;
+            fps_limit = 1000 / LV_DISP_DEF_REFR_PERIOD;
         }
 
         if(perf_monitor.elaps_sum == 0) {
@@ -414,7 +410,7 @@ void _lv_disp_refr_timer(lv_timer_t * tmr)
     }
 #endif
 
-#if LV_USE_MEM_MONITOR && LV_USE_BUILTIN_MALLOC && LV_USE_LABEL
+#if LV_USE_MEM_MONITOR && LV_MEM_CUSTOM == 0 && LV_USE_LABEL
     lv_obj_t * mem_label = mem_monitor.mem_label;
     if(mem_label == NULL) {
         mem_label = lv_label_create(lv_layer_sys());
@@ -632,14 +628,16 @@ static void refr_area_part(lv_draw_ctx_t * draw_ctx)
         }
 
         /*If the screen is transparent initialize it when the flushing is ready*/
+#if LV_COLOR_SCREEN_TRANSP
         if(disp_refr->driver->screen_transp) {
             if(disp_refr->driver->clear_cb) {
                 disp_refr->driver->clear_cb(disp_refr->driver, disp_refr->driver->draw_buf->buf_act, disp_refr->driver->draw_buf->size);
             }
             else {
-                lv_memzero(disp_refr->driver->draw_buf->buf_act, disp_refr->driver->draw_buf->size * LV_IMG_PX_SIZE_ALPHA_BYTE);
+                lv_memset_00(disp_refr->driver->draw_buf->buf_act, disp_refr->driver->draw_buf->size * LV_IMG_PX_SIZE_ALPHA_BYTE);
             }
         }
+#endif
     }
 
     lv_obj_t * top_act_scr = NULL;
@@ -1144,7 +1142,7 @@ static void draw_buf_rotate(lv_area_t * area, lv_color_t * color_p)
             }
             else {
                 /*Rotate other areas using a maximum buffer size*/
-                if(rot_buf == NULL) rot_buf = lv_malloc(LV_DISP_ROT_MAX_BUF);
+                if(rot_buf == NULL) rot_buf = lv_mem_buf_get(LV_DISP_ROT_MAX_BUF);
                 draw_buf_rotate_90(drv->rotated == LV_DISP_ROT_270, area_w, height, color_p, rot_buf);
 
                 if(drv->rotated == LV_DISP_ROT_90) {
@@ -1176,7 +1174,7 @@ static void draw_buf_rotate(lv_area_t * area, lv_color_t * color_p)
             row += height;
         }
         /*Free the allocated buffer at the end if necessary*/
-        if(rot_buf != NULL) lv_free(rot_buf);
+        if(rot_buf != NULL) lv_mem_buf_release(rot_buf);
     }
 }
 
@@ -1199,14 +1197,16 @@ static void draw_buf_flush(lv_disp_t * disp)
         }
 
         /*If the screen is transparent initialize it when the flushing is ready*/
+#if LV_COLOR_SCREEN_TRANSP
         if(disp_refr->driver->screen_transp) {
             if(disp_refr->driver->clear_cb) {
                 disp_refr->driver->clear_cb(disp_refr->driver, disp_refr->driver->draw_buf->buf_act, disp_refr->driver->draw_buf->size);
             }
             else {
-                lv_memzero(disp_refr->driver->draw_buf->buf_act, disp_refr->driver->draw_buf->size * LV_IMG_PX_SIZE_ALPHA_BYTE);
+                lv_memset_00(disp_refr->driver->draw_buf->buf_act, disp_refr->driver->draw_buf->size * LV_IMG_PX_SIZE_ALPHA_BYTE);
             }
         }
+#endif
     }
 
     draw_buf->flushing = 1;
@@ -1245,8 +1245,6 @@ static void call_flush_cb(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_
         .x2 = area->x2 + drv->offset_x,
         .y2 = area->y2 + drv->offset_y
     };
-
-    if(drv->draw_ctx->buffer_convert) drv->draw_ctx->buffer_convert(drv->draw_ctx);
 
     drv->flush_cb(drv, &offset_area, color_p);
 }

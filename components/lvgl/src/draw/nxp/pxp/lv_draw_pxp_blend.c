@@ -39,6 +39,10 @@
  *      DEFINES
  *********************/
 
+#if LV_COLOR_16_SWAP
+    #error Color swap not implemented. Disable LV_COLOR_16_SWAP feature.
+#endif
+
 #if LV_COLOR_DEPTH==16
     #define PXP_OUT_PIXEL_FORMAT kPXP_OutputPixelFormatRGB565
     #define PXP_AS_PIXEL_FORMAT kPXP_AsPixelFormatRGB565
@@ -382,7 +386,7 @@ static lv_res_t lv_gpu_nxp_pxp_blit_opa(lv_color_t * dest_buf, const lv_area_t *
     if(ROUND_UP(size, ALIGN_SIZE) >= LV_MEM_SIZE)
         PXP_RETURN_INV("Insufficient memory for temporary buffer. Please increase LV_MEM_SIZE.");
 
-    lv_color_t * tmp_buf = (lv_color_t *)lv_malloc(size);
+    lv_color_t * tmp_buf = (lv_color_t *)lv_mem_buf_get(size);
     if(!tmp_buf)
         PXP_RETURN_INV("Allocating temporary buffer failed.");
 
@@ -397,7 +401,7 @@ static lv_res_t lv_gpu_nxp_pxp_blit_opa(lv_color_t * dest_buf, const lv_area_t *
     res = lv_gpu_nxp_pxp_blit_cover(tmp_buf, &tmp_area, dest_w, src_buf, src_area, dsc, cf);
     if(res != LV_RES_OK) {
         PXP_LOG_TRACE("Blit cover with full opacity failed.");
-        lv_free(tmp_buf);
+        lv_mem_buf_release(tmp_buf);
 
         return res;
     }
@@ -406,7 +410,7 @@ static lv_res_t lv_gpu_nxp_pxp_blit_opa(lv_color_t * dest_buf, const lv_area_t *
     res = lv_gpu_nxp_pxp_blit_cf(dest_buf, dest_area, dest_stride, tmp_buf, &tmp_area, dsc, cf);
 
     /*Clean-up memory*/
-    lv_free(tmp_buf);
+    lv_mem_buf_release(tmp_buf);
 
     return res;
 }

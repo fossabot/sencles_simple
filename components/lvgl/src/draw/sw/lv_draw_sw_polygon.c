@@ -7,8 +7,6 @@
  *      INCLUDES
  *********************/
 #include "lv_draw_sw.h"
-#if LV_USE_DRAW_SW
-
 #include "../../misc/lv_math.h"
 #include "../../misc/lv_mem.h"
 #include "../../misc/lv_area.h"
@@ -49,12 +47,12 @@
 void lv_draw_sw_polygon(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * draw_dsc, const lv_point_t * points,
                         uint16_t point_cnt)
 {
-#if LV_USE_DRAW_MASKS
+#if LV_DRAW_COMPLEX
     if(point_cnt < 3) return;
     if(points == NULL) return;
 
     /*Join adjacent points if they are on the same coordinate*/
-    lv_point_t * p = lv_malloc(point_cnt * sizeof(lv_point_t));
+    lv_point_t * p = lv_mem_buf_get(point_cnt * sizeof(lv_point_t));
     if(p == NULL) return;
     uint16_t i;
     uint16_t pcnt = 0;
@@ -73,7 +71,7 @@ void lv_draw_sw_polygon(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * dra
 
     point_cnt = pcnt;
     if(point_cnt < 3) {
-        lv_free(p);
+        lv_mem_buf_release(p);
         return;
     }
 
@@ -90,7 +88,7 @@ void lv_draw_sw_polygon(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * dra
     lv_area_t clip_area;
     is_common = _lv_area_intersect(&clip_area, &poly_coords, draw_ctx->clip_area);
     if(!is_common) {
-        lv_free(p);
+        lv_mem_buf_release(p);
         return;
     }
 
@@ -108,7 +106,7 @@ void lv_draw_sw_polygon(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * dra
         }
     }
 
-    lv_draw_mask_line_param_t * mp = lv_malloc(sizeof(lv_draw_mask_line_param_t) * point_cnt);
+    lv_draw_mask_line_param_t * mp = lv_mem_buf_get(sizeof(lv_draw_mask_line_param_t) * point_cnt);
     lv_draw_mask_line_param_t * mp_next = mp;
 
     int32_t i_prev_left = y_min_i;
@@ -191,8 +189,8 @@ void lv_draw_sw_polygon(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * dra
 
     lv_draw_mask_remove_custom(mp);
 
-    lv_free(mp);
-    lv_free(p);
+    lv_mem_buf_release(mp);
+    lv_mem_buf_release(p);
 
     draw_ctx->clip_area = clip_area_ori;
 #else
@@ -200,12 +198,10 @@ void lv_draw_sw_polygon(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * dra
     LV_UNUSED(point_cnt);
     LV_UNUSED(draw_ctx);
     LV_UNUSED(draw_dsc);
-    LV_LOG_WARN("Can't draw polygon with LV_USE_DRAW_MASKS == 0");
-#endif /*LV_USE_DRAW_MASKS*/
+    LV_LOG_WARN("Can't draw polygon with LV_DRAW_COMPLEX == 0");
+#endif /*LV_DRAW_COMPLEX*/
 }
 
 /**********************
  *   STATIC FUNCTIONS
  **********************/
-
-#endif /*LV_USE_DRAW_SW*/

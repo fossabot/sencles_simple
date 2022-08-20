@@ -95,7 +95,7 @@ static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_
                      sensor_data->uv.uv, sensor_data->uv.uva, sensor_data->uv.uvb);
             break;
         default:
-            ESP_LOGI(TAG, "Timestamp = %llu - event id = %d", sensor_data->timestamp, id);
+            ESP_LOGI(TAG, "Timestamp = %llu - event id = %ld", sensor_data->timestamp, id);
             break;
     }
     float temp_body = 1.07*(sensor_data->humiture.temperature) + 0.2*((sensor_data->humiture.humidity)/100.0)*6.105*exp((17.27*(sensor_data->humiture.temperature))/(237.7+(sensor_data->humiture.temperature))) - 2.7;

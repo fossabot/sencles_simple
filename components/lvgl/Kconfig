@@ -36,6 +36,18 @@ menu "LVGL configuration"
             default 16 if LV_COLOR_DEPTH_16
             default 32 if LV_COLOR_DEPTH_32
 
+        config LV_COLOR_16_SWAP
+            bool "Swap the 2 bytes of RGB565 color. Useful if the display has an 8-bit interface (e.g. SPI)."
+            depends on LV_COLOR_DEPTH_16
+
+        config LV_COLOR_SCREEN_TRANSP
+            bool "Enable more complex drawing routines to manage screens transparency."
+            depends on LV_COLOR_DEPTH_32
+            help
+                Can be used if the UI is above another layer, e.g. an OSD menu or video player.
+                Requires `LV_COLOR_DEPTH = 32` colors and the screen's `bg_opa` should be set to
+                non LV_OPA_COVER value
+
         config LV_COLOR_MIX_ROUND_OFS
             int "Adjust color mix functions rounding"
             default 128 if !LV_COLOR_DEPTH_32
@@ -89,6 +101,16 @@ menu "LVGL configuration"
     endmenu
 
     menu "HAL Settings"
+        config LV_DISP_DEF_REFR_PERIOD
+            int "Default display refresh period (ms)."
+            default 30
+            help
+                Can be changed in the display driver (`lv_disp_drv_t`).
+
+        config LV_INDEV_DEF_READ_PERIOD
+            int "Input device read period [ms]."
+            default 30
+
         config LV_TICK_CUSTOM
             bool "Use a custom tick source"
 
@@ -289,11 +311,6 @@ menu "LVGL configuration"
                 help
                     Use printf for log output.
                     If not set the user needs to register a callback with `lv_log_register_print_cb`.
-
-            config LV_LOG_USE_TIMESTAMP
-                bool "Enable print timestamp"
-                default y
-                depends on LV_USE_LOG
 
             config LV_LOG_TRACE_MEM
                 bool "Enable/Disable LV_LOG_TRACE in mem module"
@@ -523,6 +540,12 @@ menu "LVGL configuration"
                 default y if LV_CONF_MINIMAL
             config LV_FONT_UNSCII_16
                 bool "Enable UNSCII 16 (Perfect monospace font)"
+
+            config LV_FONT_CUSTOM
+                bool "Enable the custom font"
+            config LV_FONT_CUSTOM_DECLARE
+                string "Header to include for the custom font"
+                depends on LV_FONT_CUSTOM
         endmenu
 
         choice LV_FONT_DEFAULT
@@ -998,14 +1021,6 @@ menu "LVGL configuration"
 
         config LV_USE_IMGFONT
             bool "draw img in label or span obj"
-            default n
-        config LV_IMGFONT_PATH_MAX_LEN
-            int "Imgfont image file path maximum length"
-            depends on LV_USE_IMGFONT
-            default 64
-        config LV_IMGFONT_USE_IMG_CACHE_HEADER
-            bool "Use img cache to buffer header information"
-            depends on LV_USE_IMGFONT
             default n
 
         config LV_USE_MSG

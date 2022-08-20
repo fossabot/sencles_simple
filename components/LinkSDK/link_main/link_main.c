@@ -238,14 +238,14 @@ void mqtt_recv_handler(void *handle, const aiot_mqtt_recv_t *packet, void *userd
         break;
 
         case AIOT_MQTTRECV_SUB_ACK: {
-            ESP_LOGI(TAG, "suback, res: -0x%04X, packet id: %d, max qos: %d",
+            ESP_LOGI(TAG, "suback, res: -0x%04lX, packet id: %d, max qos: %d",
                    -packet->data.sub_ack.res, packet->data.sub_ack.packet_id, packet->data.sub_ack.max_qos);
         }
         break;
 
         case AIOT_MQTTRECV_PUB: {
-            ESP_LOGI(TAG, "pub, qos: %d, topic: %.*s", packet->data.pub.qos, packet->data.pub.topic_len, packet->data.pub.topic);
-            ESP_LOGI(TAG, "pub, payload: %.*s", packet->data.pub.payload_len, packet->data.pub.payload);
+            ESP_LOGI(TAG, "pub, qos: %d, topic_len: %d, topic_name: %s", packet->data.pub.qos, packet->data.pub.topic_len, packet->data.pub.topic);
+            ESP_LOGI(TAG, "pub, payload_len: %ld, payload_name: %s", packet->data.pub.payload_len, packet->data.pub.payload);
             /* TODO: 处理服务器下发的业务报文 */
 
             /* 处理云端下发的productKey和deviceName */
@@ -298,7 +298,7 @@ void mqtt_recv_task(void *args)
 
 static void dm_recv_generic_reply(void *dm_handle, const aiot_dm_recv_t *recv, void *userdata)
 {
-    ESP_LOGI(TAG, "dm_recv_generic_reply msg_id = %d, code = %d, data = %.*s, message = %.*s",
+    ESP_LOGI(TAG, "dm_recv_generic_reply msg_id = %ld, code = %ld, data_len = %ld, data = %s, message_len = %ld, message = %s",
            recv->data.generic_reply.msg_id,
            recv->data.generic_reply.code,
            recv->data.generic_reply.data_len,
@@ -309,7 +309,7 @@ static void dm_recv_generic_reply(void *dm_handle, const aiot_dm_recv_t *recv, v
 
 static void dm_recv_property_set(void *dm_handle, const aiot_dm_recv_t *recv, void *userdata)
 {
-    ESP_LOGI(TAG, "dm_recv_property_set msg_id = %ld, params = %.*s",
+    ESP_LOGI(TAG, "dm_recv_property_set msg_id = %ld, params_len = %ld, params = %s",
            (unsigned long)recv->data.property_set.msg_id,
            recv->data.property_set.params_len,
            recv->data.property_set.params);
@@ -334,7 +334,7 @@ static void dm_recv_property_set(void *dm_handle, const aiot_dm_recv_t *recv, vo
 
 static void dm_recv_async_service_invoke(void *dm_handle, const aiot_dm_recv_t *recv, void *userdata)
 {
-    ESP_LOGI(TAG, "dm_recv_async_service_invoke msg_id = %ld, service_id = %s, params = %.*s",
+    ESP_LOGI(TAG, "dm_recv_async_service_invoke msg_id = %ld, service_id = %s, params_len = %ld, params = %s",
            (unsigned long)recv->data.async_service_invoke.msg_id,
            recv->data.async_service_invoke.service_id,
            recv->data.async_service_invoke.params_len,
@@ -365,7 +365,7 @@ static void dm_recv_async_service_invoke(void *dm_handle, const aiot_dm_recv_t *
 
 static void dm_recv_sync_service_invoke(void *dm_handle, const aiot_dm_recv_t *recv, void *userdata)
 {
-    ESP_LOGI(TAG_LOG, "dm_recv_sync_service_invoke msg_id = %ld, rrpc_id = %s, service_id = %s, params = %.*s",
+    ESP_LOGI(TAG_LOG, "dm_recv_sync_service_invoke msg_id = %ld, rrpc_id = %s, service_id = %s, params_len = %ld, params = %s",
            (unsigned long)recv->data.sync_service_invoke.msg_id,
            recv->data.sync_service_invoke.rrpc_id,
            recv->data.sync_service_invoke.service_id,
@@ -398,7 +398,7 @@ static void dm_recv_sync_service_invoke(void *dm_handle, const aiot_dm_recv_t *r
 
 static void dm_recv_raw_data(void *dm_handle, const aiot_dm_recv_t *recv, void *userdata)
 {
-    ESP_LOGI(TAG_LOG, "dm_recv_raw_data raw data len = %d", recv->data.raw_data.data_len);
+    ESP_LOGI(TAG_LOG, "dm_recv_raw_data raw data len = %ld", recv->data.raw_data.data_len);
     /* TODO: 以下代码演示如何发送二进制格式数据, 若使用需要有相应的数据透传脚本部署在云端 */
     /*
     {
@@ -416,14 +416,14 @@ static void dm_recv_raw_data(void *dm_handle, const aiot_dm_recv_t *recv, void *
 
 static void dm_recv_raw_sync_service_invoke(void *dm_handle, const aiot_dm_recv_t *recv, void *userdata)
 {
-    ESP_LOGI(TAG_LOG, "dm_recv_raw_sync_service_invoke raw sync service rrpc_id = %s, data_len = %d",
+    ESP_LOGI(TAG_LOG, "dm_recv_raw_sync_service_invoke raw sync service rrpc_id = %s, data_len = %ld",
            recv->data.raw_service_invoke.rrpc_id,
            recv->data.raw_service_invoke.data_len);
 }
 
 static void dm_recv_raw_data_reply(void *dm_handle, const aiot_dm_recv_t *recv, void *userdata)
 {
-    ESP_LOGI(TAG_LOG, "demo_dm_recv_raw_data_reply receive reply for up_raw msg, data len = %d", recv->data.raw_data.data_len);
+    ESP_LOGI(TAG_LOG, "demo_dm_recv_raw_data_reply receive reply for up_raw msg, data len = %ld", recv->data.raw_data.data_len);
     /* TODO: 用户处理下行的二进制数据, 位于recv->data.raw_data.data中 */
 }
 
@@ -607,7 +607,7 @@ void link_main(void *args)
     if (res < STATE_SUCCESS) {
         /* 尝试建立连接失败, 销毁MQTT实例, 回收资源 */
         aiot_mqtt_deinit(&mqtt_handle);
-        ESP_LOGE(TAG, "aiot_mqtt_connect failed: -0x%04X", -res);
+        ESP_LOGE(TAG, "aiot_mqtt_connect failed: -0x%04lX", -res);
         goto error_loop;
     }
 
@@ -617,7 +617,7 @@ void link_main(void *args)
     g_mqtt_process_task_running = 1;
     xTaskCreatePinnedToCore(mqtt_process_task, "mqtt_process", 2048, mqtt_handle, 0, &process_Handle, 1);
     while (process_Handle == NULL) {
-        ESP_LOGE(TAG, "create mqtt_process_task failed: %d", res);
+        ESP_LOGE(TAG, "create mqtt_process_task failed: %ld", res);
     }
 
                                     
@@ -625,7 +625,7 @@ void link_main(void *args)
     g_mqtt_recv_task_running = 1;
     xTaskCreatePinnedToCore(mqtt_recv_task, "recv_process", 4096, mqtt_handle, 0, &recv_Handle, 1);
     if (recv_Handle == NULL) {
-        ESP_LOGE(TAG, "create mqtt_recv_task failed: %d", res);
+        ESP_LOGE(TAG, "create mqtt_recv_task failed: %ld", res);
         aiot_dm_deinit(&dm_handle);
         aiot_mqtt_disconnect(mqtt_handle);
         aiot_mqtt_deinit(&mqtt_handle);
@@ -650,13 +650,13 @@ void link_main(void *args)
     res = aiot_mqtt_disconnect(mqtt_handle);
     if (res < STATE_SUCCESS) {
         aiot_mqtt_deinit(&mqtt_handle);
-        ESP_LOGE(TAG, "aiot_mqtt_disconnect failed: -0x%04X", -res);
+        ESP_LOGE(TAG, "aiot_mqtt_disconnect failed: -0x%04lX", -res);
     }
 
     /* 销毁MQTT实例, 一般不会运行到这里 */
     res = aiot_mqtt_deinit(&mqtt_handle);
     if (res < STATE_SUCCESS) {
-        ESP_LOGE(TAG, "aiot_mqtt_deinit failed: -0x%04X", -res);
+        ESP_LOGE(TAG, "aiot_mqtt_deinit failed: -0x%04lX", -res);
     }
 
     g_mqtt_process_task_running = 0;

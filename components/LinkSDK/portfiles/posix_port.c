@@ -313,13 +313,13 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
     }
 
     if (res < 0) {
-        printf("mbedtls_ssl_conf_max_frag_len error, res: -0x%04X\n", -res);
+        printf("mbedtls_ssl_conf_max_frag_len error, res: -0x%04lX\n", -res);
         return res;
     }
 
     res = mbedtls_net_connect(&network_handle->mbedtls.net_ctx, network_handle->host, port_str, MBEDTLS_NET_PROTO_TCP);
     if (res < 0) {
-        printf("mbedtls_net_connect error, res: -0x%04X\n", -res);
+        printf("mbedtls_net_connect error, res: -0x%04lX\n", -res);
         if (res == MBEDTLS_ERR_NET_UNKNOWN_HOST) {
             res = STATE_PORT_NETWORK_DNS_FAILED;
         } else if (res == MBEDTLS_ERR_NET_SOCKET_FAILED) {
@@ -333,7 +333,7 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
     res = mbedtls_ssl_config_defaults(&network_handle->mbedtls.ssl_config, MBEDTLS_SSL_IS_CLIENT,
                                       MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
     if (res < 0) {
-        printf("mbedtls_ssl_config_defaults error, res: -0x%04X\n", -res);
+        printf("mbedtls_ssl_config_defaults error, res: -0x%04lX\n", -res);
         return res;
     }
 
@@ -357,7 +357,7 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
         res = mbedtls_x509_crt_parse(&network_handle->mbedtls.x509_server_cert,
                                      (const unsigned char *)network_handle->cred->x509_server_cert, (size_t)network_handle->cred->x509_server_cert_len + 1);
         if (res < 0) {
-            printf("mbedtls_x509_crt_parse server cert error, res: -0x%04X\n", -res);
+            printf("mbedtls_x509_crt_parse server cert error, res: -0x%04lX\n", -res);
             return STATE_PORT_TLS_INVALID_SERVER_CERT;
         }
 
@@ -368,21 +368,21 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
             res = mbedtls_x509_crt_parse(&network_handle->mbedtls.x509_client_cert,
                                          (const unsigned char *)network_handle->cred->x509_client_cert, (size_t)network_handle->cred->x509_client_cert_len + 1);
             if (res < 0) {
-                printf("mbedtls_x509_crt_parse client cert error, res: -0x%04X\n", -res);
+                printf("mbedtls_x509_crt_parse client cert error, res: -0x%04lX\n", -res);
                 return STATE_PORT_TLS_INVALID_CLIENT_CERT;
             }
             res = mbedtls_pk_parse_key(&network_handle->mbedtls.x509_client_pk,
                                        (const unsigned char *)network_handle->cred->x509_client_privkey,
                                        (size_t)network_handle->cred->x509_client_privkey_len + 1, 
-                                       NULL, 0);
+                                       NULL, 0, NULL, NULL);
             if (res < 0) {
-                printf("mbedtls_pk_parse_key client pk error, res: -0x%04X\n", -res);
+                printf("mbedtls_pk_parse_key client pk error, res: -0x%04lX\n", -res);
                 return STATE_PORT_TLS_INVALID_CLIENT_KEY;
             }
             res = mbedtls_ssl_conf_own_cert(&network_handle->mbedtls.ssl_config, &network_handle->mbedtls.x509_client_cert,
                                             &network_handle->mbedtls.x509_client_pk);
             if (res < 0) {
-                printf("mbedtls_ssl_conf_own_cert error, res: -0x%04X\n", -res);
+                printf("mbedtls_ssl_conf_own_cert error, res: -0x%04lX\n", -res);
                 return STATE_PORT_TLS_INVALID_CLIENT_CERT;
             }
         }
@@ -408,7 +408,7 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
 
     res = mbedtls_ssl_setup(&network_handle->mbedtls.ssl_ctx, &network_handle->mbedtls.ssl_config);
     if (res < 0) {
-        printf("mbedtls_ssl_setup error, res: -0x%04X\n", -res);
+        printf("mbedtls_ssl_setup error, res: -0x%04lX\n", -res);
         return res;
     }
 
@@ -418,7 +418,7 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
 
     while ((res = mbedtls_ssl_handshake(&network_handle->mbedtls.ssl_ctx)) != 0) {
         if ((res != MBEDTLS_ERR_SSL_WANT_READ) && (res != MBEDTLS_ERR_SSL_WANT_WRITE)) {
-            printf("mbedtls_ssl_handshake error, res: -0x%04X\n", -res);
+            printf("mbedtls_ssl_handshake error, res: -0x%04lX\n", -res);
             if (res == MBEDTLS_ERR_SSL_INVALID_RECORD) {
                 res = STATE_PORT_TLS_INVALID_RECORD;
             } else {
@@ -430,7 +430,7 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
 
     res = mbedtls_ssl_get_verify_result(&network_handle->mbedtls.ssl_ctx);
     if (res < 0) {
-        printf("mbedtls_ssl_get_verify_result error, res: -0x%04X\n", -res);
+        printf("mbedtls_ssl_get_verify_result error, res: -0x%04lX\n", -res);
         return res;
     }
     return 0;
@@ -717,7 +717,7 @@ int32_t _core_sysdep_network_mbedtls_send(core_network_handle_t *network_handle,
             if (res != MBEDTLS_ERR_SSL_WANT_READ &&
                 res != MBEDTLS_ERR_SSL_WANT_WRITE) {
                 if (send_bytes == 0) {
-                    printf("mbedtls_ssl_send error, res: -0x%04X\n", -res);
+                    printf("mbedtls_ssl_send error, res: -0x%04lX\n", -res);
                     if (res == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
                         return STATE_PORT_TLS_SEND_CONNECTION_CLOSED;
                     } else if (res == MBEDTLS_ERR_SSL_INVALID_RECORD) {

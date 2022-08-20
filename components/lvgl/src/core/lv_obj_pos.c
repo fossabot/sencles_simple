@@ -323,7 +323,7 @@ void lv_obj_update_layout(const lv_obj_t * obj)
 uint32_t lv_layout_register(lv_layout_update_cb_t cb, void * user_data)
 {
     layout_cnt++;
-    LV_GC_ROOT(_lv_layout_list) = lv_realloc(LV_GC_ROOT(_lv_layout_list), layout_cnt * sizeof(lv_layout_dsc_t));
+    LV_GC_ROOT(_lv_layout_list) = lv_mem_realloc(LV_GC_ROOT(_lv_layout_list), layout_cnt * sizeof(lv_layout_dsc_t));
     LV_ASSERT_MALLOC(LV_GC_ROOT(_lv_layout_list));
 
     LV_GC_ROOT(_lv_layout_list)[layout_cnt - 1].cb = cb;
@@ -799,7 +799,7 @@ void lv_obj_transform_point(const lv_obj_t * obj, lv_point_t * p, bool recursive
 {
     if(obj) {
         lv_layer_type_t layer_type = _lv_obj_get_layer_type(obj);
-        bool do_tranf = layer_type == LV_LAYER_TYPE_TRANSFORM ? true : false;
+        bool do_tranf = layer_type == LV_LAYER_TYPE_TRANSFORM;
         if(inv) {
             if(recursive) lv_obj_transform_point(lv_obj_get_parent(obj), p, recursive, inv);
             if(do_tranf) transform_point(obj, p, inv);

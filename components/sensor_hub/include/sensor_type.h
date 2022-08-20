@@ -89,7 +89,7 @@ typedef enum {
  * 
  */
 typedef enum {
-    COMMAND_SET_MODE, /*!< set measure mdoe */
+    COMMAND_SET_MODE, /*!< set measure mode */
     COMMAND_SET_RANGE, /*!< set measure range */
     COMMAND_SET_ODR, /*!< set output rate */
     COMMAND_SET_POWER, /*!< set power mode */

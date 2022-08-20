@@ -122,10 +122,13 @@ void lv_draw_nxp_ctx_deinit(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx)
  * the target pixel format is ARGB8565 which is not supported by the GPU.
  * In this case, the NXP callbacks should fallback to SW rendering.
  */
-static inline bool need_argb8565_support(lv_draw_ctx_t * draw_ctx)
+static inline bool need_argb8565_support()
 {
 #if LV_COLOR_DEPTH != 32
-    if(draw_ctx->render_with_alpha) return true;
+    lv_disp_t * disp = _lv_refr_get_disp_refreshing();
+
+    if(disp->driver->screen_transp == 1)
+        return true;
 #endif
 
     return false;
@@ -314,7 +317,7 @@ static void lv_draw_nxp_rect(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t 
     lv_draw_rect_dsc_t nxp_dsc;
 
     lv_memcpy(&nxp_dsc, dsc, sizeof(nxp_dsc));
-#if LV_USE_DRAW_MASKS
+#if LV_DRAW_COMPLEX
     /* Draw only the shadow */
     nxp_dsc.bg_opa = 0;
     nxp_dsc.bg_img_opa = 0;
@@ -327,7 +330,7 @@ static void lv_draw_nxp_rect(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t 
     nxp_dsc.shadow_opa = 0;
     nxp_dsc.bg_opa = dsc->bg_opa;
     done = (draw_nxp_bg(draw_ctx, &nxp_dsc, coords) == LV_RES_OK);
-#endif /*LV_USE_DRAW_MASKS*/
+#endif /*LV_DRAW_COMPLEX*/
 
     /* Draw the remaining parts */
     nxp_dsc.shadow_opa = 0;
@@ -390,7 +393,7 @@ static void lv_draw_nxp_arc(lv_draw_ctx_t * draw_ctx, const lv_draw_arc_dsc_t * 
 {
     bool done = false;
 
-#if LV_USE_DRAW_MASKS
+#if LV_DRAW_COMPLEX
     if(dsc->opa <= LV_OPA_MIN)
         return;
     if(dsc->width == 0)
@@ -406,7 +409,7 @@ static void lv_draw_nxp_arc(lv_draw_ctx_t * draw_ctx, const lv_draw_arc_dsc_t * 
             VG_LITE_LOG_TRACE("VG-Lite draw arc failed. Fallback.");
     }
 #endif
-#endif/*LV_USE_DRAW_MASKS*/
+#endif/*LV_DRAW_COMPLEX*/
 
     if(!done)
         lv_draw_sw_arc(draw_ctx, dsc, center, radius, start_angle, end_angle);

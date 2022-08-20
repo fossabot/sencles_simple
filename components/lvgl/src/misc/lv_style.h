@@ -35,13 +35,13 @@ extern "C" {
  *
  * The rest of the flags will have _FLAG added to their name in v9.
  */
-#define LV_STYLE_PROP_FLAG_NONE                     (0)
-#define LV_STYLE_PROP_FLAG_INHERITABLE              (1 << 0)  /*Inherited*/
-#define LV_STYLE_PROP_FLAG_EXT_DRAW_UPDATE          (1 << 1)  /*Requires ext. draw size update when changed*/
-#define LV_STYLE_PROP_FLAG_LAYOUT_UPDATE            (1 << 2)  /*Requires layout update when changed*/
-#define LV_STYLE_PROP_FLAG_PARENT_LAYOUT_UPDATE     (1 << 3)  /*Requires layout update on parent when changed*/
-#define LV_STYLE_PROP_FLAG_LAYER_UPDATE             (1 << 4)  /*Affects layer handling*/
-#define LV_STYLE_PROP_FLAG_ALL                      (0x1F)     /*Indicating all flags*/
+#define LV_STYLE_PROP_FLAG_NONE             (0)
+#define LV_STYLE_PROP_INHERIT               (1 << 0)  /*Inherited*/
+#define LV_STYLE_PROP_EXT_DRAW              (1 << 1)  /*Requires ext. draw size update when changed*/
+#define LV_STYLE_PROP_LAYOUT_REFR           (1 << 2)  /*Requires layout update when changed*/
+#define LV_STYLE_PROP_PARENT_LAYOUT_REFR    (1 << 3)  /*Requires layout update on parent when changed*/
+#define LV_STYLE_PROP_LAYER_REFR            (1 << 4)  /*Affects layer handling*/
+#define LV_STYLE_PROP_ALL                   (0x1F)     /*Indicating all flags*/
 
 /**
  * Other constants
@@ -50,9 +50,14 @@ extern "C" {
 LV_EXPORT_CONST_INT(LV_IMG_ZOOM_NONE);
 
 #if LV_USE_ASSERT_STYLE
-#define LV_STYLE_CONST_INIT(var_name, prop_array) const lv_style_t var_name = { .sentinel = LV_STYLE_SENTINEL_VALUE, .v_p = { .const_props = prop_array }, .has_group = 0xFF, .prop1 = _LV_STYLE_PROP_CONST }
+#define LV_STYLE_CONST_INIT(var_name, prop_array) const lv_style_t var_name = { .sentinel = LV_STYLE_SENTINEL_VALUE, .v_p = { .const_props = prop_array }, .has_group = 0xFF, .prop1 = LV_STYLE_PROP_ANY }
 #else
-#define LV_STYLE_CONST_INIT(var_name, prop_array) const lv_style_t var_name = { .v_p = { .const_props = prop_array }, .has_group = 0xFF, .prop1 = _LV_STYLE_PROP_CONST }
+#define LV_STYLE_CONST_INIT(var_name, prop_array) const lv_style_t var_name = { .v_p = { .const_props = prop_array }, .has_group = 0xFF, .prop1 = LV_STYLE_PROP_ANY }
+#endif
+
+/** On simple system, don't waste resources on gradients */
+#if !defined(LV_DRAW_COMPLEX) || !defined(LV_GRADIENT_MAX_STOPS)
+#define LV_GRADIENT_MAX_STOPS 2
 #endif
 
 #define LV_STYLE_PROP_META_INHERIT 0x8000
@@ -60,8 +65,6 @@ LV_EXPORT_CONST_INT(LV_IMG_ZOOM_NONE);
 #define LV_STYLE_PROP_META_MASK (LV_STYLE_PROP_META_INHERIT | LV_STYLE_PROP_META_INITIAL)
 
 #define LV_STYLE_PROP_ID_MASK(prop) ((lv_style_prop_t)((prop) & ~LV_STYLE_PROP_META_MASK))
-
-#define LV_STYLE_CONST_PROPS_END { .prop_ptr = &lv_style_const_prop_id_inv, .value = { .num = 0 } }
 
 /**********************
  *      TYPEDEFS
@@ -120,7 +123,7 @@ typedef uint8_t lv_grad_dir_t;
 
 /**
  * The dithering algorithm for the gradient
- * Depends on LV_DRAW_SW_GRADIENT_DITHER
+ * Depends on LV_DITHER_GRADIENT
  */
 enum {
     LV_DITHER_NONE,     /**< No dithering, colors are just quantized to the output resolution*/
@@ -162,7 +165,7 @@ typedef union {
  *
  * Props are split into groups of 16. When adding a new prop to a group, ensure it does not overflow into the next one.
  */
-enum {
+typedef enum {
     LV_STYLE_PROP_INV               = 0,
 
     /*Group 0*/
@@ -268,9 +271,7 @@ enum {
 
     LV_STYLE_PROP_ANY                = 0xFFFF,
     _LV_STYLE_PROP_CONST             = 0xFFFF /* magic value for const styles */
-};
-
-typedef uint16_t lv_style_prop_t;
+} lv_style_prop_t;
 
 enum {
     LV_STYLE_RES_NOT_FOUND,
@@ -297,7 +298,7 @@ typedef struct {
  * Descriptor of a constant style property.
  */
 typedef struct {
-    const lv_style_prop_t * prop_ptr;
+    lv_style_prop_t prop;
     lv_style_value_t value;
 } lv_style_const_prop_t;
 
@@ -439,13 +440,12 @@ static inline lv_style_res_t lv_style_get_prop_inlined(const lv_style_t * style,
 {
     if(style->prop1 == LV_STYLE_PROP_ANY) {
         const lv_style_const_prop_t * const_prop;
-        for(const_prop = style->v_p.const_props; *const_prop->prop_ptr != LV_STYLE_PROP_INV; const_prop++) {
-            lv_style_prop_t prop_id_and_meta = *const_prop->prop_ptr;
-            lv_style_prop_t prop_id = LV_STYLE_PROP_ID_MASK(prop_id_and_meta);
+        for(const_prop = style->v_p.const_props; const_prop->prop != LV_STYLE_PROP_INV; const_prop++) {
+            lv_style_prop_t prop_id = LV_STYLE_PROP_ID_MASK(const_prop->prop);
             if(prop_id == prop) {
-                if(prop_id_and_meta & LV_STYLE_PROP_META_INHERIT)
+                if(const_prop->prop & LV_STYLE_PROP_META_INHERIT)
                     return LV_STYLE_RES_INHERIT;
-                *value = (prop_id_and_meta & LV_STYLE_PROP_META_INITIAL) ? lv_style_prop_get_default(prop_id) : const_prop->value;
+                *value = (const_prop->prop & LV_STYLE_PROP_META_INITIAL) ? lv_style_prop_get_default(prop_id) : const_prop->value;
                 return LV_STYLE_RES_FOUND;
             }
         }
@@ -508,10 +508,10 @@ uint8_t _lv_style_prop_lookup_flags(lv_style_prop_t prop);
 
 #include "lv_style_gen.h"
 
-static inline void lv_style_set_size(lv_style_t * style, lv_coord_t width, lv_coord_t height)
+static inline void lv_style_set_size(lv_style_t * style, lv_coord_t value)
 {
-    lv_style_set_width(style, width);
-    lv_style_set_height(style, height);
+    lv_style_set_width(style, value);
+    lv_style_set_height(style, value);
 }
 
 static inline void lv_style_set_pad_all(lv_style_t * style, lv_coord_t value)
@@ -558,8 +558,6 @@ static inline bool lv_style_prop_has_flag(lv_style_prop_t prop, uint8_t flag)
 /*************************
  *    GLOBAL VARIABLES
  *************************/
-
-extern const lv_style_prop_t lv_style_const_prop_id_inv;
 
 /**********************
  *      MACROS

@@ -25,10 +25,10 @@ extern "C" {
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
-void lv_example_animimg_1(void);
-
 void lv_example_arc_1(void);
 void lv_example_arc_2(void);
+
+void lv_example_animimg_1(void);
 
 void lv_example_bar_1(void);
 void lv_example_bar_2(void);
@@ -77,7 +77,6 @@ void lv_example_img_4(void);
 void lv_example_imgbtn_1(void);
 
 void lv_example_keyboard_1(void);
-void lv_example_keyboard_2(void);
 
 void lv_example_label_1(void);
 void lv_example_label_2(void);
@@ -116,8 +115,6 @@ void lv_example_slider_1(void);
 void lv_example_slider_2(void);
 void lv_example_slider_3(void);
 
-void lv_example_span_1(void);
-
 void lv_example_spinbox_1(void);
 
 void lv_example_spinner_1(void);
@@ -137,6 +134,8 @@ void lv_example_textarea_3(void);
 void lv_example_tileview_1(void);
 
 void lv_example_win_1(void);
+
+void lv_example_span_1(void);
 
 /**********************
  *      MACROS

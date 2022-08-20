@@ -5,9 +5,9 @@ menu "RMT_LED_STRIP Configuration"
         help
             Set the GPIO number used for transmitting the RMT signal.
 
-    config STRIP_LED_NUMBER
-        int "Number of LEDS in a strip"
-        default 1
+    config STRIP_RESOLUTION_HZ
+        int "STRIP_RESOLUTION_HZ"
+        default 10000000
         help
-            A single RGB strip contains several LEDs.
+            Set the strip resolution for the RMT signal. 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
 endmenu

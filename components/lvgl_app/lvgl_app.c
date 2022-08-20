@@ -55,7 +55,7 @@ static void clock_date_task_callback(lv_timer_t* timer)
         lv_label_set_text_fmt(clock->time_label, "%02d:%02d:%02d", hour, minutes, second);
         lv_label_set_text_fmt(clock->date_label, "%d-%02d-%02d", year, month, day);
         lv_label_set_text_fmt(clock->weekday_label, "%s", week_day[weekday]);
-        lv_label_set_text_fmt(ui_count, "%d", (uint32_t)difftime(examtime, current_time));
+        lv_label_set_text_fmt(ui_count, "%ld", (uint32_t)difftime(examtime, current_time));
     }
 }
 

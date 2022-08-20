@@ -9,7 +9,7 @@
 
 #include "../../lv_conf_internal.h"
 
-#if LV_USE_DRAW_SDL
+#if LV_USE_GPU_SDL
 
 #include "../lv_draw_rect.h"
 #include "../lv_draw_img.h"
@@ -297,12 +297,7 @@ static void draw_bg_img(lv_draw_sdl_ctx_t * ctx, const lv_area_t * coords, const
         label_draw_dsc.font = dsc->bg_img_symbol_font;
         label_draw_dsc.color = dsc->bg_img_recolor;
         label_draw_dsc.opa = dsc->bg_img_opa;
-
-        /* Reset transform state temporarilly, so the label will be drawn in desinated position */
-        uint8_t transform_count = ctx->internals->transform_count;
-        ctx->internals->transform_count = 0;
         lv_draw_label((lv_draw_ctx_t *) ctx, &label_draw_dsc, &a, dsc->bg_img_src, NULL);
-        ctx->internals->transform_count = transform_count;
     }
     else {
         lv_img_header_t header;
@@ -345,12 +340,7 @@ static void draw_bg_img(lv_draw_sdl_ctx_t * ctx, const lv_area_t * coords, const
             area.x2 = area.x1 + header.w - 1;
             area.y2 = area.y1 + header.h - 1;
 
-
-            /* Reset transform state temporarilly, so the image will be drawn in desinated position */
-            uint8_t transform_count = ctx->internals->transform_count;
-            ctx->internals->transform_count = 0;
             lv_draw_img((lv_draw_ctx_t *) ctx, &img_dsc, &area, dsc->bg_img_src);
-            ctx->internals->transform_count = transform_count;
         }
         else {
             lv_area_t area;
@@ -361,14 +351,9 @@ static void draw_bg_img(lv_draw_sdl_ctx_t * ctx, const lv_area_t * coords, const
 
                 area.x1 = coords->x1;
                 area.x2 = area.x1 + header.w - 1;
-
-                /* Reset transform state temporarilly, so the image will be drawn in desinated position */
-                uint8_t transform_count = ctx->internals->transform_count;
-                ctx->internals->transform_count = 0;
                 for(; area.x1 <= coords->x2; area.x1 += header.w, area.x2 += header.w) {
                     lv_draw_img((lv_draw_ctx_t *) ctx, &img_dsc, &area, dsc->bg_img_src);
                 }
-                ctx->internals->transform_count = transform_count;
             }
         }
 
@@ -439,7 +424,7 @@ static void draw_shadow(lv_draw_sdl_ctx_t * ctx, const lv_area_t * coords, const
                                 sw / 2 + sw % 2);
         texture = lv_sdl_create_opa_texture(ctx->renderer, mask_buf, blur_frag_size, blur_frag_size,
                                             lv_area_get_width(&mask_area_blurred));
-        lv_free(mask_buf);
+        lv_mem_buf_release(mask_buf);
         lv_draw_mask_remove_id(mask_id);
         SDL_assert(texture);
         lv_draw_sdl_texture_cache_put(ctx, &key, sizeof(key), texture);
@@ -467,12 +452,9 @@ static void draw_border(lv_draw_sdl_ctx_t * ctx, const lv_area_t * coords, const
 
     lv_coord_t coords_w = lv_area_get_width(coords), coords_h = lv_area_get_height(coords);
     lv_coord_t short_side = LV_MIN(coords_w, coords_h);
-    lv_coord_t rout = LV_MIN(dsc->radius, short_side / 2);
-
-    /*Get the inner area*/
+    lv_coord_t rout = LV_MIN(dsc->radius, short_side / 2);/*Get the inner area*/
     lv_area_t area_inner;
-    lv_area_copy(&area_inner, coords);
-
+    lv_area_copy(&area_inner, coords);//        lv_area_increase(&area_inner, 1, 1);
     area_inner.x1 += ((dsc->border_side & LV_BORDER_SIDE_LEFT) ? dsc->border_width : -(dsc->border_width + rout));
     area_inner.x2 -= ((dsc->border_side & LV_BORDER_SIDE_RIGHT) ? dsc->border_width : -(dsc->border_width + rout));
     area_inner.y1 += ((dsc->border_side & LV_BORDER_SIDE_TOP) ? dsc->border_width : -(dsc->border_width + rout));
@@ -727,4 +709,4 @@ static lv_draw_rect_border_key_t rect_border_key_create(lv_coord_t rout, lv_coor
     return key;
 }
 
-#endif /*LV_USE_DRAW_SDL*/
+#endif /*LV_USE_GPU_SDL*/

@@ -95,7 +95,7 @@ esp_err_t esp_lcd_new_panel_gc9a01(const esp_lcd_panel_io_handle_t io, const esp
     gc9a01->base.set_gap = panel_gc9a01_set_gap;
     gc9a01->base.mirror = panel_gc9a01_mirror;
     gc9a01->base.swap_xy = panel_gc9a01_swap_xy;
-    gc9a01->base.disp_off = panel_gc9a01_disp_off;
+    gc9a01->base.disp_on_off = panel_gc9a01_disp_off;
     *ret_panel = &(gc9a01->base);
     ESP_LOGD(TAG, "new gc9a01 panel @%p", gc9a01);
 

@@ -2,16 +2,16 @@
 
 Pinyin IME provides API to provide Chinese Pinyin input method (Chinese input) for keyboard object, which supports 26 key and 9 key input modes. You can think of `lv_ime_pinyin` as a Pinyin input method plug-in for keyboard objects.
 
-Normally, an environment where [lv_keyboard](/widgets/keyboard) can run can also run `lv_ime_pinyin`. There are two main influencing factors: the size of the font file and the size of the dictionary.
+Normally, an environment where [lv_keyboard](/widgets/extra/keyboard) can run can also run `lv_ime_pinyin`. There are two main influencing factors: the size of the font file and the size of the dictionary.
 
 <details>
 <summary>中文</summary>
 <p>
-
-`lv_ime_pinyin`为[键盘](/widgets/keyboard)组件提供汉语拼音输入法（中文输入）的功能(后文简称为拼音输入法)，支持26键和9键输入模式。您可以将 `lv_ime_pinyin` 看成是键盘组件的汉语拼音输入法插件。
-
-一般情况下，只要是[键盘](/widgets/keyboard)组件能运行的环境 `lv_ime_pinyin` 也能运行。有两个影响因素：字库的大小和词库的大小。
-
+            
+`lv_ime_pinyin`为[键盘](/widgets/extra/keyboard)组件提供汉语拼音输入法（中文输入）的功能(后文简称为拼音输入法)，支持26键和9键输入模式。您可以将 `lv_ime_pinyin` 看成是键盘组件的汉语拼音输入法插件。
+ 
+一般情况下，只要是[键盘](/widgets/extra/keyboard)组件能运行的环境 `lv_ime_pinyin` 也能运行。有两个影响因素：字库的大小和词库的大小。
+            
 </p>
 </details>
 
@@ -29,9 +29,9 @@ In the process of using the Pinyin input method plug-in, you can change the keyb
 <details>
 <summary>中文</summary>
 <p>
-
+            
 在 `lv_conf.h` 中打开 `LV_USE_IME_PINYIN`。
-
+            
 首先，使用 `lv_ime_pinyin_create(lv_scr_act())` 函数创建一个拼音输入法插件，
 然后使用 `lv_ime_pinyin_set_keyboard(pinyin_ime, kb)` 函数将您创建的键盘组件添加到插件中。
 
@@ -56,7 +56,7 @@ Then, write a dictionary in the following format.
 <details>
 <summary>中文</summary>
 <p>
-
+            
 如果您不想使用内置的词库，可以通过下面的方法自定义词库。
 
 自定义词典非常简单。
@@ -118,31 +118,15 @@ After writing a dictionary according to the above dictionary format, you only ne
     lv_100ask_pinyin_ime_set_dict(pinyin_ime, your_pinyin_dict);
 ```
 
-## Modes
+## Input modes
 
-The lv_ime_pinyin have the following modes:
-
-- `LV_IME_PINYIN_MODE_K26` Pinyin 26 key input mode
-- `LV_IME_PINYIN_MODE_K9` Pinyin 9 key input mode
-- `LV_IME_PINYIN_MODE_K9_NUMBER` Numeric keypad mode
-
-The `TEXT` modes' layout contains buttons to change mode.
-
-To set the mode manually, use `lv_ime_pinyin_set_mode(pinyin_ime, mode)` . The default mode is `LV_IME_PINYIN_MODE_K26` .
+`lv_ime_pinyin` supports 26 key and 9 key input modes. The mode switching is very simple, just call the function `lv_ime_pinyin_set_mode`. If the second parameter of function `lv_ime_pinyin_set_mode` is' 1 ', switch to 26 key input mode; if it is' 0', switch to 9 key input mode, and the default is' 1 '.
 
 <details>
 <summary>中文</summary>
 <p>
 
-lv_ime_pinyin 有以下模式：
-
-- `LV_IME_PINYIN_MODE_K26` 拼音26键
-- `LV_IME_PINYIN_MODE_K9` 拼音9键(九宫格)
-- `LV_IME_PINYIN_MODE_K9_NUMBER` 九宫格布局的数字键盘
-
-每个模式的布局中都包含有更改到其他模式的按钮。
-
-您可以通过 `lv_keyboard_set_mode(kb, mode)` 函数手动设置模式。默认的模式是 `LV_IME_PINYIN_MODE_K26` 。
+`lv_ime_pinyin` 支持26键和9键输入模式。模式的切换非常简单，只需调用函数 `lv_ime_pinyin_set_mode` 即可。如果函数 `lv_ime_pinyin_set_mode` 的第2个参数为 `1` 则切换到 26 键输入模式，如果为 `0` 则切换到 9 键输入法模式，默认为 `1` 。
 
 </p>
 </details>
