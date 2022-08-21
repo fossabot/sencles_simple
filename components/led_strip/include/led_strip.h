@@ -20,16 +20,16 @@ extern "C" {
 #include "esp_err.h"
 #include "driver/rmt_tx.h"
 
-typedef struct 
+typedef enum 
 {
-    uint8_t red  ;
-    uint8_t green;
-    uint8_t blue ;
+    red  ,
+    green,
+    blue ,
 } led_strip_color_t;
 
 
 void led_task(void* arg);
-esp_err_t color_breathe(rmt_channel_handle_t tx_channel, rmt_encoder_handle_t encoder, led_strip_color_t led_strip_color, uint8_t min_lighten, uint8_t max_lighten, uint8_t light_step, uint8_t chase_speed_ms, uint8_t loop_num, uint32_t *time_minus, const rmt_transmit_config_t *config);
+
 
 #ifdef __cplusplus
 }
