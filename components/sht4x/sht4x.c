@@ -1,5 +1,5 @@
 // Copyright 2020-2021 Espressif Systems (Shanghai) PTE LTD
-// Copyright 2021-2022 Jeong Yeham
+// Copyright 2022 Jeong Yeham
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

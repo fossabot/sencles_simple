@@ -1,11 +1,19 @@
-/* RGB LED Strip
+// Copyright 2022 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2022 JeongYeham
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
+
 #include <string.h>
 #include "esp_log.h"
 #include "sdkconfig.h"
@@ -33,7 +41,6 @@ void led_task(void* arg)
     //uint32_t red = 0;
     //uint32_t green = 0;
     //uint32_t blue = 0;
-    uint32_t time = 0;
     
     rmt_channel_handle_t led_chan = NULL;
     rmt_encoder_handle_t led_encoder = NULL;
@@ -71,7 +78,7 @@ void led_task(void* arg)
 
         if (uxBits_hot & (BIT4_ENV_TOO_HOT))
         {
-            ESP_ERROR_CHECK(color_breathe(led_chan, led_encoder, red, 0, 2, 1, 40, 2, &time,&tx_config));
+            ESP_ERROR_CHECK(color_breathe(led_chan, led_encoder, red, 0, 255, 5, 1, 1, &time,&tx_config));
             vTaskDelay(pdMS_TO_TICKS(1000 - time));
         }else{
 

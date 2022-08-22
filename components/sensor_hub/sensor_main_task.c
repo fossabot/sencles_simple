@@ -1,5 +1,5 @@
-#include <sys/cdefs.h>
 // Copyright 2020-2021 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2022 JeongYeham
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #include "iot_sensor_hub.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+#include <sys/cdefs.h>
 #include "freertos/queue.h"
 #include "sensor_main_task.h"
 #include "lvgl_app.h"
