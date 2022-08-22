@@ -20,7 +20,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_err.h"
-#include "main_group_config.h"
+#include "main.h"
 #include "driver/rmt_tx.h"
 #include "led_strip_encoder.h"
 #include "led_strip.h"

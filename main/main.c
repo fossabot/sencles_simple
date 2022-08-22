@@ -17,14 +17,14 @@
 #include "freertos/event_groups.h"
 #include "esp_wifi.h"
 #include <sys/param.h>
-#include "smart_config.h"
-#include "gc9a01.h"
-#include "sensor_main_task.h"
-#include "link_main.h"
+#include "wifi_smart_config_main_task.h"
+#include "lvgl_hw_gc9a01.h"
+#include "sensor_hub_main_task.h"
+#include "LinkSDK_main_task.h"
 #include "esp_sntp.h"
 #include "time.h"
 #include "led_strip.h"
-#include "main_group_config.h"
+#include "main.h"
 
 
 const char *TAG = "main";

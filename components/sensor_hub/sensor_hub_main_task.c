@@ -19,7 +19,7 @@
 #include "freertos/event_groups.h"
 #include <sys/cdefs.h>
 #include "freertos/queue.h"
-#include "sensor_main_task.h"
+#include "sensor_hub_main_task.h"
 #include "lvgl_app.h"
 #include "math.h"
 

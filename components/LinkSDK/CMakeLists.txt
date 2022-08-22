@@ -1,6 +1,6 @@
-set(include_dirs core core/sysdep core/utils components/data_model components/ota link_main)
+set(include_dirs core core/sysdep core/utils components/data_model components/ota LinkSDK_main_task)
 file(GLOB c_sdk_srcs
-    "link_main/*.c"
+    "LinkSDK_main_task/*.c"
     "components/data_model/*.c"
     "components/ota/*.c"
     "core/*.c"

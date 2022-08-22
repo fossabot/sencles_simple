@@ -26,7 +26,7 @@
 #include "driver/spi_master.h"
 #include "esp_err.h"
 #include "esp_log.h"
-#include "gc9a01.h"
+#include "lvgl_hw_gc9a01.h"
 #include "lvgl.h"
 #include "lvgl_app.h"
 #include "driver/gpio.h"

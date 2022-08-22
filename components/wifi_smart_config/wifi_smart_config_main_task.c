@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "smart_config.h"
+#include "wifi_smart_config_main_task.h"
 
 extern EventGroupHandle_t all_event;
 
