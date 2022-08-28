@@ -17,15 +17,15 @@
 #include "freertos/event_groups.h"
 #include "esp_wifi.h"
 #include <sys/param.h>
+#include "esp_sntp.h"
+#include "time.h"
+///////////////////////////////////////////////////////////////
 #include "wifi_smart_config_main_task.h"
 #include "lvgl_hw_gc9a01.h"
 #include "sensor_hub_main_task.h"
 #include "LinkSDK_main_task.h"
-#include "esp_sntp.h"
-#include "time.h"
-#include "led_strip.h"
+#include "led_strip_main_task.h"
 #include "main.h"
-
 
 const char *TAG = "main";
 EventGroupHandle_t all_event;
@@ -35,9 +35,8 @@ void app_main(void)
     all_event = xEventGroupCreate();
     uint16_t i = 0;
 
-
     xTaskCreatePinnedToCore(initialise_wifi_task, "initialise_wifi", 4096, NULL, 0, NULL, 1);
-    xTaskCreatePinnedToCore(gui_task, "gui", 4096*2, NULL, 2, NULL, 0);
+    xTaskCreatePinnedToCore(gui_task, "gui", 4096 * 2, NULL, 2, NULL, 0);
     xTaskCreatePinnedToCore(sensor_task, "sensor_hub", 4096, NULL, 0, NULL, 0);
     xTaskCreatePinnedToCore(led_task, "led_strip", 4096, NULL, 3, NULL, 1);
 
@@ -47,6 +46,7 @@ void app_main(void)
 
         if (uxBits_wifi & (BIT0_WIFI_READY))
         {
+            ESP_LOGI(TAG, "Network found, prepare to connect SNTP and aliyun");
             setenv("TZ", "EST-8", 1);
             tzset();
             sntp_setoperatingmode(SNTP_OPMODE_POLL);
@@ -57,12 +57,12 @@ void app_main(void)
             sntp_init();
             xEventGroupSetBits(all_event, BIT2_NTP_READY);
             ESP_LOGI(TAG, "SNTP Finished! Ready to launch aliyun!");
-            //xTaskCreatePinnedToCore(link_main, "aliyun", 4096, NULL, 0, NULL, 0);
+            // xTaskCreatePinnedToCore(link_main, "aliyun", 4096, NULL, 0, NULL, 0);
             break;
         }
         vTaskDelay(pdMS_TO_TICKS(1000));
         i++;
-        ESP_LOGI(TAG, "Waiting for network! %ds are avilable!!", 15-i);
+        ESP_LOGI(TAG, "Waiting for network! %ds are avilable!!", 15 - i);
         if (i == 15)
         {
             esp_wifi_stop();
@@ -70,9 +70,4 @@ void app_main(void)
             break;
         }
     }
-    return ;
 }
-
-
-
-

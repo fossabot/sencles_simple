@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
@@ -27,7 +26,8 @@ static esp_event_loop_handle_t h_sensors_loop = NULL;
 
 esp_err_t sensors_event_loop_create(void)
 {
-    if (h_sensors_loop) {
+    if (h_sensors_loop)
+    {
         return ESP_ERR_INVALID_STATE;
     }
 
@@ -40,11 +40,11 @@ esp_err_t sensors_event_loop_create(void)
 #else
         .task_priority = uxTaskPriorityGet(NULL),
 #endif
-        .task_core_id = 0
-    };
+        .task_core_id = 0};
     esp_err_t err = esp_event_loop_create(&loop_args, &h_sensors_loop);
 
-    if (err != ESP_OK) {
+    if (err != ESP_OK)
+    {
         ESP_LOGE(TAG, "event loop created error");
         return err;
     }
@@ -54,13 +54,15 @@ esp_err_t sensors_event_loop_create(void)
 
 esp_err_t sensors_event_loop_delete(void)
 {
-    if (!h_sensors_loop) {
+    if (!h_sensors_loop)
+    {
         return ESP_ERR_INVALID_STATE;
     }
 
     esp_err_t err = esp_event_loop_delete(h_sensors_loop);
 
-    if (err != ESP_OK) {
+    if (err != ESP_OK)
+    {
         ESP_LOGE(TAG, "delete event loop failed");
         return err;
     }
@@ -69,23 +71,25 @@ esp_err_t sensors_event_loop_delete(void)
     return ESP_OK;
 }
 
-
 esp_err_t sensors_event_handler_instance_register(esp_event_base_t event_base,
-        int32_t event_id,
-        esp_event_handler_t event_handler,
-        void *event_handler_arg,
-        esp_event_handler_instance_t *context)
+                                                  int32_t event_id,
+                                                  esp_event_handler_t event_handler,
+                                                  void *event_handler_arg,
+                                                  esp_event_handler_instance_t *context)
 {
 #ifdef CONFIG_SENSOR_EVENT_LOOP_AUTO
-    if (h_sensors_loop == NULL) {
+    if (h_sensors_loop == NULL)
+    {
         /* creat event loop if not inited*/
-        if (ESP_OK != sensors_event_loop_create()) {
+        if (ESP_OK != sensors_event_loop_create())
+        {
             return ESP_FAIL;
         }
         register_count = 0;
     }
 #else
-    if (h_sensors_loop == NULL) {
+    if (h_sensors_loop == NULL)
+    {
         ESP_LOGE(TAG, "event loop must init first");
         return ESP_ERR_INVALID_STATE;
     }
@@ -94,7 +98,8 @@ esp_err_t sensors_event_handler_instance_register(esp_event_base_t event_base,
     esp_err_t ret = esp_event_handler_instance_register_with(h_sensors_loop, event_base, event_id, event_handler, event_handler_arg, context);
 
 #ifdef CONFIG_SENSOR_EVENT_LOOP_AUTO
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         ESP_LOGE(TAG, "register a new handler to event loop failed");
         return ret;
     }
@@ -106,22 +111,25 @@ esp_err_t sensors_event_handler_instance_register(esp_event_base_t event_base,
 }
 
 esp_err_t sensors_event_handler_instance_unregister(esp_event_base_t event_base,
-        int32_t event_id,
-        esp_event_handler_instance_t context)
+                                                    int32_t event_id,
+                                                    esp_event_handler_instance_t context)
 {
-    if (h_sensors_loop == NULL) {
+    if (h_sensors_loop == NULL)
+    {
         return ESP_ERR_INVALID_STATE;
     }
     esp_err_t ret = esp_event_handler_instance_unregister_with(h_sensors_loop, event_base, event_id, context);
 
 #ifdef CONFIG_SENSOR_EVENT_LOOP_AUTO
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         ESP_LOGI(TAG, "unregister handler from event loop failed");
         return ret;
     }
     register_count--;
     ESP_LOGI(TAG, "unregister handler from event loop succeed");
-    if (register_count == 0) {
+    if (register_count == 0)
+    {
         ret = sensors_event_loop_delete();
     }
 #endif
@@ -132,19 +140,20 @@ esp_err_t sensors_event_handler_instance_unregister(esp_event_base_t event_base,
 esp_err_t sensors_event_post(esp_event_base_t event_base, int32_t event_id,
                              void *event_data, size_t event_data_size, TickType_t ticks_to_wait)
 {
-    if (h_sensors_loop == NULL) {
+    if (h_sensors_loop == NULL)
+    {
         return ESP_ERR_INVALID_STATE;
     }
     return esp_event_post_to(h_sensors_loop, event_base, event_id,
                              event_data, event_data_size, ticks_to_wait);
 }
 
-
 #if CONFIG_ESP_EVENT_POST_FROM_ISR
 esp_err_t sensors_event_isr_post(esp_event_base_t event_base, int32_t event_id,
                                  void *event_data, size_t event_data_size, BaseType_t *task_unblocked)
 {
-    if (h_sensors_loop == NULL) {
+    if (h_sensors_loop == NULL)
+    {
         return ESP_ERR_INVALID_STATE;
     }
     return esp_event_isr_post_to(h_sensors_loop, event_base, event_id,

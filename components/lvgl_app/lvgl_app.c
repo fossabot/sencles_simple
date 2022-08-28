@@ -16,40 +16,38 @@
 #include "math.h"
 #include "time.h"
 
-
 ///////////////////// VARIABLES ////////////////////
-lv_obj_t* ui_Screen1;
-lv_obj_t* ui_humiArc;
-lv_obj_t* ui_tempArc;
-lv_obj_t* ui_humiLabel;
-lv_obj_t* ui_tempLabel;
-lv_obj_t* ui_tempLabelnum;
-lv_obj_t* ui_humiLabelnum;
-lv_obj_t* ui_Labeldegree;
-lv_obj_t* ui_Labelpercent;
-lv_obj_t* ui_btempLabel;
-lv_obj_t* ui_btempLabelnum;
-lv_obj_t* ui_timeLabel;
-lv_obj_t* ui_btempLabeldegree;
-lv_obj_t* ui_count;
-lv_obj_t* ui_countss;
-
+lv_obj_t *ui_Screen1;
+lv_obj_t *ui_humiArc;
+lv_obj_t *ui_tempArc;
+lv_obj_t *ui_humiLabel;
+lv_obj_t *ui_tempLabel;
+lv_obj_t *ui_tempLabelnum;
+lv_obj_t *ui_humiLabelnum;
+lv_obj_t *ui_Labeldegree;
+lv_obj_t *ui_Labelpercent;
+lv_obj_t *ui_btempLabel;
+lv_obj_t *ui_btempLabelnum;
+lv_obj_t *ui_timeLabel;
+lv_obj_t *ui_btempLabeldegree;
+lv_obj_t *ui_count;
+lv_obj_t *ui_countss;
 
 typedef struct _lv_clock
 {
-    lv_obj_t* time_label;
-    lv_obj_t* date_label;
-    lv_obj_t* weekday_label;
+    lv_obj_t *time_label;
+    lv_obj_t *date_label;
+    lv_obj_t *weekday_label;
 } lv_clock_t;
 
-static lv_clock_t lv_clock = { 0 };
+static lv_clock_t lv_clock = {0};
 
-static void clock_date_task_callback(lv_timer_t* timer)
+static void clock_date_task_callback(lv_timer_t *timer)
 {
-    static const char* week_day[7] = { "Sun","Mon","Tue","Wed","Thu","Fri","Sat" };
+    static const char *week_day[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     static time_t current_time;
     static time_t examtime = 1671843600;
-    static struct tm* time_info;
+    static struct tm *time_info;
 
     current_time = time(NULL);
 
@@ -65,7 +63,7 @@ static void clock_date_task_callback(lv_timer_t* timer)
 
     if (timer != NULL && timer->user_data != NULL)
     {
-        lv_clock_t* clock = (lv_clock_t*)(timer->user_data);
+        lv_clock_t *clock = (lv_clock_t *)(timer->user_data);
         lv_label_set_text_fmt(clock->time_label, "%02d:%02d:%02d", hour, minutes, second);
         lv_label_set_text_fmt(clock->date_label, "%d-%02d-%02d", year, month, day);
         lv_label_set_text_fmt(clock->weekday_label, "%s", week_day[weekday]);
@@ -73,9 +71,8 @@ static void clock_date_task_callback(lv_timer_t* timer)
     }
 }
 
-
-
-void ui_Screen1_screen_init(void) {
+void ui_Screen1_screen_init(void)
+{
 
     // ui_Screen1
 
@@ -96,14 +93,14 @@ void ui_Screen1_screen_init(void) {
     lv_obj_set_align(ui_humiArc, LV_ALIGN_CENTER);
 
     lv_obj_clear_flag(ui_humiArc, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE |
-        LV_OBJ_FLAG_GESTURE_BUBBLE);
+                                      LV_OBJ_FLAG_GESTURE_BUBBLE);
 
     lv_arc_set_range(ui_humiArc, 0, 100);
     lv_arc_set_value(ui_humiArc, 10);
     lv_arc_set_bg_angles(ui_humiArc, 270, 90);
 
     lv_obj_set_style_shadow_spread(ui_humiArc, 120, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    //lv_obj_set_style_arc_color(ui_humiArc, lv_color_hex(0x00FF68), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    // lv_obj_set_style_arc_color(ui_humiArc, lv_color_hex(0x00FF68), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_arc_opa(ui_humiArc, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
     lv_obj_set_style_bg_color(ui_humiArc, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT);
@@ -126,7 +123,7 @@ void ui_Screen1_screen_init(void) {
     lv_obj_set_align(ui_tempArc, LV_ALIGN_CENTER);
 
     lv_obj_clear_flag(ui_tempArc, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE |
-        LV_OBJ_FLAG_GESTURE_BUBBLE);
+                                      LV_OBJ_FLAG_GESTURE_BUBBLE);
 
     lv_arc_set_range(ui_tempArc, -25, 60);
     lv_arc_set_value(ui_tempArc, -20);
@@ -157,7 +154,7 @@ void ui_Screen1_screen_init(void) {
     lv_label_set_text(ui_humiLabel, "humi");
 
     lv_obj_clear_flag(ui_humiLabel, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
-        LV_OBJ_FLAG_SNAPPABLE);
+                                        LV_OBJ_FLAG_SNAPPABLE);
 
     lv_obj_set_style_text_font(ui_humiLabel, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -176,7 +173,7 @@ void ui_Screen1_screen_init(void) {
     lv_label_set_text(ui_tempLabel, "temp");
 
     lv_obj_clear_flag(ui_tempLabel, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
-        LV_OBJ_FLAG_SNAPPABLE);
+                                        LV_OBJ_FLAG_SNAPPABLE);
 
     lv_obj_set_style_text_font(ui_tempLabel, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -195,7 +192,7 @@ void ui_Screen1_screen_init(void) {
     lv_label_set_text(ui_tempLabelnum, "20.000");
 
     lv_obj_clear_flag(ui_tempLabelnum, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
-        LV_OBJ_FLAG_SNAPPABLE);
+                                           LV_OBJ_FLAG_SNAPPABLE);
 
     lv_obj_set_style_text_font(ui_tempLabelnum, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -273,7 +270,6 @@ void ui_Screen1_screen_init(void) {
 
     lv_obj_set_style_text_font(ui_btempLabelnum, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-
     // ui_btempLabeldegree
 
     ui_btempLabeldegree = lv_label_create(ui_Screen1);
@@ -288,13 +284,10 @@ void ui_Screen1_screen_init(void) {
 
     lv_label_set_text(ui_btempLabeldegree, "*C");
 
-
-
     // ui_timeLabel
 
-
     /*Time display*/
-    lv_clock.time_label = lv_label_create(ui_Screen1); // 基于time_obj对象创建时间显示标签对象 lv_clock.time_label
+    lv_clock.time_label = lv_label_create(ui_Screen1);
     lv_obj_set_width(lv_clock.time_label, 100);
     lv_obj_set_height(lv_clock.time_label, 20);
 
@@ -303,9 +296,8 @@ void ui_Screen1_screen_init(void) {
 
     lv_obj_set_align(lv_clock.time_label, LV_ALIGN_CENTER);
 
-
     /*Date display*/
-    lv_clock.date_label = lv_label_create(ui_Screen1); // 基于date_obj对象创建lv_clock.date_label日期显示对象
+    lv_clock.date_label = lv_label_create(ui_Screen1);
     lv_obj_set_width(lv_clock.date_label, 100);
     lv_obj_set_height(lv_clock.date_label, 20);
 
@@ -314,19 +306,15 @@ void ui_Screen1_screen_init(void) {
 
     lv_obj_set_align(lv_clock.date_label, LV_ALIGN_CENTER);
 
-
-
     /*Week display*/
-    lv_clock.weekday_label = lv_label_create(ui_Screen1); // 基于date_obj对象创建星期显示lv_clock.weekday_label对象
+    lv_clock.weekday_label = lv_label_create(ui_Screen1);
     lv_obj_set_width(lv_clock.weekday_label, 100);
     lv_obj_set_height(lv_clock.weekday_label, 20);
 
-    lv_obj_set_x(lv_clock.weekday_label, 60);
+    lv_obj_set_x(lv_clock.weekday_label, 70);
     lv_obj_set_y(lv_clock.weekday_label, -62);
 
     lv_obj_set_align(lv_clock.weekday_label, LV_ALIGN_CENTER);
-
-
 
     // ui_count
 
@@ -342,8 +330,6 @@ void ui_Screen1_screen_init(void) {
 
     lv_label_set_text(ui_count, "00000000");
 
-
-
     // ui_countss
 
     ui_countss = lv_label_create(ui_Screen1);
@@ -357,21 +343,18 @@ void ui_Screen1_screen_init(void) {
     lv_obj_set_align(ui_countss, LV_ALIGN_CENTER);
 
     lv_label_set_text(ui_countss, "sec");
-
 }
-
-
 
 void ui_init(void)
 {
-    lv_disp_t* dispp = lv_disp_get_default();
-    lv_theme_t* theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
-        false, LV_FONT_DEFAULT);
-    lv_timer_t* task_timer = lv_timer_create(clock_date_task_callback, 200, (void*)&lv_clock);
-    if(task_timer != NULL){
+    lv_disp_t *dispp = lv_disp_get_default();
+    lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
+                                              false, LV_FONT_DEFAULT);
+    lv_timer_t *task_timer = lv_timer_create(clock_date_task_callback, 200, (void *)&lv_clock);
+    if (task_timer != NULL)
+    {
         lv_disp_set_theme(dispp, theme);
         ui_Screen1_screen_init();
         lv_disp_load_scr(ui_Screen1);
     }
 }
-

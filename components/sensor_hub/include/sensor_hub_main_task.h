@@ -29,11 +29,9 @@ extern "C"
 {
 #endif
 
-extern sensor_data_t *sensor_data;
+    extern sensor_data_t *sensor_data;
 
-void sensor_task(void *args);
-
-
+    void sensor_task(void *args);
 
 #ifdef __cplusplus
 }

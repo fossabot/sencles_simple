@@ -12,29 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-#ifndef _SQUARELINE_PROJECT_UI_H
-#define _SQUARELINE_PROJECT_UI_H
+#ifndef _LVGL_APP_H
+#define _LVGL_APP_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-#if __has_include("lvgl.h")
 #include "lvgl.h"
-#else
-#include "lvgl/lvgl.h"
-#endif
 
-
-
-
-
-
-void ui_init(void);
+    void ui_init(void);
 
 #ifdef __cplusplus
-} /*extern "C"*/
+}
 #endif
 
 #endif

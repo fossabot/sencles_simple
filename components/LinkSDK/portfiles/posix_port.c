@@ -37,17 +37,19 @@
 #include "mbedtls/debug.h"
 #include "mbedtls/platform.h"
 
-typedef struct {
+typedef struct
+{
     mbedtls_net_context net_ctx;
     mbedtls_ssl_context ssl_ctx;
-    mbedtls_ssl_config  ssl_config;
-    mbedtls_x509_crt    x509_server_cert;
-    mbedtls_x509_crt    x509_client_cert;
-    mbedtls_pk_context  x509_client_pk;
+    mbedtls_ssl_config ssl_config;
+    mbedtls_x509_crt x509_server_cert;
+    mbedtls_x509_crt x509_client_cert;
+    mbedtls_pk_context x509_client_pk;
 } core_sysdep_mbedtls_t;
 #endif /* CORE_SYSDEP_MBEDTLS_ENABLED */
 
-typedef struct {
+typedef struct
+{
     int fd;
     core_sysdep_socket_type_t socket_type;
     aiot_sysdep_network_cred_t *cred;
@@ -60,22 +62,25 @@ typedef struct {
 #endif
 } core_network_handle_t;
 
-
 #ifdef CORE_SYSDEP_MBEDTLS_ENABLED
 
 static void *_core_mbedtls_calloc(size_t n, size_t size)
 {
     void *buf = NULL;
 
-    if (n == 0 || size == 0) {
+    if (n == 0 || size == 0)
+    {
         return NULL;
     }
 
     /* 此处若使用pvPortMalloc, 在esp8266上有mbedtls内存分配失败问题 */
     buf = pvPortMalloc(n * size);
-    if (NULL == buf) {
+    if (NULL == buf)
+    {
         return NULL;
-    } else {
+    }
+    else
+    {
         memset(buf, 0, n * size);
     }
     return buf;
@@ -108,7 +113,8 @@ void *core_sysdep_network_init(void)
     core_network_handle_t *handle = NULL;
 
     handle = pvPortMalloc(sizeof(core_network_handle_t));
-    if (handle == NULL) {
+    if (handle == NULL)
+    {
         return NULL;
     }
     memset(handle, 0, sizeof(core_network_handle_t));
@@ -120,71 +126,85 @@ int32_t core_sysdep_network_setopt(void *handle, core_sysdep_network_option_t op
 {
     core_network_handle_t *network_handle = (core_network_handle_t *)handle;
 
-    if (handle == NULL || data == NULL) {
+    if (handle == NULL || data == NULL)
+    {
         return STATE_PORT_INPUT_NULL_POINTER;
     }
 
-    if (option >= CORE_SYSDEP_NETWORK_MAX) {
+    if (option >= CORE_SYSDEP_NETWORK_MAX)
+    {
         return STATE_PORT_INPUT_OUT_RANGE;
     }
 
-    switch (option) {
-        case CORE_SYSDEP_NETWORK_SOCKET_TYPE: {
-            network_handle->socket_type = *(core_sysdep_socket_type_t *)data;
+    switch (option)
+    {
+    case CORE_SYSDEP_NETWORK_SOCKET_TYPE:
+    {
+        network_handle->socket_type = *(core_sysdep_socket_type_t *)data;
+    }
+    break;
+    case CORE_SYSDEP_NETWORK_HOST:
+    {
+        network_handle->host = pvPortMalloc(strlen(data) + 1);
+        if (network_handle->host == NULL)
+        {
+            printf("malloc failed\n");
+            return STATE_PORT_MALLOC_FAILED;
         }
-        break;
-        case CORE_SYSDEP_NETWORK_HOST: {
-            network_handle->host = pvPortMalloc(strlen(data) + 1);
-            if (network_handle->host == NULL) {
-                printf("malloc failed\n");
-                return STATE_PORT_MALLOC_FAILED;
-            }
-            memset(network_handle->host, 0, strlen(data) + 1);
-            memcpy(network_handle->host, data, strlen(data));
-        }
-        break;
-        case CORE_SYSDEP_NETWORK_PORT: {
-            network_handle->port = *(uint16_t *)data;
-        }
-        break;
-        case CORE_SYSDEP_NETWORK_CONNECT_TIMEOUT_MS: {
-            network_handle->connect_timeout_ms = *(uint32_t *)data;
-        }
-        break;
+        memset(network_handle->host, 0, strlen(data) + 1);
+        memcpy(network_handle->host, data, strlen(data));
+    }
+    break;
+    case CORE_SYSDEP_NETWORK_PORT:
+    {
+        network_handle->port = *(uint16_t *)data;
+    }
+    break;
+    case CORE_SYSDEP_NETWORK_CONNECT_TIMEOUT_MS:
+    {
+        network_handle->connect_timeout_ms = *(uint32_t *)data;
+    }
+    break;
 #ifdef CORE_SYSDEP_MBEDTLS_ENABLED
-        case CORE_SYSDEP_NETWORK_CRED: {
-            network_handle->cred = pvPortMalloc(sizeof(aiot_sysdep_network_cred_t));
-            if (network_handle->cred == NULL) {
-                printf("malloc failed\n");
-                return STATE_PORT_MALLOC_FAILED;
-            }
-            memset(network_handle->cred, 0, sizeof(aiot_sysdep_network_cred_t));
-            memcpy(network_handle->cred, data, sizeof(aiot_sysdep_network_cred_t));
+    case CORE_SYSDEP_NETWORK_CRED:
+    {
+        network_handle->cred = pvPortMalloc(sizeof(aiot_sysdep_network_cred_t));
+        if (network_handle->cred == NULL)
+        {
+            printf("malloc failed\n");
+            return STATE_PORT_MALLOC_FAILED;
         }
-        break;
-        case CORE_SYSDEP_NETWORK_PSK: {
-            core_sysdep_psk_t *psk = (core_sysdep_psk_t *)data;
-            network_handle->psk.psk_id = pvPortMalloc(strlen(psk->psk_id) + 1);
-            if (network_handle->psk.psk_id == NULL) {
-                printf("malloc failed\n");
-                return STATE_PORT_MALLOC_FAILED;
-            }
-            memset(network_handle->psk.psk_id, 0, strlen(psk->psk_id) + 1);
-            memcpy(network_handle->psk.psk_id, psk->psk_id, strlen(psk->psk_id));
-            network_handle->psk.psk = pvPortMalloc(strlen(psk->psk) + 1);
-            if (network_handle->psk.psk == NULL) {
-                vPortFree(network_handle->psk.psk_id);
-                printf("malloc failed\n");
-                return STATE_PORT_MALLOC_FAILED;
-            }
-            memset(network_handle->psk.psk, 0, strlen(psk->psk) + 1);
-            memcpy(network_handle->psk.psk, psk->psk, strlen(psk->psk));
+        memset(network_handle->cred, 0, sizeof(aiot_sysdep_network_cred_t));
+        memcpy(network_handle->cred, data, sizeof(aiot_sysdep_network_cred_t));
+    }
+    break;
+    case CORE_SYSDEP_NETWORK_PSK:
+    {
+        core_sysdep_psk_t *psk = (core_sysdep_psk_t *)data;
+        network_handle->psk.psk_id = pvPortMalloc(strlen(psk->psk_id) + 1);
+        if (network_handle->psk.psk_id == NULL)
+        {
+            printf("malloc failed\n");
+            return STATE_PORT_MALLOC_FAILED;
         }
-        break;
+        memset(network_handle->psk.psk_id, 0, strlen(psk->psk_id) + 1);
+        memcpy(network_handle->psk.psk_id, psk->psk_id, strlen(psk->psk_id));
+        network_handle->psk.psk = pvPortMalloc(strlen(psk->psk) + 1);
+        if (network_handle->psk.psk == NULL)
+        {
+            vPortFree(network_handle->psk.psk_id);
+            printf("malloc failed\n");
+            return STATE_PORT_MALLOC_FAILED;
+        }
+        memset(network_handle->psk.psk, 0, strlen(psk->psk) + 1);
+        memcpy(network_handle->psk.psk, psk->psk, strlen(psk->psk));
+    }
+    break;
 #endif
-        default: {
-            printf("unknown option\n");
-        }
+    default:
+    {
+        printf("unknown option\n");
+    }
     }
 
     return STATE_SUCCESS;
@@ -207,26 +227,31 @@ static int32_t _core_sysdep_network_tcp_establish(core_network_handle_t *network
     printf("establish tcp connection with server(host='%s', port=[%u])\n", network_handle->host, network_handle->port);
 
     res = getaddrinfo(network_handle->host, service, &hints, &addrInfoList);
-    if (res != 0) {
+    if (res != 0)
+    {
         printf("getaddrinfo error, errno: %d, host: %s, port: %s\n", errno, network_handle->host, service);
         return STATE_PORT_NETWORK_DNS_FAILED;
     }
 
-    for (pos = addrInfoList; pos != NULL; pos = pos->ai_next) {
-        if (pos->ai_family != AF_INET) {
+    for (pos = addrInfoList; pos != NULL; pos = pos->ai_next)
+    {
+        if (pos->ai_family != AF_INET)
+        {
             printf("socket type error\n");
             res = -1;
             continue;
         }
 
         fd = socket(pos->ai_family, pos->ai_socktype, pos->ai_protocol);
-        if (fd < 0) {
+        if (fd < 0)
+        {
             printf("create socket error\n");
             res = -1;
             continue;
         }
 
-        if (connect(fd, pos->ai_addr, pos->ai_addrlen) == 0) {
+        if (connect(fd, pos->ai_addr, pos->ai_addrlen) == 0)
+        {
             network_handle->fd = fd;
             res = STATE_SUCCESS;
             break;
@@ -236,10 +261,13 @@ static int32_t _core_sysdep_network_tcp_establish(core_network_handle_t *network
         printf("connect error, errno: %d\n", errno);
     }
 
-    if (res < 0) {
+    if (res < 0)
+    {
         printf("fail to establish tcp\n");
         res = STATE_PORT_NETWORK_CONNECT_FAILED;
-    } else {
+    }
+    else
+    {
         printf("success to establish tcp, fd=%d\n", network_handle->fd);
         res = STATE_SUCCESS;
     }
@@ -254,11 +282,13 @@ static void _port_uint2str(uint16_t input, char *output)
     uint8_t i = 0, j = 0;
     char temp[6] = {0};
 
-    do {
+    do
+    {
         temp[i++] = input % 10 + '0';
     } while ((input /= 10) > 0);
 
-    do {
+    do
+    {
         output[--i] = temp[j++];
     } while (i > 0);
 }
@@ -272,8 +302,9 @@ static int _mbedtls_random(void *handle, unsigned char *output, size_t output_le
 
 static void _mbedtls_debug(void *ctx, int level, const char *file, int line, const char *str)
 {
-    ((void) level);
-    if (NULL != ctx) {
+    ((void)level);
+    if (NULL != ctx)
+    {
         printf("%s\n", str);
     }
 }
@@ -291,7 +322,8 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
     mbedtls_ssl_config_init(&network_handle->mbedtls.ssl_config);
     mbedtls_platform_set_calloc_free(_core_mbedtls_calloc, free);
 
-    if (network_handle->cred->max_tls_fragment == 0) {
+    if (network_handle->cred->max_tls_fragment == 0)
+    {
         printf("invalid max_tls_fragment parameter\n");
         return STATE_PORT_TLS_INVALID_MAX_FRAGMENT;
     }
@@ -300,31 +332,47 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
 
     _port_uint2str(network_handle->port, port_str);
 
-    if (network_handle->cred->max_tls_fragment <= 512) {
+    if (network_handle->cred->max_tls_fragment <= 512)
+    {
         res = mbedtls_ssl_conf_max_frag_len(&network_handle->mbedtls.ssl_config, MBEDTLS_SSL_MAX_FRAG_LEN_512);
-    } else if (network_handle->cred->max_tls_fragment <= 1024) {
+    }
+    else if (network_handle->cred->max_tls_fragment <= 1024)
+    {
         res = mbedtls_ssl_conf_max_frag_len(&network_handle->mbedtls.ssl_config, MBEDTLS_SSL_MAX_FRAG_LEN_1024);
-    } else if (network_handle->cred->max_tls_fragment <= 2048) {
+    }
+    else if (network_handle->cred->max_tls_fragment <= 2048)
+    {
         res = mbedtls_ssl_conf_max_frag_len(&network_handle->mbedtls.ssl_config, MBEDTLS_SSL_MAX_FRAG_LEN_2048);
-    } else if (network_handle->cred->max_tls_fragment <= 4096) {
+    }
+    else if (network_handle->cred->max_tls_fragment <= 4096)
+    {
         res = mbedtls_ssl_conf_max_frag_len(&network_handle->mbedtls.ssl_config, MBEDTLS_SSL_MAX_FRAG_LEN_4096);
-    } else {
+    }
+    else
+    {
         res = mbedtls_ssl_conf_max_frag_len(&network_handle->mbedtls.ssl_config, MBEDTLS_SSL_MAX_FRAG_LEN_NONE);
     }
 
-    if (res < 0) {
+    if (res < 0)
+    {
         printf("mbedtls_ssl_conf_max_frag_len error, res: -0x%04lX\n", -res);
         return res;
     }
 
     res = mbedtls_net_connect(&network_handle->mbedtls.net_ctx, network_handle->host, port_str, MBEDTLS_NET_PROTO_TCP);
-    if (res < 0) {
+    if (res < 0)
+    {
         printf("mbedtls_net_connect error, res: -0x%04lX\n", -res);
-        if (res == MBEDTLS_ERR_NET_UNKNOWN_HOST) {
+        if (res == MBEDTLS_ERR_NET_UNKNOWN_HOST)
+        {
             res = STATE_PORT_NETWORK_DNS_FAILED;
-        } else if (res == MBEDTLS_ERR_NET_SOCKET_FAILED) {
+        }
+        else if (res == MBEDTLS_ERR_NET_SOCKET_FAILED)
+        {
             res = STATE_PORT_TLS_SOCKET_CREATE_FAILED;
-        } else if (res == MBEDTLS_ERR_NET_CONNECT_FAILED) {
+        }
+        else if (res == MBEDTLS_ERR_NET_CONNECT_FAILED)
+        {
             res = STATE_PORT_TLS_SOCKET_CONNECT_FAILED;
         }
         return res;
@@ -332,7 +380,8 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
 
     res = mbedtls_ssl_config_defaults(&network_handle->mbedtls.ssl_config, MBEDTLS_SSL_IS_CLIENT,
                                       MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
-    if (res < 0) {
+    if (res < 0)
+    {
         printf("mbedtls_ssl_config_defaults error, res: -0x%04lX\n", -res);
         return res;
     }
@@ -344,11 +393,13 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
     mbedtls_ssl_conf_rng(&network_handle->mbedtls.ssl_config, _mbedtls_random, NULL);
     mbedtls_ssl_conf_dbg(&network_handle->mbedtls.ssl_config, _mbedtls_debug, stdout);
 
-    if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_SVRCERT_CA) {
+    if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_SVRCERT_CA)
+    {
         static const int ciphersuites[1] = {MBEDTLS_TLS_RSA_WITH_AES_256_CBC_SHA256};
         mbedtls_ssl_conf_ciphersuites(&network_handle->mbedtls.ssl_config, ciphersuites);
 
-        if (network_handle->cred->x509_server_cert == NULL && network_handle->cred->x509_server_cert_len == 0) {
+        if (network_handle->cred->x509_server_cert == NULL && network_handle->cred->x509_server_cert_len == 0)
+        {
             printf("invalid x509 server cert\n");
             return STATE_PORT_TLS_INVALID_SERVER_CERT;
         }
@@ -356,38 +407,45 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
 
         res = mbedtls_x509_crt_parse(&network_handle->mbedtls.x509_server_cert,
                                      (const unsigned char *)network_handle->cred->x509_server_cert, (size_t)network_handle->cred->x509_server_cert_len + 1);
-        if (res < 0) {
+        if (res < 0)
+        {
             printf("mbedtls_x509_crt_parse server cert error, res: -0x%04lX\n", -res);
             return STATE_PORT_TLS_INVALID_SERVER_CERT;
         }
 
         if (network_handle->cred->x509_client_cert != NULL && network_handle->cred->x509_client_cert_len > 0 &&
-            network_handle->cred->x509_client_privkey != NULL && network_handle->cred->x509_client_privkey_len > 0) {
+            network_handle->cred->x509_client_privkey != NULL && network_handle->cred->x509_client_privkey_len > 0)
+        {
             mbedtls_x509_crt_init(&network_handle->mbedtls.x509_client_cert);
             mbedtls_pk_init(&network_handle->mbedtls.x509_client_pk);
             res = mbedtls_x509_crt_parse(&network_handle->mbedtls.x509_client_cert,
                                          (const unsigned char *)network_handle->cred->x509_client_cert, (size_t)network_handle->cred->x509_client_cert_len + 1);
-            if (res < 0) {
+            if (res < 0)
+            {
                 printf("mbedtls_x509_crt_parse client cert error, res: -0x%04lX\n", -res);
                 return STATE_PORT_TLS_INVALID_CLIENT_CERT;
             }
             res = mbedtls_pk_parse_key(&network_handle->mbedtls.x509_client_pk,
                                        (const unsigned char *)network_handle->cred->x509_client_privkey,
-                                       (size_t)network_handle->cred->x509_client_privkey_len + 1, 
+                                       (size_t)network_handle->cred->x509_client_privkey_len + 1,
                                        NULL, 0, NULL, NULL);
-            if (res < 0) {
+            if (res < 0)
+            {
                 printf("mbedtls_pk_parse_key client pk error, res: -0x%04lX\n", -res);
                 return STATE_PORT_TLS_INVALID_CLIENT_KEY;
             }
             res = mbedtls_ssl_conf_own_cert(&network_handle->mbedtls.ssl_config, &network_handle->mbedtls.x509_client_cert,
                                             &network_handle->mbedtls.x509_client_pk);
-            if (res < 0) {
+            if (res < 0)
+            {
                 printf("mbedtls_ssl_conf_own_cert error, res: -0x%04lX\n", -res);
                 return STATE_PORT_TLS_INVALID_CLIENT_CERT;
             }
         }
         mbedtls_ssl_conf_ca_chain(&network_handle->mbedtls.ssl_config, &network_handle->mbedtls.x509_server_cert, NULL);
-    } else if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_SVRCERT_PSK) {
+    }
+    else if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_SVRCERT_PSK)
+    {
 #if 0
         static const int ciphersuites[1] = {MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA};
         res = mbedtls_ssl_conf_psk(&network_handle->mbedtls.ssl_config,
@@ -400,14 +458,17 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
 
         mbedtls_ssl_conf_ciphersuites(&network_handle->mbedtls.ssl_config, ciphersuites);
 #endif
-            return STATE_PORT_TLS_CONFIG_PSK_FAILED;
-    } else {
+        return STATE_PORT_TLS_CONFIG_PSK_FAILED;
+    }
+    else
+    {
         printf("unsupported security option\n");
         return STATE_PORT_TLS_INVALID_CRED_OPTION;
     }
 
     res = mbedtls_ssl_setup(&network_handle->mbedtls.ssl_ctx, &network_handle->mbedtls.ssl_config);
-    if (res < 0) {
+    if (res < 0)
+    {
         printf("mbedtls_ssl_setup error, res: -0x%04lX\n", -res);
         return res;
     }
@@ -416,12 +477,17 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
                         mbedtls_net_recv, mbedtls_net_recv_timeout);
     mbedtls_ssl_conf_read_timeout(&network_handle->mbedtls.ssl_config, network_handle->connect_timeout_ms);
 
-    while ((res = mbedtls_ssl_handshake(&network_handle->mbedtls.ssl_ctx)) != 0) {
-        if ((res != MBEDTLS_ERR_SSL_WANT_READ) && (res != MBEDTLS_ERR_SSL_WANT_WRITE)) {
+    while ((res = mbedtls_ssl_handshake(&network_handle->mbedtls.ssl_ctx)) != 0)
+    {
+        if ((res != MBEDTLS_ERR_SSL_WANT_READ) && (res != MBEDTLS_ERR_SSL_WANT_WRITE))
+        {
             printf("mbedtls_ssl_handshake error, res: -0x%04lX\n", -res);
-            if (res == MBEDTLS_ERR_SSL_INVALID_RECORD) {
+            if (res == MBEDTLS_ERR_SSL_INVALID_RECORD)
+            {
                 res = STATE_PORT_TLS_INVALID_RECORD;
-            } else {
+            }
+            else
+            {
                 res = STATE_PORT_TLS_INVALID_HANDSHAKE;
             }
             return res;
@@ -429,7 +495,8 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
     }
 
     res = mbedtls_ssl_get_verify_result(&network_handle->mbedtls.ssl_ctx);
-    if (res < 0) {
+    if (res < 0)
+    {
         printf("mbedtls_ssl_get_verify_result error, res: -0x%04lX\n", -res);
         return res;
     }
@@ -441,32 +508,45 @@ int32_t core_sysdep_network_establish(void *handle)
 {
     core_network_handle_t *network_handle = (core_network_handle_t *)handle;
 
-    if (handle == NULL) {
+    if (handle == NULL)
+    {
         return STATE_PORT_INPUT_NULL_POINTER;
     }
 
-    if (network_handle->socket_type == CORE_SYSDEP_SOCKET_TCP_CLIENT) {
-        if (network_handle->host == NULL) {
+    if (network_handle->socket_type == CORE_SYSDEP_SOCKET_TCP_CLIENT)
+    {
+        if (network_handle->host == NULL)
+        {
             return STATE_PORT_MISSING_HOST;
         }
-        if (network_handle->cred == NULL) {
+        if (network_handle->cred == NULL)
+        {
             return _core_sysdep_network_tcp_establish(network_handle);
-        } else {
-            if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_NONE) {
+        }
+        else
+        {
+            if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_NONE)
+            {
                 return _core_sysdep_network_tcp_establish(network_handle);
             }
 #ifdef CORE_SYSDEP_MBEDTLS_ENABLED
-            else {
+            else
+            {
                 return _core_sysdep_network_mbedtls_establish(network_handle);
             }
 #endif
         }
-
-    } else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_TCP_SERVER) {
+    }
+    else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_TCP_SERVER)
+    {
         return STATE_PORT_TCP_SERVER_NOT_IMPLEMENT;
-    } else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_UDP_CLIENT) {
+    }
+    else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_UDP_CLIENT)
+    {
         return STATE_PORT_UDP_CLIENT_NOT_IMPLEMENT;
-    } else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_UDP_SERVER) {
+    }
+    else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_UDP_SERVER)
+    {
         return STATE_PORT_UDP_SERVER_NOT_IMPLEMENT;
     }
 
@@ -476,7 +556,7 @@ int32_t core_sysdep_network_establish(void *handle)
 }
 
 static int32_t _core_sysdep_network_tcp_recv(core_network_handle_t *network_handle, uint8_t *buffer, uint32_t len,
-        uint32_t timeout_ms)
+                                             uint32_t timeout_ms)
 {
     int res = 0;
     int32_t recv_bytes = 0;
@@ -492,11 +572,13 @@ static int32_t _core_sysdep_network_tcp_recv(core_network_handle_t *network_hand
     timestart_ms = core_sysdep_time();
     timenow_ms = timestart_ms;
 
-    do {
+    do
+    {
         timenow_ms = core_sysdep_time();
 
         if (timenow_ms - timestart_ms >= timenow_ms ||
-            timeout_ms - (timenow_ms - timestart_ms) > timeout_ms) {
+            timeout_ms - (timenow_ms - timestart_ms) > timeout_ms)
+        {
             break;
         }
 
@@ -505,30 +587,43 @@ static int32_t _core_sysdep_network_tcp_recv(core_network_handle_t *network_hand
         timeselect.tv_usec = timeselect_ms % 1000 * 1000;
 
         res = select(network_handle->fd + 1, &recv_sets, NULL, NULL, &timeselect);
-        if (res == 0) {
+        if (res == 0)
+        {
             /* printf("_core_sysdep_network_tcp_recv, nwk select timeout\n"); */
             continue;
-        } else if (res < 0) {
+        }
+        else if (res < 0)
+        {
             printf("_core_sysdep_network_tcp_recv, errno: %d\n", errno);
             perror("_core_sysdep_network_tcp_recv, nwk select failed: ");
             return STATE_PORT_NETWORK_SELECT_FAILED;
-        } else {
-            if (FD_ISSET(network_handle->fd, &recv_sets)) {
+        }
+        else
+        {
+            if (FD_ISSET(network_handle->fd, &recv_sets))
+            {
                 recv_res = recv(network_handle->fd, buffer + recv_bytes, len - recv_bytes, 0);
-                if (recv_res == 0) {
+                if (recv_res == 0)
+                {
                     printf("_core_sysdep_network_tcp_recv, nwk connection closed\n");
                     return STATE_PORT_NETWORK_RECV_CONNECTION_CLOSED;
-                } else if (recv_res < 0) {
+                }
+                else if (recv_res < 0)
+                {
                     printf("_core_sysdep_network_tcp_recv, errno: %d\n", errno);
                     perror("_core_sysdep_network_tcp_recv, nwk recv error: ");
-                    if (errno == EINTR) {
+                    if (errno == EINTR)
+                    {
                         continue;
                     }
                     return STATE_PORT_NETWORK_RECV_FAILED;
-                } else {
+                }
+                else
+                {
                     recv_bytes += recv_res;
                     /* printf("recv_bytes: %d, len: %d\n",recv_bytes,len); */
-                    if (recv_bytes == len) {
+                    if (recv_bytes == len)
+                    {
                         break;
                     }
                 }
@@ -542,35 +637,50 @@ static int32_t _core_sysdep_network_tcp_recv(core_network_handle_t *network_hand
 
 #ifdef CORE_SYSDEP_MBEDTLS_ENABLED
 static int32_t _core_sysdep_network_mbedtls_recv(core_network_handle_t *network_handle, uint8_t *buffer, uint32_t len,
-        uint32_t timeout_ms)
+                                                 uint32_t timeout_ms)
 {
     int res = 0;
     int32_t recv_bytes = 0;
 
     mbedtls_ssl_conf_read_timeout(&network_handle->mbedtls.ssl_config, timeout_ms);
-    do {
+    do
+    {
         res = mbedtls_ssl_read(&network_handle->mbedtls.ssl_ctx, buffer + recv_bytes, len - recv_bytes);
-        if (res < 0) {
-            if (res == MBEDTLS_ERR_SSL_TIMEOUT) {
+        if (res < 0)
+        {
+            if (res == MBEDTLS_ERR_SSL_TIMEOUT)
+            {
                 break;
-            } else if (res != MBEDTLS_ERR_SSL_WANT_READ &&
-                       res != MBEDTLS_ERR_SSL_WANT_WRITE &&
-                       res != MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {
-                if (recv_bytes == 0) {
+            }
+            else if (res != MBEDTLS_ERR_SSL_WANT_READ &&
+                     res != MBEDTLS_ERR_SSL_WANT_WRITE &&
+                     res != MBEDTLS_ERR_SSL_CLIENT_RECONNECT)
+            {
+                if (recv_bytes == 0)
+                {
                     printf("mbedtls_ssl_recv error, res: -0x%04X\n", -res);
-                    if (res == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
+                    if (res == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY)
+                    {
                         return STATE_PORT_TLS_RECV_CONNECTION_CLOSED;
-                    } else if (res == MBEDTLS_ERR_SSL_INVALID_RECORD) {
+                    }
+                    else if (res == MBEDTLS_ERR_SSL_INVALID_RECORD)
+                    {
                         return STATE_PORT_TLS_INVALID_RECORD;
-                    } else {
+                    }
+                    else
+                    {
                         return STATE_PORT_TLS_RECV_FAILED;
                     }
                 }
                 break;
             }
-        } else if (res == 0) {
+        }
+        else if (res == 0)
+        {
             break;
-        } else {
+        }
+        else
+        {
             recv_bytes += res;
         }
     } while (recv_bytes < len);
@@ -584,32 +694,46 @@ int32_t core_sysdep_network_recv(void *handle, uint8_t *buffer, uint32_t len, ui
 {
     core_network_handle_t *network_handle = (core_network_handle_t *)handle;
 
-    if (handle == NULL || buffer == NULL) {
+    if (handle == NULL || buffer == NULL)
+    {
         return STATE_PORT_INPUT_NULL_POINTER;
     }
 
-    if (len == 0 || timeout_ms == 0) {
+    if (len == 0 || timeout_ms == 0)
+    {
         return STATE_PORT_INPUT_OUT_RANGE;
     }
 
-    if (network_handle->socket_type == CORE_SYSDEP_SOCKET_TCP_CLIENT) {
-        if (network_handle->cred == NULL) {
+    if (network_handle->socket_type == CORE_SYSDEP_SOCKET_TCP_CLIENT)
+    {
+        if (network_handle->cred == NULL)
+        {
             return _core_sysdep_network_tcp_recv(network_handle, buffer, len, timeout_ms);
-        } else {
-            if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_NONE) {
+        }
+        else
+        {
+            if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_NONE)
+            {
                 return _core_sysdep_network_tcp_recv(network_handle, buffer, len, timeout_ms);
             }
 #ifdef CORE_SYSDEP_MBEDTLS_ENABLED
-            else {
+            else
+            {
                 return _core_sysdep_network_mbedtls_recv(network_handle, buffer, len, timeout_ms);
             }
 #endif
         }
-    } else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_TCP_SERVER) {
+    }
+    else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_TCP_SERVER)
+    {
         return STATE_PORT_TCP_SERVER_NOT_IMPLEMENT;
-    } else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_UDP_CLIENT) {
+    }
+    else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_UDP_CLIENT)
+    {
         return STATE_PORT_UDP_CLIENT_NOT_IMPLEMENT;
-    } else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_UDP_SERVER) {
+    }
+    else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_UDP_SERVER)
+    {
         return STATE_PORT_UDP_SERVER_NOT_IMPLEMENT;
     }
 
@@ -635,11 +759,13 @@ int32_t _core_sysdep_network_tcp_send(core_network_handle_t *network_handle, uin
     timestart_ms = core_sysdep_time();
     timenow_ms = timestart_ms;
 
-    do {
+    do
+    {
         timenow_ms = core_sysdep_time();
 
         if (timenow_ms - timestart_ms >= timenow_ms ||
-            timeout_ms - (timenow_ms - timestart_ms) > timeout_ms) {
+            timeout_ms - (timenow_ms - timestart_ms) > timeout_ms)
+        {
             break;
         }
 
@@ -648,29 +774,42 @@ int32_t _core_sysdep_network_tcp_send(core_network_handle_t *network_handle, uin
         timeselect.tv_usec = timeselect_ms % 1000 * 1000;
 
         res = select(network_handle->fd + 1, NULL, &send_sets, NULL, &timeselect);
-        if (res == 0) {
+        if (res == 0)
+        {
             printf("_core_sysdep_network_tcp_send, nwk select timeout\n");
             continue;
-        } else if (res < 0) {
+        }
+        else if (res < 0)
+        {
             printf("_core_sysdep_network_tcp_send, errno: %d\n", errno);
             perror("_core_sysdep_network_tcp_send, nwk select failed: ");
             return STATE_PORT_NETWORK_SELECT_FAILED;
-        } else {
-            if (FD_ISSET(network_handle->fd, &send_sets)) {
+        }
+        else
+        {
+            if (FD_ISSET(network_handle->fd, &send_sets))
+            {
                 send_res = send(network_handle->fd, buffer + send_bytes, len - send_bytes, 0);
-                if (send_res == 0) {
+                if (send_res == 0)
+                {
                     printf("_core_sysdep_network_tcp_send, nwk connection closed\n");
                     return STATE_PORT_NETWORK_SEND_CONNECTION_CLOSED;
-                } else if (send_res < 0) {
+                }
+                else if (send_res < 0)
+                {
                     printf("_core_sysdep_network_tcp_send, errno: %d\n", errno);
                     perror("_core_sysdep_network_tcp_send, nwk recv error: ");
-                    if (errno == EINTR) {
+                    if (errno == EINTR)
+                    {
                         continue;
                     }
                     return STATE_PORT_NETWORK_SEND_FAILED;
-                } else {
+                }
+                else
+                {
                     send_bytes += send_res;
-                    if (send_bytes == len) {
+                    if (send_bytes == len)
+                    {
                         break;
                     }
                 }
@@ -683,7 +822,7 @@ int32_t _core_sysdep_network_tcp_send(core_network_handle_t *network_handle, uin
 
 #ifdef CORE_SYSDEP_MBEDTLS_ENABLED
 int32_t _core_sysdep_network_mbedtls_send(core_network_handle_t *network_handle, uint8_t *buffer, uint32_t len,
-        uint32_t timeout_ms)
+                                          uint32_t timeout_ms)
 {
     int32_t res = 0;
     int32_t send_bytes = 0;
@@ -699,38 +838,53 @@ int32_t _core_sysdep_network_mbedtls_send(core_network_handle_t *network_handle,
     timenow_ms = timestart_ms;
 
     res = setsockopt(network_handle->mbedtls.net_ctx.fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
-    if (res < 0) {
+    if (res < 0)
+    {
         printf("setsockopt error, errno: %d\r\n", errno);
         return STATE_PORT_TLS_SEND_FAILED;
     }
 
-    do {
+    do
+    {
         timenow_ms = core_sysdep_time();
 
         if (timenow_ms - timestart_ms >= timenow_ms ||
-            timeout_ms - (timenow_ms - timestart_ms) > timeout_ms) {
+            timeout_ms - (timenow_ms - timestart_ms) > timeout_ms)
+        {
             break;
         }
 
         res = mbedtls_ssl_write(&network_handle->mbedtls.ssl_ctx, buffer + send_bytes, len - send_bytes);
-        if (res < 0) {
+        if (res < 0)
+        {
             if (res != MBEDTLS_ERR_SSL_WANT_READ &&
-                res != MBEDTLS_ERR_SSL_WANT_WRITE) {
-                if (send_bytes == 0) {
+                res != MBEDTLS_ERR_SSL_WANT_WRITE)
+            {
+                if (send_bytes == 0)
+                {
                     printf("mbedtls_ssl_send error, res: -0x%04lX\n", -res);
-                    if (res == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
+                    if (res == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY)
+                    {
                         return STATE_PORT_TLS_SEND_CONNECTION_CLOSED;
-                    } else if (res == MBEDTLS_ERR_SSL_INVALID_RECORD) {
+                    }
+                    else if (res == MBEDTLS_ERR_SSL_INVALID_RECORD)
+                    {
                         return STATE_PORT_TLS_INVALID_RECORD;
-                    } else {
+                    }
+                    else
+                    {
                         return STATE_PORT_TLS_SEND_FAILED;
                     }
                 }
                 break;
             }
-        } else if (res == 0) {
+        }
+        else if (res == 0)
+        {
             break;
-        } else {
+        }
+        else
+        {
             send_bytes += res;
         }
     } while (((timenow_ms - timestart_ms) < timeout_ms) && (send_bytes < len));
@@ -744,32 +898,46 @@ int32_t core_sysdep_network_send(void *handle, uint8_t *buffer, uint32_t len, ui
 {
     core_network_handle_t *network_handle = (core_network_handle_t *)handle;
 
-    if (handle == NULL || buffer == NULL) {
+    if (handle == NULL || buffer == NULL)
+    {
         printf("invalid parameter\n");
         return STATE_PORT_INPUT_NULL_POINTER;
     }
-    if (len == 0 || timeout_ms == 0) {
+    if (len == 0 || timeout_ms == 0)
+    {
         return STATE_PORT_INPUT_OUT_RANGE;
     }
 
-    if (network_handle->socket_type == CORE_SYSDEP_SOCKET_TCP_CLIENT) {
-        if (network_handle->cred == NULL) {
+    if (network_handle->socket_type == CORE_SYSDEP_SOCKET_TCP_CLIENT)
+    {
+        if (network_handle->cred == NULL)
+        {
             return _core_sysdep_network_tcp_send(network_handle, buffer, len, timeout_ms);
-        } else {
-            if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_NONE) {
+        }
+        else
+        {
+            if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_NONE)
+            {
                 return _core_sysdep_network_tcp_send(network_handle, buffer, len, timeout_ms);
             }
 #ifdef CORE_SYSDEP_MBEDTLS_ENABLED
-            else {
+            else
+            {
                 return _core_sysdep_network_mbedtls_send(network_handle, buffer, len, timeout_ms);
             }
 #endif
         }
-    } else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_TCP_SERVER) {
+    }
+    else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_TCP_SERVER)
+    {
         return STATE_PORT_TCP_SERVER_NOT_IMPLEMENT;
-    } else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_UDP_CLIENT) {
+    }
+    else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_UDP_CLIENT)
+    {
         return STATE_PORT_UDP_CLIENT_NOT_IMPLEMENT;
-    } else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_UDP_SERVER) {
+    }
+    else if (network_handle->socket_type == CORE_SYSDEP_SOCKET_UDP_SERVER)
+    {
         return STATE_PORT_UDP_SERVER_NOT_IMPLEMENT;
     }
 
@@ -789,7 +957,8 @@ static void _core_sysdep_network_mbedtls_disconnect(core_network_handle_t *netwo
 {
     mbedtls_ssl_close_notify(&network_handle->mbedtls.ssl_ctx);
     mbedtls_net_free(&network_handle->mbedtls.net_ctx);
-    if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_SVRCERT_CA) {
+    if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_SVRCERT_CA)
+    {
         mbedtls_x509_crt_free(&network_handle->mbedtls.x509_server_cert);
         mbedtls_x509_crt_free(&network_handle->mbedtls.x509_client_cert);
         mbedtls_pk_free(&network_handle->mbedtls.x509_client_pk);
@@ -803,42 +972,53 @@ int32_t core_sysdep_network_deinit(void **handle)
 {
     core_network_handle_t *network_handle = NULL;
 
-    if (handle == NULL || *handle == NULL) {
+    if (handle == NULL || *handle == NULL)
+    {
         return STATE_PORT_INPUT_NULL_POINTER;
     }
 
     network_handle = *(core_network_handle_t **)handle;
 
     /* Shutdown both send and receive operations. */
-    if (network_handle->socket_type == 0 && network_handle->host != NULL) {
-        if (network_handle->cred == NULL) {
+    if (network_handle->socket_type == 0 && network_handle->host != NULL)
+    {
+        if (network_handle->cred == NULL)
+        {
             _core_sysdep_network_tcp_disconnect(network_handle);
-        } else {
-            if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_NONE) {
+        }
+        else
+        {
+            if (network_handle->cred->option == AIOT_SYSDEP_NETWORK_CRED_NONE)
+            {
                 _core_sysdep_network_tcp_disconnect(network_handle);
             }
 #ifdef CORE_SYSDEP_MBEDTLS_ENABLED
-            else {
+            else
+            {
                 _core_sysdep_network_mbedtls_disconnect(network_handle);
             }
 #endif
         }
     }
 
-    if (network_handle->host != NULL) {
+    if (network_handle->host != NULL)
+    {
         vPortFree(network_handle->host);
         network_handle->host = NULL;
     }
-    if (network_handle->cred != NULL) {
+    if (network_handle->cred != NULL)
+    {
         vPortFree(network_handle->cred);
         network_handle->cred = NULL;
     }
 #ifdef CORE_SYSDEP_MBEDTLS_ENABLED
-    if (network_handle->psk.psk_id != NULL) {
+    if (network_handle->psk.psk_id != NULL)
+    {
         vPortFree(network_handle->psk.psk_id);
         network_handle->psk.psk_id = NULL;
     }
-    if (network_handle->psk.psk != NULL) {
+    if (network_handle->psk.psk != NULL)
+    {
         vPortFree(network_handle->psk.psk);
         network_handle->psk.psk = NULL;
     }
@@ -873,7 +1053,8 @@ void core_sysdep_mutex_unlock(void *mutex)
 
 void core_sysdep_mutex_deinit(void **mutex)
 {
-    if (mutex != NULL || *mutex != NULL) {
+    if (mutex != NULL || *mutex != NULL)
+    {
         vSemaphoreDelete((SemaphoreHandle_t)*mutex);
         *mutex = NULL;
     }
@@ -894,5 +1075,4 @@ aiot_sysdep_portfile_t g_aiot_sysdep_portfile = {
     core_sysdep_mutex_init,
     core_sysdep_mutex_lock,
     core_sysdep_mutex_unlock,
-    core_sysdep_mutex_deinit
-};
+    core_sysdep_mutex_deinit};

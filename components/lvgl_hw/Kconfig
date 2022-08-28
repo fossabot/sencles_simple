@@ -1,0 +1,132 @@
+menu "LVGL_Hardware Configuration"
+    
+    choice  LCD_HOST
+        prompt  "spihost number to use"
+        default SPI2_HOST
+        help
+            Set the spihost number to use.
+        
+        config SPI1_HOST
+            bool "SPI1_HOST"
+
+        config SPI2_HOST
+            bool "SPI2_HOST" 
+            
+        config SPI3_HOST
+            bool "SPI3_HOST"
+    endchoice   
+    config LCD_HOST
+        int
+        default 0 if SPI1_HOST
+        default 1 if SPI2_HOST
+        default 2 if SPI3_HOST
+
+
+
+    config LCD_PIXEL_CLOCK_HZ
+        int "clock for the spibus LCD"
+        default 40000000
+        help
+            Set the clock for the spibus LCD.
+
+    config LCD_BK_LIGHT_ON_LEVEL
+        int "backlight on level"
+        range 0 1
+        default 1
+        help
+            Set the backlight on level.
+
+    config PIN_NUM_DATA0
+        int "data pin for spibus"
+        range 1 48
+        default 16
+        help
+            Set the data pin for spibus.   
+        
+    config PIN_NUM_PCLK
+        int "clock pin for spibus"
+        range 1 48
+        default 15
+        help
+            Set the clock pin for spibus.
+        
+    config PIN_NUM_CS
+        int "choose pin for spibus"
+        range 1 48
+        default 8
+        help
+            Set the choose pin for spibus.     
+        
+    config PIN_NUM_DC
+        int "dc pin for spibus"
+        range 1 48
+        default 18
+        help
+            Set the dc pin for spibus.       
+        
+    config PIN_NUM_RST
+        int "reset pin for spibus"
+        range 1  48
+        default 17
+        help
+            Set the reset pin for spibus.    
+                
+    config PIN_NUM_BK_LIGHT
+        int "backlight pin for spibus"
+        range 1 48
+        default 19
+        help
+            Set the backlight pin for spibus.        
+        
+        
+        
+    config LCD_H_RES
+        int "LCD horizontal resolution."
+        default 240
+        help
+            Set the LCD horizontal resolution.       
+                
+    config LCD_V_RES
+        int "LCD vertical resolution"
+        default 240
+        help
+            Set the LCD vertical resolution.
+                     
+            
+
+
+    config DISP_BUF_SIZE
+        int "display buffer size"
+        default 10240
+        help
+            Set the display buffer size.   
+            
+    
+    config LVGL_TICK_PERIOD_MS
+        int "lvgl ticks_ms"
+        default 1
+        help
+            Set the lvgl ticks_ms.         
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        endmenu

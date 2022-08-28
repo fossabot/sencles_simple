@@ -27,38 +27,33 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "lvgl_hw_gc9a01.h"
+#include "lvgl_hw_main_task.h"
 #include "lvgl.h"
 #include "lvgl_app.h"
 #include "driver/gpio.h"
 
 static const char *TAG = "gui_task";
 
-// Using SPI2 
-#define LCD_HOST  SPI2_HOST
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////configuration according to your LCD spec //////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define LCD_PIXEL_CLOCK_HZ     (40 * 1000 * 1000)
-#define LCD_BK_LIGHT_ON_LEVEL  1
+#define LCD_HOST CONFIG_LCD_HOST
+#define LCD_PIXEL_CLOCK_HZ CONFIG_LCD_PIXEL_CLOCK_HZ
+#define LCD_BK_LIGHT_ON_LEVEL CONFIG_LCD_BK_LIGHT_ON_LEVEL
 #define LCD_BK_LIGHT_OFF_LEVEL !LCD_BK_LIGHT_ON_LEVEL
-#define PIN_NUM_DATA0          GPIO_NUM_16
-#define PIN_NUM_PCLK           GPIO_NUM_15
-#define PIN_NUM_CS             GPIO_NUM_8
-#define PIN_NUM_DC             GPIO_NUM_18
-#define PIN_NUM_RST            GPIO_NUM_17
-#define PIN_NUM_BK_LIGHT       GPIO_NUM_19
+#define PIN_NUM_DATA0 CONFIG_PIN_NUM_DATA0
+#define PIN_NUM_PCLK CONFIG_PIN_NUM_PCLK
+#define PIN_NUM_CS CONFIG_PIN_NUM_CS
+#define PIN_NUM_DC CONFIG_PIN_NUM_DC
+#define PIN_NUM_RST CONFIG_PIN_NUM_RST
+#define PIN_NUM_BK_LIGHT CONFIG_PIN_NUM_BK_LIGHT
 
 // The pixel number in horizontal and vertical
-#define LCD_H_RES              240
-#define LCD_V_RES              240
+#define LCD_H_RES CONFIG_LCD_H_RES
+#define LCD_V_RES CONFIG_LCD_V_RES
 // Bit number used to represent command and parameter
-#define LCD_CMD_BITS           8
-#define LCD_PARAM_BITS         8
+#define LCD_CMD_BITS 8
+#define LCD_PARAM_BITS 8
 
-#define DISP_BUF_SIZE   10240
-#define LVGL_TICK_PERIOD_MS    1
-
+#define DISP_BUF_SIZE CONFIG_DISP_BUF_SIZE
+#define LVGL_TICK_PERIOD_MS CONFIG_LVGL_TICK_PERIOD_MS
 
 static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
@@ -69,7 +64,7 @@ static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_
 
 static void lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map)
 {
-    esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t) drv->user_data;
+    esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t)drv->user_data;
     int offsetx1 = area->x1;
     int offsetx2 = area->x2;
     int offsety1 = area->y1;
@@ -86,20 +81,22 @@ static void increase_lvgl_tick(void *arg)
 
 SemaphoreHandle_t xGuiSemaphore;
 
-void gui_task(void* arg)
+void gui_task(void *arg)
 {
-    (void) arg;
+    (void)arg;
     xGuiSemaphore = xSemaphoreCreateMutex();
 
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
 
-    ESP_LOGI(TAG, "Turn off LCD backlight");
+    ESP_LOGI(TAG, "Initialize Backlight GPIO Configuration");
     gpio_config_t bk_gpio_config = {
         .mode = GPIO_MODE_OUTPUT,
-        .pin_bit_mask = 1ULL << PIN_NUM_BK_LIGHT
-    };
+        .pin_bit_mask = 1ULL << PIN_NUM_BK_LIGHT};
     ESP_ERROR_CHECK(gpio_config(&bk_gpio_config));
+
+    ESP_LOGI(TAG, "Turn off LCD backlight");
+    ESP_ERROR_CHECK(gpio_set_level(PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_OFF_LEVEL));
 
     ESP_LOGI(TAG, "Initialize SPI bus");
     spi_bus_config_t buscfg = {
@@ -108,7 +105,7 @@ void gui_task(void* arg)
         .miso_io_num = -1,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .max_transfer_sz = LCD_H_RES * LCD_V_RES  * sizeof(lv_color_t),
+        .max_transfer_sz = LCD_H_RES * LCD_V_RES * sizeof(lv_color_t),
     };
     ESP_ERROR_CHECK(spi_bus_initialize(LCD_HOST, &buscfg, SPI_DMA_CH_AUTO));
 
@@ -145,9 +142,6 @@ void gui_task(void* arg)
     // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
 
-    ESP_LOGI(TAG, "Turn on LCD backlight");
-    gpio_set_level(PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_ON_LEVEL);
-
     ESP_LOGI(TAG, "Initialize LVGL library");
     lv_init();
     // alloc draw buffers used by LVGL
@@ -167,30 +161,37 @@ void gui_task(void* arg)
     disp_drv.draw_buf = &disp_buf;
     disp_drv.user_data = panel_handle;
     lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
-    if( NULL != (void*)disp )  ESP_LOGI(TAG, "Registered display driver to LVGL");
+    if (NULL != (void *)disp)
+        ESP_LOGI(TAG, "Registered display driver to LVGL");
 
     ESP_LOGI(TAG, "Install LVGL tick timer");
     // Tick interface for LVGL (using esp_timer to generate 1ms periodic event)
     const esp_timer_create_args_t lvgl_tick_timer_args = {
         .callback = &increase_lvgl_tick,
-        .name = "lvgl_tick"
-    };
+        .name = "lvgl_tick"};
     esp_timer_handle_t lvgl_tick_timer = NULL;
     ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
 
-    ESP_LOGI(TAG, "Display LVGL ");
+    ESP_LOGI(TAG, "Hardware initialization complete!");
 
+    ESP_LOGI(TAG, "Initializing LVGL_UI");
     ui_init();
+    ESP_LOGI(TAG, "Initialized LVGL_UI");
 
-    while (1) {
+    ESP_LOGI(TAG, "Ready to display the LVGL screen");
+    gpio_set_level(PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_ON_LEVEL);
+
+    while (1)
+    {
         // raise the task priority of LVGL and/or reduce the handler period can improve the performance
         vTaskDelay(pdMS_TO_TICKS(10));
         // The task running lv_timer_handler should have lower priority than that running `lv_tick_inc`
-        if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY)) {
+        if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
+        {
             lv_timer_handler();
             xSemaphoreGive(xGuiSemaphore);
-       }
+        }
     }
 
     free(buf1);

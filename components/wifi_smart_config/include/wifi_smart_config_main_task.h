@@ -16,7 +16,6 @@
 #ifndef _SMART_CONFIG_H_
 #define _SMART_CONFIG_H_
 
-
 #include <string.h>
 #include <stdlib.h>
 #include "freertos/FreeRTOS.h"
@@ -31,12 +30,7 @@
 #include "esp_netif.h"
 #include "esp_smartconfig.h"
 
-
-
-
-void initialise_wifi_task(void* arg);
-void smartconfig_task(void* parm);
-
-
+void initialise_wifi_task(void *arg);
+void smartconfig_task(void *parm);
 
 #endif

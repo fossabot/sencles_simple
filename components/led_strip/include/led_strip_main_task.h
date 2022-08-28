@@ -1,5 +1,5 @@
 // Copyright 2019 Espressif Systems (Shanghai) PTE LTD
-// Copyright 2022 JeongYeham  
+// Copyright 2022 JeongYeham
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,22 +15,21 @@
 #pragma once
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #include "esp_err.h"
 #include "driver/rmt_tx.h"
 
-typedef enum 
-{
-    red  ,
-    green,
-    blue ,
-} led_strip_color_t;
+    typedef enum
+    {
+        red,
+        green,
+        blue,
+    } led_strip_color_t;
 
-
-void led_task(void* arg);
-
+    void led_task(void *arg);
 
 #ifdef __cplusplus
 }

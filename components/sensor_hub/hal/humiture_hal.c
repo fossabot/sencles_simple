@@ -30,19 +30,22 @@
 
 //#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-static esp_err_t null_function(void){return ESP_ERR_NOT_SUPPORTED;}
-static esp_err_t null_acquire_humidity_function(float *h){return ESP_ERR_NOT_SUPPORTED;}
-static esp_err_t null_acquire_temperature_function(float *t){return ESP_ERR_NOT_SUPPORTED;}
+static esp_err_t null_function(void) { return ESP_ERR_NOT_SUPPORTED; }
+static esp_err_t null_acquire_humidity_function(float *h) { return ESP_ERR_NOT_SUPPORTED; }
+static esp_err_t null_acquire_temperature_function(float *t) { return ESP_ERR_NOT_SUPPORTED; }
 //#pragma GCC diagnostic pop
 
 static const char *TAG = "HUMITURE|TEMPERATURE";
 
-#define SENSOR_CHECK(a, str, ret) if(!(a)) { \
-        ESP_LOGE(TAG,"%s:%d (%s):%s", __FILE__, __LINE__, __FUNCTION__, str); \
-        return (ret); \
+#define SENSOR_CHECK(a, str, ret)                                              \
+    if (!(a))                                                                  \
+    {                                                                          \
+        ESP_LOGE(TAG, "%s:%d (%s):%s", __FILE__, __LINE__, __FUNCTION__, str); \
+        return (ret);                                                          \
     }
 
-typedef struct {
+typedef struct
+{
     humiture_id_t id;
     esp_err_t (*init)(bus_handle_t);
     esp_err_t (*deinit)(void);
@@ -52,7 +55,8 @@ typedef struct {
     esp_err_t (*wakeup)(void);
 } humiture_impl_t;
 
-typedef struct {
+typedef struct
+{
     humiture_id_t id;
     bus_handle_t bus;
     bool is_init;
@@ -91,8 +95,10 @@ static const humiture_impl_t *find_implementation(int id)
     const humiture_impl_t *active_driver = NULL;
     int count = sizeof(humiture_implementations) / sizeof(humiture_impl_t);
 
-    for (int i = 0; i < count; i++) {
-        if (humiture_implementations[i].id == id) {
+    for (int i = 0; i < count; i++)
+    {
+        if (humiture_implementations[i].id == id)
+        {
             active_driver = &humiture_implementations[i];
             break;
         }
@@ -108,7 +114,8 @@ sensor_humiture_handle_t humiture_create(bus_handle_t bus, int id)
     SENSOR_CHECK(bus != NULL, "i2c bus has not initialized", NULL);
     const humiture_impl_t *sensor_impl = find_implementation(id);
 
-    if (sensor_impl == NULL) {
+    if (sensor_impl == NULL)
+    {
         ESP_LOGE(TAG, "no driver founded, HUMITURE ID = %d", id);
         return NULL;
     }
@@ -120,7 +127,8 @@ sensor_humiture_handle_t humiture_create(bus_handle_t bus, int id)
     p_sensor->impl = sensor_impl;
     esp_err_t ret = p_sensor->impl->init(bus);
 
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         free(p_sensor);
         ESP_LOGE(TAG, "humiture sensor init failed");
         return NULL;
@@ -135,7 +143,8 @@ esp_err_t humiture_delete(sensor_humiture_handle_t *sensor)
     SENSOR_CHECK(sensor != NULL && *sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)(*sensor);
 
-    if (!p_sensor->is_init) {
+    if (!p_sensor->is_init)
+    {
         free(p_sensor);
         return ESP_OK;
     }
@@ -153,7 +162,8 @@ esp_err_t humiture_test(sensor_humiture_handle_t sensor)
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
 
-    if (!p_sensor->is_init) {
+    if (!p_sensor->is_init)
+    {
         return ESP_FAIL;
     }
 
@@ -161,7 +171,7 @@ esp_err_t humiture_test(sensor_humiture_handle_t sensor)
     return ret;
 }
 
-esp_err_t humiture_acquire_humiture(sensor_humiture_handle_t sensor, humiture_t* humiture)
+esp_err_t humiture_acquire_humiture(sensor_humiture_handle_t sensor, humiture_t *humiture)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
@@ -212,7 +222,8 @@ esp_err_t humiture_acquire(sensor_humiture_handle_t sensor, sensor_data_group_t 
     esp_err_t ret;
     int i = 0;
     ret = p_sensor->impl->acquire_humiture(&data_group->sensor_data[i].humiture.humidity, &data_group->sensor_data[i].humiture.temperature);
-    if (ESP_OK == ret) {
+    if (ESP_OK == ret)
+    {
         data_group->sensor_data[i].event_id = SENSOR_TEMP_HUMI_DATA_READY;
         i++;
     }

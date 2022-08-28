@@ -42,12 +42,15 @@ static esp_err_t null_acquire_function(float *x, float *y, float *z)
 
 static const char *TAG = "IMU";
 
-#define SENSOR_CHECK(a, str, ret) if(!(a)) { \
-        ESP_LOGE(TAG,"%s:%d (%s):%s", __FILE__, __LINE__, __FUNCTION__, str); \
-        return (ret); \
+#define SENSOR_CHECK(a, str, ret)                                              \
+    if (!(a))                                                                  \
+    {                                                                          \
+        ESP_LOGE(TAG, "%s:%d (%s):%s", __FILE__, __LINE__, __FUNCTION__, str); \
+        return (ret);                                                          \
     }
 
-typedef struct {
+typedef struct
+{
     imu_id_t id;
     esp_err_t (*init)(bus_handle_t);
     esp_err_t (*deinit)(void);
@@ -58,7 +61,8 @@ typedef struct {
     esp_err_t (*wakeup)(void);
 } imu_impl_t;
 
-typedef struct {
+typedef struct
+{
     imu_id_t id;
     bus_handle_t bus;
     bool is_init;
@@ -99,8 +103,10 @@ static const imu_impl_t *find_implementation(imu_id_t id)
     const imu_impl_t *active_driver = NULL;
     int count = sizeof(imu_implementations) / sizeof(imu_impl_t);
 
-    for (int i = 0; i < count; i++) {
-        if (imu_implementations[i].id == id) {
+    for (int i = 0; i < count; i++)
+    {
+        if (imu_implementations[i].id == id)
+        {
             active_driver = &imu_implementations[i];
             break;
         }
@@ -116,7 +122,8 @@ sensor_imu_handle_t imu_create(bus_handle_t bus, int imu_id)
     SENSOR_CHECK(bus != NULL, "i2c bus has not initialized", NULL);
     const imu_impl_t *sensor_impl = find_implementation(imu_id);
 
-    if (sensor_impl == NULL) {
+    if (sensor_impl == NULL)
+    {
         ESP_LOGE(TAG, "no driver founded, IMU ID = %d", imu_id);
         return NULL;
     }
@@ -128,7 +135,8 @@ sensor_imu_handle_t imu_create(bus_handle_t bus, int imu_id)
     p_sensor->impl = sensor_impl;
     esp_err_t ret = p_sensor->impl->init(bus);
 
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         free(p_sensor);
         ESP_LOGE(TAG, "imu sensor init failed");
         return NULL;
@@ -143,7 +151,8 @@ esp_err_t imu_delete(sensor_imu_handle_t *sensor)
     SENSOR_CHECK(sensor != NULL && *sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     sensor_imu_t *p_sensor = (sensor_imu_t *)(*sensor);
 
-    if (!p_sensor->is_init) {
+    if (!p_sensor->is_init)
+    {
         free(p_sensor);
         return ESP_OK;
     }
@@ -161,7 +170,8 @@ esp_err_t imu_test(sensor_imu_handle_t sensor)
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     sensor_imu_t *p_sensor = (sensor_imu_t *)(sensor);
 
-    if (!p_sensor->is_init) {
+    if (!p_sensor->is_init)
+    {
         return ESP_FAIL;
     }
 
@@ -169,18 +179,18 @@ esp_err_t imu_test(sensor_imu_handle_t sensor)
     return ret;
 }
 
-esp_err_t imu_acquire_acce(sensor_imu_handle_t sensor, axis3_t* acce)
+esp_err_t imu_acquire_acce(sensor_imu_handle_t sensor, axis3_t *acce)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
-    sensor_imu_t *p_sensor = (sensor_imu_t* )(sensor);
+    sensor_imu_t *p_sensor = (sensor_imu_t *)(sensor);
     esp_err_t ret = p_sensor->impl->acquire_acce(&acce->x, &acce->y, &acce->z);
     return ret;
 }
 
-esp_err_t imu_acquire_gyro(sensor_imu_handle_t sensor, axis3_t* gyro)
+esp_err_t imu_acquire_gyro(sensor_imu_handle_t sensor, axis3_t *gyro)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
-    sensor_imu_t *p_sensor = (sensor_imu_t* )(sensor);
+    sensor_imu_t *p_sensor = (sensor_imu_t *)(sensor);
     esp_err_t ret = p_sensor->impl->acquire_gyro(&gyro->x, &gyro->y, &gyro->z);
     return ret;
 }
@@ -228,12 +238,14 @@ esp_err_t imu_acquire(sensor_imu_handle_t sensor, sensor_data_group_t *data_grou
     esp_err_t ret;
     int i = 0;
     ret = p_sensor->impl->acquire_gyro(&data_group->sensor_data[i].gyro.x, &data_group->sensor_data[i].gyro.y, &data_group->sensor_data[i].gyro.z);
-    if (ESP_OK == ret) {
+    if (ESP_OK == ret)
+    {
         data_group->sensor_data[i].event_id = SENSOR_GYRO_DATA_READY;
         i++;
     }
     ret = p_sensor->impl->acquire_acce(&data_group->sensor_data[i].acce.x, &data_group->sensor_data[i].acce.y, &data_group->sensor_data[i].acce.z);
-    if (ESP_OK == ret) {
+    if (ESP_OK == ret)
+    {
         data_group->sensor_data[i].event_id = SENSOR_ACCE_DATA_READY;
         i++;
     }
