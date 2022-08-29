@@ -33,7 +33,7 @@ lv_obj_t *ui_btempLabeldegree;
 lv_obj_t *ui_count;
 lv_obj_t *ui_countss;
 
-typedef struct _lv_clock
+typedef struct _lv_clock_detail
 {
     lv_obj_t *time_label;
     lv_obj_t *date_label;

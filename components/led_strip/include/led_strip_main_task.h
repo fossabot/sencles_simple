@@ -22,7 +22,7 @@ extern "C"
 #include "esp_err.h"
 #include "driver/rmt_tx.h"
 
-    typedef enum
+    typedef enum _led_strip_color_type
     {
         red,
         green,

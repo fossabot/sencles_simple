@@ -48,7 +48,7 @@ static const char *TAG = "LIGHT|RGBW|UV";
         return (ret);                                                          \
     }
 
-typedef struct
+typedef struct _light_implementation
 {
     light_sensor_id_t id;
     esp_err_t (*init)(bus_handle_t);
@@ -61,7 +61,7 @@ typedef struct
     esp_err_t (*wakeup)(void);
 } light_sensor_impl_t;
 
-typedef struct
+typedef struct _light_sensor_detail
 {
     light_sensor_id_t id;
     bus_handle_t bus;

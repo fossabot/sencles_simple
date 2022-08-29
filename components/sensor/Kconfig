@@ -1,5 +1,9 @@
 menu "Sensor Hub Options"
 
+    config SENSOR_PERIOD_MS
+        int "Sensor Period in ms"
+        default 1000
+    
     menu "Sensor Hal Options"
         menu "IMU Hal Options"
             config SENSOR_IMU_INCLUDED_MPU6050
@@ -27,6 +31,28 @@ menu "Sensor Hub Options"
             config SENSOR_LIGHT_INCLUDED_VEML6075
                 bool "include VEML6075 driver"
                 default y
+        endmenu
+        menu "I2C Bus Driver Options"
+            config I2C_CLK_SPEED
+                int "clock for the i2cbus"
+                default 40000
+                help
+                    Set the clock for the i2cbus.
+        
+            config I2C_SDA_IO_NUM
+                int "GPIO number for the i2cbus sda"
+                range 1 48
+                default 35
+                help
+                    Set the gpio for the i2cbus sda.
+        
+            config I2C_SCL_IO_NUM
+                int "GPIO number for the i2cbus sda"
+                range 1 48
+                default 36
+                help
+                    Set the gpio for the i2cbus scl.   
+                
         endmenu
     endmenu
 

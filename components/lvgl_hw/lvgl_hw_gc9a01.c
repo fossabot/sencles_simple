@@ -39,7 +39,7 @@ static esp_err_t panel_gc9a01_swap_xy(esp_lcd_panel_t *panel, bool swap_axes);
 static esp_err_t panel_gc9a01_set_gap(esp_lcd_panel_t *panel, int x_gap, int y_gap);
 static esp_err_t panel_gc9a01_disp_off(esp_lcd_panel_t *panel, bool off);
 
-typedef struct
+typedef struct _gcd9a01_panel_details
 {
     esp_lcd_panel_t base;
     esp_lcd_panel_io_handle_t io;

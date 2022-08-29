@@ -25,7 +25,6 @@ static const char *NVS_Name_space = "wifi_data";
 static const char *NVS_Key = "key1";
 static nvs_handle_t wifi_nvs_handle;
 static wifi_config_t wifi_config_stored;
-// memset(&wifi_config_stored, 0x0, sizeof(wifi_config_stored));
 
 /* The event group allows multiple bits for each event,
    but we only care about one event - are we connected
@@ -101,7 +100,6 @@ static void event_handler(void *arg, esp_event_base_t event_base,
         ESP_LOGI(TAG, "SSID:%s", ssid);
         ESP_LOGI(TAG, "PASSWORD:%s", password);
 
-        ESP_ERROR_CHECK(esp_wifi_disconnect());
         ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
         ESP_ERROR_CHECK(nvs_open(NVS_Name_space, NVS_READWRITE, &wifi_nvs_handle));
         ESP_ERROR_CHECK(nvs_set_blob(wifi_nvs_handle, NVS_Key, &wifi_config, sizeof(wifi_config)));
@@ -178,6 +176,8 @@ void smartconfig_task(void *parm)
             ESP_LOGI(TAG, "smartconfig over");
             esp_smartconfig_stop();
             xEventGroupSetBits(all_event, ESPTOUCH_DONE_BIT);
+            break;
         }
     }
+    vTaskDelete(NULL);
 }

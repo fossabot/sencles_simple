@@ -386,10 +386,8 @@ static int32_t _core_sysdep_network_mbedtls_establish(core_network_handle_t *net
         return res;
     }
 
-    mbedtls_ssl_conf_max_version(&network_handle->mbedtls.ssl_config, MBEDTLS_SSL_MAJOR_VERSION_3,
-                                 MBEDTLS_SSL_MINOR_VERSION_3);
-    mbedtls_ssl_conf_min_version(&network_handle->mbedtls.ssl_config, MBEDTLS_SSL_MAJOR_VERSION_3,
-                                 MBEDTLS_SSL_MINOR_VERSION_3);
+    mbedtls_ssl_conf_max_tls_version(&network_handle->mbedtls.ssl_config, MBEDTLS_SSL_VERSION_TLS1_3);
+    mbedtls_ssl_conf_min_tls_version(&network_handle->mbedtls.ssl_config, MBEDTLS_SSL_VERSION_TLS1_2);
     mbedtls_ssl_conf_rng(&network_handle->mbedtls.ssl_config, _mbedtls_random, NULL);
     mbedtls_ssl_conf_dbg(&network_handle->mbedtls.ssl_config, _mbedtls_debug, stdout);
 

@@ -53,7 +53,7 @@ extern const char *SENSOR_MODE_STRING[];
  * @brief sensor id, used for iot_sensor_create
  *
  */
-typedef enum
+typedef enum _sensor_id
 {
 #ifdef CONFIG_SENSOR_INCLUDED_HUMITURE
     SENSOR_SHT3X_ID = (HUMITURE_ID << SENSOR_ID_OFFSET) | SHT3X_ID, /*!< sht3x sensor id*/
@@ -74,7 +74,7 @@ typedef enum
  * @brief sensor information type
  *
  */
-typedef struct
+typedef struct _sensor_info
 {
     const char *name;      /*!< sensor name*/
     const char *desc;      /*!< sensor descriptive message*/
@@ -86,7 +86,7 @@ typedef struct
  * @brief sensor initialization parameter
  *
  */
-typedef struct
+typedef struct _sensor_config
 {
     bus_handle_t bus;     /*!< i2c/spi bus handle*/
     sensor_mode_t mode;   /*!< set acquire mode detiled in sensor_mode_t*/

@@ -23,7 +23,7 @@
 #include "lvgl_app.h"
 #include "math.h"
 
-#define SENSOR_PERIOD_MS 1000
+#define SENSOR_PERIOD_MS CONFIG_SENSOR_PERIOD_MS
 
 sensor_data_t *sensor_data;
 
@@ -121,11 +121,11 @@ void sensor_task(void *args)
     /*create the i2c0 bus handle with a resource ID*/
     i2c_config_t i2c_conf = {
         .mode = I2C_MODE_MASTER,
-        .sda_io_num = GPIO_NUM_35,
-        .scl_io_num = GPIO_NUM_36,
+        .sda_io_num = CONFIG_I2C_SDA_IO_NUM,
+        .scl_io_num = CONFIG_I2C_SCL_IO_NUM,
         .sda_pullup_en = true,
         .scl_pullup_en = true,
-        .master.clk_speed = 40000,
+        .master.clk_speed = CONFIG_I2C_CLK_SPEED,
     };
 
     bus_handle_t i2c0_bus_handle = i2c_bus_create(I2C_NUM_0, &i2c_conf);

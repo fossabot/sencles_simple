@@ -10,4 +10,4 @@ file(GLOB c_sdk_srcs
     "external/*.c")
 idf_component_register(SRCS ${c_sdk_srcs}
                        INCLUDE_DIRS "${include_dirs}"
-                       REQUIRES mbedtls json sensor_hub)
+                       REQUIRES mbedtls json sensor)

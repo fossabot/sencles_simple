@@ -32,14 +32,10 @@ typedef void *bus_handle_t;                  /*!< i2c/spi bus handle */
  *
  */
 #ifndef HUMITURE_T
-typedef union
+typedef struct
 {
-    struct
-    {
-        float temperature; /*!< temp */
-        float humidity;    /*!< humi */
-    };
-    float humiture[3];
+    float temperature; /*!< temp */
+    float humidity;    /*!< humi */
 } humiture_t;
 #define HUMITURE_T humiture_t
 #endif

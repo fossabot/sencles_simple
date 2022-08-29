@@ -24,20 +24,20 @@
 #include "led_strip_encoder.h"
 #include "led_strip_main_task.h"
 
-#define RMT_LED_STRIP_RESOLUTION_HZ CONFIG_STRIP_RESOLUTION_HZ // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
+#define RMT_LED_STRIP_RESOLUTION_HZ CONFIG_STRIP_RESOLUTION_HZ
 #define RMT_LED_STRIP_GPIO_NUM CONFIG_RMT_TX_GPIO
 
 static const char *TAG = "led_strip";
 static uint8_t led_strip_pixels[3];
-esp_err_t color_breathe(rmt_channel_handle_t tx_channel, rmt_encoder_handle_t encoder, led_strip_color_t led_strip_color, uint8_t min_lighten, uint8_t max_lighten, uint8_t light_step, uint8_t chase_speed_ms, uint8_t loop_num, uint32_t *time_minus, rmt_transmit_config_t *config);
+esp_err_t color_breathe(rmt_channel_handle_t tx_channel, rmt_encoder_handle_t encoder,
+                        led_strip_color_t led_strip_color,
+                        uint8_t min_lighten, uint8_t max_lighten, uint8_t light_step,
+                        uint8_t chase_speed_ms, uint8_t loop_num, uint32_t *time_minus,
+                        rmt_transmit_config_t *config);
 
 void led_task(void *arg)
 {
     (void)arg;
-
-    // uint32_t red = 0;
-    // uint32_t green = 0;
-    // uint32_t blue = 0;
 
     rmt_channel_handle_t led_chan = NULL;
     rmt_encoder_handle_t led_encoder = NULL;
@@ -86,7 +86,11 @@ void led_task(void *arg)
     }
 }
 
-esp_err_t color_breathe(rmt_channel_handle_t tx_channel, rmt_encoder_handle_t encoder, led_strip_color_t led_strip_color, uint8_t min_lighten, uint8_t max_lighten, uint8_t light_step, uint8_t chase_speed_ms, uint8_t loop_num, uint32_t *time_minus, rmt_transmit_config_t *config)
+esp_err_t color_breathe(rmt_channel_handle_t tx_channel, rmt_encoder_handle_t encoder,
+                        led_strip_color_t led_strip_color,
+                        uint8_t min_lighten, uint8_t max_lighten, uint8_t light_step,
+                        uint8_t chase_speed_ms, uint8_t loop_num, uint32_t *time_minus,
+                        rmt_transmit_config_t *config)
 {
     switch (led_strip_color)
     {

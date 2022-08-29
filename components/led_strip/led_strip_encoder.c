@@ -18,7 +18,7 @@
 
 static const char *TAG = "led_encoder";
 
-typedef struct
+typedef struct _rmt_led_strip_encoder_type
 {
     rmt_encoder_t base;
     rmt_encoder_t *bytes_encoder;
