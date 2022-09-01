@@ -46,59 +46,16 @@ extern QueueHandle_t xQueueHumi;
 extern QueueHandle_t xQueueTemp;
 extern EventGroupHandle_t all_event;
 
-const char client_cert[] = {
-    "-----BEGIN CERTIFICATE-----\r\n"
-    "MIIDiDCCAnCgAwIBAgIIARZ5afiOrwwwDQYJKoZIhvcNAQELBQAwUzEoMCYGA1UE\r\n"
-    "AwwfQWxpYmFiYSBDbG91ZCBJb1QgT3BlcmF0aW9uIENBMTEaMBgGA1UECgwRQWxp\r\n"
-    "YmFiYSBDbG91ZCBJb1QxCzAJBgNVBAYTAkNOMCAXDTIyMDYxODExNTAxOFoYDzIx\r\n"
-    "MjIwNjE4MTE1MDE4WjBRMSYwJAYDVQQDDB1BbGliYWJhIENsb3VkIElvVCBDZXJ0\r\n"
-    "aWZpY2F0ZTEaMBgGA1UECgwRQWxpYmFiYSBDbG91ZCBJb1QxCzAJBgNVBAYTAkNO\r\n"
-    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoC1rGokL76QnnMGQTrTK\r\n"
-    "tN/CxFYoYIXnt6FO4VhJ7Tpjk5OYxjk8Ggg++plq3g85RSgi8DcPNzpnq4WOM0rw\r\n"
-    "Qqbmd7AOg48pbYf8iJ0d93jo1RU9oVfm6V5qWvlk9oBjTSN87xdtXOIN6xL6iYst\r\n"
-    "jlECo4A78Jw1BojTwy/EeU9C9EMcr0YioHzwnyDP32YZ5vKxbJqsDfDlZbwK3QLh\r\n"
-    "99h9aMmdxN+59Jtcx0vwvanLmxedDACIWb7M4C7aovcjKRJbFVU6iQSyT45DDjeO\r\n"
-    "nATf3bxxrIeRzs6DFa3ka6z01gdDVf+zqFFyf+vJmE6SZHFT+/StG0QfSd3V5+wo\r\n"
-    "4wIDAQABo2AwXjAfBgNVHSMEGDAWgBSKN5uocM3V+UjIl34hn1lvSY4kETAdBgNV\r\n"
-    "HQ4EFgQUTjBGySzQzDRdyrbnOEacopPIl9YwDgYDVR0PAQH/BAQDAgP4MAwGA1Ud\r\n"
-    "EwEB/wQCMAAwDQYJKoZIhvcNAQELBQADggEBACsc2oZIZokvBY7i0JSm0IKBQ81u\r\n"
-    "gcngY3Ex83gaVe0/hQ6VC5Zmj9T7/Yes8Bj0P1WlCRgw116YQcdpQac5R3UvUHUj\r\n"
-    "hsC4KZIc0MQ0snaXciDvNIMdp+IuS5qcsa1KQxlOT+YKehRuV0Evba0LJcpFdEsT\r\n"
-    "TPiokjU7RxltP5+o79T4lA9qYCBL8VxyQqkqYDJ/P9s+gwwvPiLGVEwxs49ZHKEv\r\n"
-    "FDBtxOrPkBxZIhyrExh7qlInvYPcPfOuPpUPN2QwAaAx/cPVwmn57yiWkv8WaEMG\r\n"
-    "oQnJpqg30+cCoAt5wjtNgMRZWL6ch6iqY12SEauUHA5opaWqHkFgLaVStn4=\r\n"
-    "-----END CERTIFICATE-----\r\n"
 
-};
 
-const char client_private_key[] = {
-    "-----BEGIN RSA PRIVATE KEY-----\r\n"
-    "MIIEogIBAAKCAQEAoC1rGokL76QnnMGQTrTKtN/CxFYoYIXnt6FO4VhJ7Tpjk5OY\r\n"
-    "xjk8Ggg++plq3g85RSgi8DcPNzpnq4WOM0rwQqbmd7AOg48pbYf8iJ0d93jo1RU9\r\n"
-    "oVfm6V5qWvlk9oBjTSN87xdtXOIN6xL6iYstjlECo4A78Jw1BojTwy/EeU9C9EMc\r\n"
-    "r0YioHzwnyDP32YZ5vKxbJqsDfDlZbwK3QLh99h9aMmdxN+59Jtcx0vwvanLmxed\r\n"
-    "DACIWb7M4C7aovcjKRJbFVU6iQSyT45DDjeOnATf3bxxrIeRzs6DFa3ka6z01gdD\r\n"
-    "Vf+zqFFyf+vJmE6SZHFT+/StG0QfSd3V5+wo4wIDAQABAoIBAFkYqmi6Ln+ACeCx\r\n"
-    "8nk1K0Ps60OWwSLfmQKVoXDLUWO5hMYD5YjtMTcxuwZd7AnU4gBL0RNZLQeFX0ET\r\n"
-    "KwPw/S+18qBEt+4J5ftdFuVOr+qFwM014XArmu/YasRr0PMkexffU5ESsOxneWJ2\r\n"
-    "zhFP72koOpWDsNOnr/8QgOojWeA3isSrr1GsCpQw0f4Wi4jz+bi7Hrjop1+BWZcD\r\n"
-    "GJU9miih1a4jC0Q7eraNO/7z3lWbtjc5IG6nkACCl+kbJ05jYojUu/8ZfM04zD7d\r\n"
-    "jFLOqwMsUxUbUKRmbU7jGDI7GUxR9P9eqeZsYqCVrHUHrlBF37L6e+Js8bkoE7KE\r\n"
-    "PgwsuOECgYEA19L+GkKHREMhqFzwmnYSUwGnjsCi7IRwJ12/jLpclEpbxNuo/DaU\r\n"
-    "vKxCAzTrjLoFgLg5c7HkO7qZvWWRDQG6E0T542Qrll83UGuTttGWNBTS+tkWOmm+\r\n"
-    "ZJZyPPvQtDnY4YuQRp+DIh9JyaTBUl6hQIoVIeuEOmA/fUY0DJzj8ksCgYEAvf6a\r\n"
-    "Y8MHc7DGTfuJpoUnbowLh25bNq45yvbVGVwCLTfC37y/0olCcX3VR61Q49Bycpz7\r\n"
-    "6VYCaNoPTTksPugiIZJ/qkUE3zQyzkdnyD/BYLHsvBhA4drJ1rw6H2IoueIAVhR9\r\n"
-    "6qEQ2WlJL8vl3CrxQY3+406VPsqC4NV4JZ9lRMkCgYAkHpOYIXox2mpPmv5JW2lF\r\n"
-    "qwk3wtWBb8i1TeM40hecWbVyBLELRLcvvERv9PNW4er519sFmcfwlxITuGPGIXva\r\n"
-    "rbiEbcc9q0G+m8Jk3j6dCL8mbB5kOD4851DHE/2hq+y4Enta1mdD1qiqroAMIPor\r\n"
-    "qvBOdPP0MRdvB8i+M6OScQKBgG88e2PhMaG4Y8IQfRzzZIzCjZVzNRAknU2JimZY\r\n"
-    "iiWzOfMIbT50gmQ0CgT3Ih7fUcJsyshoROzijobl7FPAUQta3EfyNNIBm6VOBSMm\r\n"
-    "wK8+PJ47jPEuyXFhrp3lOHbsLMo5ISeXuWewztqfBCsNMUbyPcMTpSmoI0xDbx6H\r\n"
-    "3iCRAoGAKilIgLKanvEHYL30x7rKT2AJqhCbfIghhrTVoaW+o0HgtSrn/8I0C3jq\r\n"
-    "44fx4cBMJOW8bM4/hI9Zn+e7zZJxVjnjDXXCxU4jh7DpRxHHZUAB4Cv//GxRhFal\r\n"
-    "i9wkCO3rJ/qDZdRKBcozyUOGz7uCZ/xVZZfVtdk421+p7YN4tqY=\r\n"
-    "-----END RSA PRIVATE KEY-----\r\n"};
+extern const uint8_t client_cert_pem_start[] asm("_binary_client_crt_start");
+extern const uint8_t client_cert_pem_end[] asm("_binary_client_crt_end");
+extern const uint8_t client_key_pem_start[] asm("_binary_client_key_start");
+extern const uint8_t client_key_pem_end[] asm("_binary_client_key_end");
+
+
+
+
 
 /* 位于portfiles/aiot_port文件夹下的系统适配函数集合 */
 extern aiot_sysdep_portfile_t g_aiot_sysdep_portfile;
@@ -584,10 +541,10 @@ void link_main(void *args)
     cred.x509_server_cert_len = strlen(ali_ca_cert);   /* 用来验证MQTT服务端的RSA根证书长度 */
 
     /* TODO: 留意以下4行, 使用X509双向认证时, 用户对安全凭据的设置就只要增加这一部分 */
-    cred.x509_client_cert = client_cert;
-    cred.x509_client_cert_len = strlen(client_cert);
-    cred.x509_client_privkey = client_private_key;
-    cred.x509_client_privkey_len = strlen(client_private_key);
+    cred.x509_client_cert = (const char *)client_cert_pem_start;
+    cred.x509_client_cert_len = strlen((const char *)client_cert_pem_start);
+    cred.x509_client_privkey = (const char *)client_key_pem_start;
+    cred.x509_client_privkey_len = strlen((const char *)client_key_pem_start);
 
     /* 创建1个MQTT客户端实例并内部初始化默认参数 */
     mqtt_handle = aiot_mqtt_init();
