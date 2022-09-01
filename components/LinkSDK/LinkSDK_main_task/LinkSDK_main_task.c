@@ -46,16 +46,10 @@ extern QueueHandle_t xQueueHumi;
 extern QueueHandle_t xQueueTemp;
 extern EventGroupHandle_t all_event;
 
-
-
 extern const uint8_t client_cert_pem_start[] asm("_binary_client_crt_start");
 extern const uint8_t client_cert_pem_end[] asm("_binary_client_crt_end");
 extern const uint8_t client_key_pem_start[] asm("_binary_client_key_start");
 extern const uint8_t client_key_pem_end[] asm("_binary_client_key_end");
-
-
-
-
 
 /* 位于portfiles/aiot_port文件夹下的系统适配函数集合 */
 extern aiot_sysdep_portfile_t g_aiot_sysdep_portfile;
