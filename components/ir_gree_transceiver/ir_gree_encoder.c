@@ -14,10 +14,13 @@ typedef struct
     rmt_encoder_t base;                    // the base "class", declares the standard encoder interface
     rmt_encoder_t *copy_encoder;           // use the copy_encoder to encode the leading and ending pulse
     rmt_encoder_t *bytes_encoder;          // use the bytes_encoder to encode the address and command data
-    rmt_symbol_word_t gree_leading_symbol;  // GREE leading code with RMT representation
-    rmt_symbol_word_t gree_connect_symbol;  // GREE ending code with RMT representation
-    rmt_symbol_word_t gree_lconnect_symbol; 
-    rmt_symbol_word_t gree_gap_symbol; 
+    rmt_symbol_word_t gree_leading_symbol; // GREE leading code with RMT representation
+    rmt_symbol_word_t gree_connect_symbol; // GREE ending code with RMT representation
+    rmt_symbol_word_t gree_lconnect_symbol;
+    rmt_symbol_word_t gree_gap_symbol;
+
+    rmt_symbol_word_t gree_low_level;
+    rmt_symbol_word_t gree_high_level;
     int state;
 } rmt_ir_gree_encoder_t;
 
@@ -27,9 +30,12 @@ static size_t rmt_encode_ir_gree(rmt_encoder_t *encoder, rmt_channel_handle_t ch
     rmt_encode_state_t session_state = 0;
     rmt_encode_state_t state = 0;
     size_t encoded_symbols = 0;
-    ir_gree_scan_code_t *scan_code = (ir_gree_scan_code_t *)primary_data;
+    GreeProtocol_t *scan_code = (GreeProtocol_t *)primary_data;
     rmt_encoder_handle_t copy_encoder = gree_encoder->copy_encoder;
     rmt_encoder_handle_t bytes_encoder = gree_encoder->bytes_encoder;
+
+    uint8_t i = 0;
+
     switch (gree_encoder->state)
     {
     case 0: // send leading code
@@ -46,7 +52,7 @@ static size_t rmt_encode_ir_gree(rmt_encoder_t *encoder, rmt_channel_handle_t ch
         }
     // fall-through
     case 1: // send data four bytes at a time
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->code, 4 * sizeof(uint8_t), &session_state);
+        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[0], 4 * sizeof(uint8_t), &session_state);
         if (session_state & RMT_ENCODING_COMPLETE)
         {
             gree_encoder->state = 2; // we can only switch to next state when current encoder finished
@@ -58,10 +64,29 @@ static size_t rmt_encode_ir_gree(rmt_encoder_t *encoder, rmt_channel_handle_t ch
         }
     // fall-through
     case 2: // send identifier 0b010
-        encoded_symbols += bytes_encoder->encode(copy_encoder, channel, &scan_code->command, sizeof(uint16_t), &session_state);
+        encoded_symbols += bytes_encoder->encode(copy_encoder, channel, &gree_encoder->gree_low_level, sizeof(rmt_symbol_word_t), &session_state);
         if (session_state & RMT_ENCODING_COMPLETE)
         {
-            gree_encoder->state = 3; // we can only switch to next state when current encoder finished
+            gree_encoder->state = 3;
+            //i++;
+        }
+        //if (session_state & RMT_ENCODING_COMPLETE & (i == 2))
+        //{
+            //i = 0;
+            //gree_encoder->state = 3; // we can only switch to next state when current encoder finished
+        //}
+        if (session_state & RMT_ENCODING_MEM_FULL)
+        {
+            state |= RMT_ENCODING_MEM_FULL;
+            goto out; // yield if there's no free space to put other encoding artifacts
+        }
+
+    // fall-through
+    case 3: // send connect code
+        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_connect_symbol, sizeof(rmt_symbol_word_t), &session_state);
+        if (session_state & RMT_ENCODING_COMPLETE)
+        {
+            gree_encoder->state = 4;
         }
         if (session_state & RMT_ENCODING_MEM_FULL)
         {
@@ -69,12 +94,23 @@ static size_t rmt_encode_ir_gree(rmt_encoder_t *encoder, rmt_channel_handle_t ch
             goto out; // yield if there's no free space to put other encoding artifacts
         }
     // fall-through
-    case 3: // send ending code
-        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_ending_symbol,
-                                                sizeof(rmt_symbol_word_t), &session_state);
+    case 4: // send second four bytes
+        encoded_symbols += copy_encoder->encode(bytes_encoder, channel, &scan_code->raw[4], 4 * sizeof(uint8_t), &session_state);
         if (session_state & RMT_ENCODING_COMPLETE)
         {
-            gree_encoder->state = 0; // back to the initial encoding session
+            gree_encoder->state = 5; // back to the initial encoding session
+        }
+        if (session_state & RMT_ENCODING_MEM_FULL)
+        {
+            state |= RMT_ENCODING_MEM_FULL;
+            goto out; // yield if there's no free space to put other encoding artifacts
+        }
+    // fall-through
+    case 5: // send long connect code
+        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_lconnect_symbol, sizeof(rmt_symbol_word_t), &session_state);
+        if (session_state & RMT_ENCODING_COMPLETE)
+        {
+            gree_encoder->state = 0;
             state |= RMT_ENCODING_COMPLETE;
         }
         if (session_state & RMT_ENCODING_MEM_FULL)
@@ -82,6 +118,7 @@ static size_t rmt_encode_ir_gree(rmt_encoder_t *encoder, rmt_channel_handle_t ch
             state |= RMT_ENCODING_MEM_FULL;
             goto out; // yield if there's no free space to put other encoding artifacts
         }
+        // fall-through
     }
 out:
     *ret_state = state;
@@ -122,22 +159,34 @@ esp_err_t rmt_new_ir_gree_encoder(const ir_gree_encoder_config_t *config, rmt_en
 
     // construct the leading code and ending code with RMT symbol format
     gree_encoder->gree_leading_symbol = (rmt_symbol_word_t){
-        .level0 = 0,
-        .duration0 = 9000ULL * config->resolution / 1000000,
-        .level1 = 1,
-        .duration1 = 4500ULL * config->resolution / 1000000,
+        .level0 = 1,
+        .duration0 = 4500ULL * config->resolution / 1000000,
+        .level1 = 0,
+        .duration1 = 9000ULL * config->resolution / 1000000,
     };
     gree_encoder->gree_connect_symbol = (rmt_symbol_word_t){
-        .level0 = 0,
-        .duration0 = 680 * config->resolution / 1000000,
-        .level1 = 1,
-        .duration1 = 19975 * config->resolution / 1000000,
+        .level0 = 1,
+        .duration0 = 19975 * config->resolution / 1000000,
+        .level1 = 0,
+        .duration1 = 680 * config->resolution / 1000000,
     };
     gree_encoder->gree_lconnect_symbol = (rmt_symbol_word_t){
-        .level0 = 0,
-        .duration0 = 680 * config->resolution / 1000000,
-        .level1 = 1,
-        .duration1 = 19975 * 2 * config->resolution / 1000000,
+        .level0 = 1,
+        .duration0 = 19975 * 2 * config->resolution / 1000000,
+        .level1 = 0,
+        .duration1 = 680 * config->resolution / 1000000,
+    };
+    gree_encoder->gree_low_level = (rmt_symbol_word_t){
+        .level0 = 1,
+        .duration0 = 510 * config->resolution / 1000000,
+        .level1 = 0,
+        .duration1 = 680 * config->resolution / 1000000,
+    };
+    gree_encoder->gree_high_level = (rmt_symbol_word_t){
+        .level0 = 1,
+        .duration0 = 1530 * config->resolution / 1000000,
+        .level1 = 0,
+        .duration1 = 680 * config->resolution / 1000000,
     };
 
     rmt_bytes_encoder_config_t bytes_encoder_config = {
@@ -151,7 +200,7 @@ esp_err_t rmt_new_ir_gree_encoder(const ir_gree_encoder_config_t *config, rmt_en
             .level0 = 1,
             .duration0 = 1530 * config->resolution / 1000000, // T1H=1530us
             .level1 = 0,
-            .duration1 =  680 * config->resolution / 1000000, // T1L=680us
+            .duration1 = 680 * config->resolution / 1000000, // T1L=680us
         },
     };
     ESP_GOTO_ON_ERROR(rmt_new_bytes_encoder(&bytes_encoder_config, &gree_encoder->bytes_encoder), err, TAG, "create bytes encoder failed");

@@ -25,6 +25,7 @@
 #include "sensor_hub_main_task.h"
 #include "LinkSDK_main_task.h"
 #include "led_strip_main_task.h"
+#include "ir_gree_encoder.h"
 #include "main.h"
 
 const char *TAG = "main";
@@ -35,12 +36,13 @@ void app_main(void)
     all_event = xEventGroupCreate();
     uint16_t i = 0;
 
-    xTaskCreatePinnedToCore(initialise_wifi_task, "initialise_wifi", 4096, NULL, 0, NULL, 1);
-    xTaskCreatePinnedToCore(gui_task, "gui", 4096 * 2, NULL, 2, NULL, 0);
-    xTaskCreatePinnedToCore(sensor_task, "sensor_hub", 4096, NULL, 0, NULL, 0);
+    //xTaskCreatePinnedToCore(initialise_wifi_task, "initialise_wifi", 4096, NULL, 0, NULL, 1);
+    //xTaskCreatePinnedToCore(gui_task, "gui", 4096 * 2, NULL, 2, NULL, 0);
+    //xTaskCreatePinnedToCore(sensor_task, "sensor_hub", 4096, NULL, 0, NULL, 0);
     xTaskCreatePinnedToCore(led_task, "led_strip", 4096, NULL, 3, NULL, 1);
+    xTaskCreatePinnedToCore(ir_gree_transceiver_main_task, "gree_ir", 4096, NULL, 3, NULL, 1);
 
-    while (1)
+    /*while (1)
     {
         EventBits_t uxBits_wifi = xEventGroupWaitBits(all_event, BIT0_WIFI_READY, pdFALSE, pdTRUE, (TickType_t)0);
 
@@ -69,5 +71,5 @@ void app_main(void)
             ESP_LOGI(TAG, "NO Network!!! Turning OFF WIFI!!!");
             break;
         }
-    }
+    }*/
 }

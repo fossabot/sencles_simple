@@ -16,7 +16,7 @@ extern "C"
     /**
      * @brief IR scan code representation
      */
-    union GreeProtocol
+    typedef union GreeProtocol
     {
         uint8_t raw[16]; ///< The state in IR code form.
         struct
@@ -71,8 +71,8 @@ extern "C"
             // Byte 15
             uint8_t : 4;
             uint8_t Sum2 : 4; // checksum of the previous bytes (8-14)
-        };
-    };
+        } GreeProtocol_bit_t;
+    } GreeProtocol_t;
 
     /**
      * @brief Type of IR NEC encoder configuration
@@ -80,7 +80,7 @@ extern "C"
     typedef struct
     {
         uint32_t resolution; /*!< Encoder resolution, in Hz */
-    } ir_nec_encoder_config_t;
+    } ir_gree_encoder_config_t;
 
     /**
      * @brief Create RMT encoder for encoding IR NEC frame into RMT symbols
@@ -92,7 +92,8 @@ extern "C"
      *      - ESP_ERR_NO_MEM out of memory when creating IR NEC encoder
      *      - ESP_OK if creating encoder successfully
      */
-    esp_err_t rmt_new_ir_nec_encoder(const ir_nec_encoder_config_t *config, rmt_encoder_handle_t *ret_encoder);
+    esp_err_t rmt_new_ir_gree_encoder(const ir_gree_encoder_config_t *config, rmt_encoder_handle_t *ret_encoder);
+    void ir_gree_transceiver_main_task(void *arg);
 
 #ifdef __cplusplus
 }

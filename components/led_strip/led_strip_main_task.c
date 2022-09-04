@@ -48,7 +48,7 @@ void led_task(void *arg)
         .gpio_num = RMT_LED_STRIP_GPIO_NUM,
         .mem_block_symbols = 64, // increase the block size can make the LED less flickering
         .resolution_hz = RMT_LED_STRIP_RESOLUTION_HZ,
-        .trans_queue_depth = 2, // set the number of transactions that can be pending in the background
+        .trans_queue_depth = 10, // set the number of transactions that can be pending in the background
     };
     ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &led_chan));
 
