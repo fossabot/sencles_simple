@@ -19,7 +19,7 @@ extern "C"
     typedef union GreeProtocol
     {
         uint8_t raw[16]; ///< The state in IR code form.
-        struct
+        struct GreeProtocol_bit
         {
             // Byte 0
             uint8_t Mode : 3;
@@ -73,6 +73,88 @@ extern "C"
             uint8_t Sum2 : 4; // checksum of the previous bytes (8-14)
         } GreeProtocol_bit_t;
     } GreeProtocol_t;
+
+    enum opmode_t
+    {
+        opmode_Off = -1,
+        opmode_Auto = 0,
+        opmode_Cool = 1,
+        opmode_Heat = 2,
+        opmode_Dry = 3,
+        opmode_Fan = 4,
+    };
+
+    /// Common A/C settings for Fan Speeds.
+    enum fanspeed_t
+    {
+        fanspeed_Auto = 0,
+        fanspeed_Min = 1,
+        fanspeed_Low = 2,
+        fanspeed_Medium = 3,
+        fanspeed_High = 4,
+        fanspeed_Max = 5,
+    };
+
+    /// Common A/C settings for Vertical Swing.
+    enum swingv_t
+    {
+        swingv_Off = -1,
+        swingv_Auto = 0,
+        swingv_Highest = 1,
+        swingv_High = 2,
+        swingv_Middle = 3,
+        swingv_Low = 4,
+        swingv_Lowest = 5,
+    };
+
+
+    /// Structure to hold a common A/C state.
+    struct state_t
+    {
+        bool power = false;
+        opmode_t mode = opmode_t::kOff;
+        float degrees = 25;
+        bool celsius = true;
+        fanspeed_t fanspeed = fanspeed_t::kAuto;
+        swingv_t swingv = swingv_t::kOff;
+        swingh_t swingh = swingh_t::kOff;
+        bool quiet = false;
+        bool turbo = false;
+        bool econo = false;
+        bool light = false;
+        bool filter = false;
+        bool clean = false;
+        bool beep = false;
+        int16_t sleep = -1; // `-1` means off.
+        int16_t clock = -1; // `-1` means not set.
+    };
+
+    // Constants
+    const uint8_t kKelvinatorAuto = 0; // (temp = 25C)
+    const uint8_t kKelvinatorCool = 1;
+    const uint8_t kKelvinatorDry = 2; // (temp = 25C, but not shown)
+    const uint8_t kKelvinatorFan = 3;
+    const uint8_t kKelvinatorHeat = 4;
+    const uint8_t kKelvinatorBasicFanMax = 3;
+    const uint8_t kKelvinatorFanAuto = 0;
+    const uint8_t kKelvinatorFanMin = 1;
+    const uint8_t kKelvinatorFanMax = 5;
+    const uint8_t kKelvinatorMinTemp = 16;  // 16C
+    const uint8_t kKelvinatorMaxTemp = 30;  // 30C
+    const uint8_t kKelvinatorAutoTemp = 25; // 25C
+
+    const uint8_t kKelvinatorSwingVOff = 0b0000;         // 0
+    const uint8_t kKelvinatorSwingVAuto = 0b0001;        // 1
+    const uint8_t kKelvinatorSwingVHighest = 0b0010;     // 2
+    const uint8_t kKelvinatorSwingVUpperMiddle = 0b0011; // 3
+    const uint8_t kKelvinatorSwingVMiddle = 0b0100;      // 4
+    const uint8_t kKelvinatorSwingVLowerMiddle = 0b0101; // 5
+    const uint8_t kKelvinatorSwingVLowest = 0b0110;      // 6
+    const uint8_t kKelvinatorSwingVLowAuto = 0b0111;     // 7
+    const uint8_t kKelvinatorSwingVMiddleAuto = 0b1001;  // 9
+    const uint8_t kKelvinatorSwingVHighAuto = 0b1011;    // 11
+
+    GreeProtocol_t _;
 
     /**
      * @brief Type of IR NEC encoder configuration

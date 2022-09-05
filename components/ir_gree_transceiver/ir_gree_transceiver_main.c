@@ -52,12 +52,15 @@ void ir_gree_transceiver_main_task(void *arg)
 
     ESP_LOGI(TAG, "enable RMT TX channels");
     ESP_ERROR_CHECK(rmt_enable(tx_channel));
-    const GreeProtocol_t scan_code = {{0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
 
     while (1)
     {
-        ESP_ERROR_CHECK(rmt_transmit(tx_channel, gree_encoder, &scan_code, sizeof(scan_code), &transmit_config));
-        vTaskDelay(pdMS_TO_TICKS(10000));
-        ESP_LOGI(TAG, "transmiting ok");
+        for (uint16_t i = 0; i < 100; i++)
+        {
+            GreeProtocol_t scan_code = {{0x10 + i, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+            ESP_ERROR_CHECK(rmt_transmit(tx_channel, gree_encoder, &scan_code, sizeof(scan_code), &transmit_config));
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            ESP_LOGI(TAG, "transmiting ok %d", i);
+        }
     }
 }
