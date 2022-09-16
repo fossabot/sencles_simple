@@ -25,7 +25,7 @@
 #include "sensor_hub_main_task.h"
 #include "LinkSDK_main_task.h"
 #include "led_strip_main_task.h"
-#include "ir_gree_encoder.h"
+#include "ir_gree_transceiver_main.h"
 #include "main.h"
 
 const char *TAG = "main";
@@ -34,12 +34,12 @@ EventGroupHandle_t all_event;
 void app_main(void)
 {
     all_event = xEventGroupCreate();
-    uint16_t i = 0;
+    //uint16_t i = 0;
 
     //xTaskCreatePinnedToCore(initialise_wifi_task, "initialise_wifi", 4096, NULL, 0, NULL, 1);
     //xTaskCreatePinnedToCore(gui_task, "gui", 4096 * 2, NULL, 2, NULL, 0);
     //xTaskCreatePinnedToCore(sensor_task, "sensor_hub", 4096, NULL, 0, NULL, 0);
-    xTaskCreatePinnedToCore(led_task, "led_strip", 4096, NULL, 3, NULL, 1);
+    //xTaskCreatePinnedToCore(led_task, "led_strip", 4096, NULL, 3, NULL, 1);
     xTaskCreatePinnedToCore(ir_gree_transceiver_main_task, "gree_ir", 4096, NULL, 3, NULL, 1);
 
     /*while (1)

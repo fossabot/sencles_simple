@@ -9,11 +9,10 @@
 #include "freertos/queue.h"
 #include "esp_log.h"
 #include "driver/rmt_tx.h"
-#include "driver/rmt_rx.h"
-#include "ir_gree_encoder.h"
+#include "ir_gree_transceiver_main.h"
 
 #define IR_RESOLUTION_HZ 1000000 // 1MHz resolution, 1 tick = 1us
-#define IR_TX_GPIO_NUM 14
+#define IR_TX_GPIO_NUM 47
 
 static const char *TAG = "GREE_IR";
 
@@ -24,7 +23,7 @@ void ir_gree_transceiver_main_task(void *arg)
     rmt_tx_channel_config_t tx_channel_cfg = {
         .clk_src = RMT_CLK_SRC_DEFAULT,
         .resolution_hz = IR_RESOLUTION_HZ,
-        .mem_block_symbols = 64, // amount of RMT symbols that the channel can store at a time
+        .mem_block_symbols = 250, // amount of RMT symbols that the channel can store at a time
         .trans_queue_depth = 2,  // number of transactions that allowed to pending in the background
         .gpio_num = IR_TX_GPIO_NUM,
     };
@@ -33,7 +32,7 @@ void ir_gree_transceiver_main_task(void *arg)
 
     ESP_LOGI(TAG, "modulate carrier to TX channel");
     rmt_carrier_config_t carrier_cfg = {
-        .duty_cycle = 0.5,
+        .duty_cycle = 0.50,
         .frequency_hz = 38000, // 38KHz
     };
     ESP_ERROR_CHECK(rmt_apply_carrier(tx_channel, &carrier_cfg));
@@ -51,16 +50,27 @@ void ir_gree_transceiver_main_task(void *arg)
     ESP_ERROR_CHECK(rmt_new_ir_gree_encoder(&gree_encoder_cfg, &gree_encoder));
 
     ESP_LOGI(TAG, "enable RMT TX channels");
-    ESP_ERROR_CHECK(rmt_enable(tx_channel));
-
+    ESP_ERROR_CHECK(rmt_enable(tx_channel)); 
     while (1)
     {
-        for (uint16_t i = 0; i < 100; i++)
+        for (uint16_t i = 0; i < 3; i++)
         {
-            GreeProtocol_t scan_code = {{0x10 + i, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
-            ESP_ERROR_CHECK(rmt_transmit(tx_channel, gree_encoder, &scan_code, sizeof(scan_code), &transmit_config));
+            GreeProtocol_t code = {{0}};
+            stateReset(&code);
+            setPower(&code, true);
+            setFan(&code, 0);
+            setMode(&code, 1);
+            setTemp(&code, 25);
+            setSwingVertical(&code, false, 0);
+            setIonFilter(&code, true);
+            setLight(&code, true);
+            procotol_fixup(&code);
+            for (uint8_t q = 0; q < 16; q++)
+                ESP_LOGI(TAG, "%x", code.raw[q]);
+            ESP_ERROR_CHECK(rmt_transmit(tx_channel, gree_encoder, &code, sizeof(code), &transmit_config));
             vTaskDelay(pdMS_TO_TICKS(1000));
             ESP_LOGI(TAG, "transmiting ok %d", i);
         }
+        vTaskDelete(NULL);
     }
 }
