@@ -1653,6 +1653,7 @@ static int32_t _core_mqtt_repub(core_mqtt_handle_t *mqtt_handle)
             mqtt_handle->sysdep->core_sysdep_mutex_lock(mqtt_handle->send_mutex);
             res = _core_mqtt_write(mqtt_handle, node->packet, node->len, mqtt_handle->send_timeout_ms);
             mqtt_handle->sysdep->core_sysdep_mutex_unlock(mqtt_handle->send_mutex);
+            node->last_send_time = time_now;
             if (res < STATE_SUCCESS) {
                 mqtt_handle->sysdep->core_sysdep_mutex_unlock(mqtt_handle->pub_mutex);
                 if (res != STATE_SYS_DEPEND_NWK_WRITE_LESSDATA) {
@@ -2891,10 +2892,8 @@ int32_t aiot_mqtt_process(void *handle)
     }
     if ((time_now - mqtt_handle->heartbeat_params.last_send_time) >= mqtt_handle->heartbeat_params.interval_ms) {
         res = _core_mqtt_heartbeat(mqtt_handle);
-        if (res == STATE_SUCCESS) {
-            mqtt_handle->heartbeat_params.last_send_time = time_now;
-            mqtt_handle->heartbeat_params.lost_times++;
-        }
+        mqtt_handle->heartbeat_params.last_send_time = time_now;
+        mqtt_handle->heartbeat_params.lost_times++;
     }
 
     /* mqtt QoS1 packet republish */

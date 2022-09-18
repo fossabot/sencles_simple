@@ -36,6 +36,7 @@ typedef struct
 {
     float temperature; /*!< temp */
     float humidity;    /*!< humi */
+    float body_temperature;
 } humiture_t;
 #define HUMITURE_T humiture_t
 #endif

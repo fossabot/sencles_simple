@@ -15,35 +15,48 @@
 #include "lvgl_app.h"
 #include "math.h"
 #include "time.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
+#include "sensor_type.h"
+
+extern QueueHandle_t xQueueSenData;
 
 ///////////////////// VARIABLES ////////////////////
 lv_obj_t *ui_Screen1;
-lv_obj_t *ui_humiArc;
-lv_obj_t *ui_tempArc;
 lv_obj_t *ui_humiLabel;
 lv_obj_t *ui_tempLabel;
-lv_obj_t *ui_tempLabelnum;
-lv_obj_t *ui_humiLabelnum;
 lv_obj_t *ui_Labeldegree;
 lv_obj_t *ui_Labelpercent;
 lv_obj_t *ui_btempLabel;
-lv_obj_t *ui_btempLabelnum;
 lv_obj_t *ui_timeLabel;
 lv_obj_t *ui_btempLabeldegree;
 lv_obj_t *ui_count;
 lv_obj_t *ui_countss;
 
-typedef struct _lv_clock_detail
+typedef struct _lv_refresh_detail
 {
-    lv_obj_t *time_label;
-    lv_obj_t *date_label;
-    lv_obj_t *weekday_label;
-} lv_clock_t;
+    struct _lv_clock_detail
+    {
+        lv_obj_t *time_label;
+        lv_obj_t *date_label;
+        lv_obj_t *weekday_label;
+    } lv_clock;
+    struct _lv_humiture_detail
+    {
+        lv_obj_t *ui_humiArc;
+        lv_obj_t *ui_tempArc;
+        lv_obj_t *ui_tempLabelnum;
+        lv_obj_t *ui_humiLabelnum;
+        lv_obj_t *ui_btempLabelnum;
+    } lv_humiture;
 
-static lv_clock_t lv_clock = {0};
+} lv_refresh_t;
 
-static void clock_date_task_callback(lv_timer_t *timer)
+static lv_refresh_t lv_refresh = {0};
+
+static void refresh_task_callback(lv_timer_t *timer)
 {
+
     static const char *week_day[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     static time_t current_time;
     static time_t examtime = 1671843600;
@@ -61,13 +74,23 @@ static void clock_date_task_callback(lv_timer_t *timer)
     int minutes = time_info->tm_min;
     int second = time_info->tm_sec;
 
+    static sensor_data_t lvgl_recv_data ;
+    xQueuePeekFromISR(xQueueSenData, &lvgl_recv_data);
+
     if (timer != NULL && timer->user_data != NULL)
     {
-        lv_clock_t *clock = (lv_clock_t *)(timer->user_data);
-        lv_label_set_text_fmt(clock->time_label, "%02d:%02d:%02d", hour, minutes, second);
-        lv_label_set_text_fmt(clock->date_label, "%d-%02d-%02d", year, month, day);
-        lv_label_set_text_fmt(clock->weekday_label, "%s", week_day[weekday]);
+        lv_refresh_t *refresh = (lv_refresh_t *)(timer->user_data);
+        lv_label_set_text_fmt(refresh->lv_clock.time_label, "%02d:%02d:%02d", hour, minutes, second);
+        lv_label_set_text_fmt(refresh->lv_clock.date_label, "%d-%02d-%02d", year, month, day);
+        lv_label_set_text_fmt(refresh->lv_clock.weekday_label, "%s", week_day[weekday]);
         lv_label_set_text_fmt(ui_count, "%ld", (uint32_t)difftime(examtime, current_time));
+
+        lv_label_set_text_fmt(refresh->lv_humiture.ui_tempLabelnum, "%0.3f", lvgl_recv_data.humiture.temperature);
+        lv_label_set_text_fmt(refresh->lv_humiture.ui_humiLabelnum, "%0.3f", lvgl_recv_data.humiture.humidity);
+        lv_label_set_text_fmt(refresh->lv_humiture.ui_btempLabelnum, "%0.3f", lvgl_recv_data.humiture.body_temperature); 
+        lv_arc_set_value(refresh->lv_humiture.ui_tempArc, (int)lvgl_recv_data.humiture.temperature);
+        lv_arc_set_value(refresh->lv_humiture.ui_humiArc, (int)lvgl_recv_data.humiture.humidity);
+
     }
 }
 
@@ -82,62 +105,62 @@ void ui_Screen1_screen_init(void)
 
     // ui_humiArc
 
-    ui_humiArc = lv_arc_create(ui_Screen1);
+    lv_refresh.lv_humiture.ui_humiArc = lv_arc_create(ui_Screen1);
 
-    lv_obj_set_width(ui_humiArc, 240);
-    lv_obj_set_height(ui_humiArc, 240);
+    lv_obj_set_width(lv_refresh.lv_humiture.ui_humiArc, 240);
+    lv_obj_set_height(lv_refresh.lv_humiture.ui_humiArc, 240);
 
-    lv_obj_set_x(ui_humiArc, 0);
-    lv_obj_set_y(ui_humiArc, 0);
+    lv_obj_set_x(lv_refresh.lv_humiture.ui_humiArc, 0);
+    lv_obj_set_y(lv_refresh.lv_humiture.ui_humiArc, 0);
 
-    lv_obj_set_align(ui_humiArc, LV_ALIGN_CENTER);
+    lv_obj_set_align(lv_refresh.lv_humiture.ui_humiArc, LV_ALIGN_CENTER);
 
-    lv_obj_clear_flag(ui_humiArc, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE |
-                                      LV_OBJ_FLAG_GESTURE_BUBBLE);
+    lv_obj_clear_flag(lv_refresh.lv_humiture.ui_humiArc, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE |
+                                                             LV_OBJ_FLAG_GESTURE_BUBBLE);
 
-    lv_arc_set_range(ui_humiArc, 0, 100);
-    lv_arc_set_value(ui_humiArc, 10);
-    lv_arc_set_bg_angles(ui_humiArc, 270, 90);
+    lv_arc_set_range(lv_refresh.lv_humiture.ui_humiArc, 0, 100);
+    lv_arc_set_value(lv_refresh.lv_humiture.ui_humiArc, 10);
+    lv_arc_set_bg_angles(lv_refresh.lv_humiture.ui_humiArc, 270, 90);
 
-    lv_obj_set_style_shadow_spread(ui_humiArc, 120, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    // lv_obj_set_style_arc_color(ui_humiArc, lv_color_hex(0x00FF68), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_opa(ui_humiArc, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_spread(lv_refresh.lv_humiture.ui_humiArc, 120, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    // lv_obj_set_style_arc_color(lv_refresh.lv_humiture.ui_humiArc, lv_color_hex(0x00FF68), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_arc_opa(lv_refresh.lv_humiture.ui_humiArc, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
-    lv_obj_set_style_bg_color(ui_humiArc, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_humiArc, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_humiArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_humiArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_humiArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_humiArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(lv_refresh.lv_humiture.ui_humiArc, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(lv_refresh.lv_humiture.ui_humiArc, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(lv_refresh.lv_humiture.ui_humiArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(lv_refresh.lv_humiture.ui_humiArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(lv_refresh.lv_humiture.ui_humiArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(lv_refresh.lv_humiture.ui_humiArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
 
     // ui_tempArc
 
-    ui_tempArc = lv_arc_create(ui_Screen1);
+    lv_refresh.lv_humiture.ui_tempArc = lv_arc_create(ui_Screen1);
 
-    lv_obj_set_width(ui_tempArc, 240);
-    lv_obj_set_height(ui_tempArc, 240);
+    lv_obj_set_width(lv_refresh.lv_humiture.ui_tempArc, 240);
+    lv_obj_set_height(lv_refresh.lv_humiture.ui_tempArc, 240);
 
-    lv_obj_set_x(ui_tempArc, 0);
-    lv_obj_set_y(ui_tempArc, 0);
+    lv_obj_set_x(lv_refresh.lv_humiture.ui_tempArc, 0);
+    lv_obj_set_y(lv_refresh.lv_humiture.ui_tempArc, 0);
 
-    lv_obj_set_align(ui_tempArc, LV_ALIGN_CENTER);
+    lv_obj_set_align(lv_refresh.lv_humiture.ui_tempArc, LV_ALIGN_CENTER);
 
-    lv_obj_clear_flag(ui_tempArc, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE |
+    lv_obj_clear_flag(lv_refresh.lv_humiture.ui_tempArc, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE |
                                       LV_OBJ_FLAG_GESTURE_BUBBLE);
 
-    lv_arc_set_range(ui_tempArc, -25, 60);
-    lv_arc_set_value(ui_tempArc, -20);
-    lv_arc_set_bg_angles(ui_tempArc, 90, 270);
+    lv_arc_set_range(lv_refresh.lv_humiture.ui_tempArc, -25, 60);
+    lv_arc_set_value(lv_refresh.lv_humiture.ui_tempArc, -20);
+    lv_arc_set_bg_angles(lv_refresh.lv_humiture.ui_tempArc, 90, 270);
 
-    lv_obj_set_style_arc_color(ui_tempArc, lv_color_hex(0x00D3FF), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_opa(ui_tempArc, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_arc_color(lv_refresh.lv_humiture.ui_tempArc, lv_color_hex(0x00D3FF), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_arc_opa(lv_refresh.lv_humiture.ui_tempArc, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
-    lv_obj_set_style_bg_color(ui_tempArc, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_tempArc, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_tempArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_tempArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_tempArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_tempArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(lv_refresh.lv_humiture.ui_tempArc, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(lv_refresh.lv_humiture.ui_tempArc, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(lv_refresh.lv_humiture.ui_tempArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(lv_refresh.lv_humiture.ui_tempArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(lv_refresh.lv_humiture.ui_tempArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(lv_refresh.lv_humiture.ui_tempArc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
 
     // ui_humiLabel
 
@@ -179,38 +202,38 @@ void ui_Screen1_screen_init(void)
 
     // ui_tempLabelnum
 
-    ui_tempLabelnum = lv_label_create(ui_Screen1);
+    lv_refresh.lv_humiture.ui_tempLabelnum = lv_label_create(ui_Screen1);
 
-    lv_obj_set_width(ui_tempLabelnum, 40);
-    lv_obj_set_height(ui_tempLabelnum, 50);
+    lv_obj_set_width(lv_refresh.lv_humiture.ui_tempLabelnum, 40);
+    lv_obj_set_height(lv_refresh.lv_humiture.ui_tempLabelnum, 50);
 
-    lv_obj_set_x(ui_tempLabelnum, -39);
-    lv_obj_set_y(ui_tempLabelnum, 0);
+    lv_obj_set_x(lv_refresh.lv_humiture.ui_tempLabelnum, -39);
+    lv_obj_set_y(lv_refresh.lv_humiture.ui_tempLabelnum, 0);
 
-    lv_obj_set_align(ui_tempLabelnum, LV_ALIGN_CENTER);
+    lv_obj_set_align(lv_refresh.lv_humiture.ui_tempLabelnum, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_tempLabelnum, "20.000");
+    lv_label_set_text(lv_refresh.lv_humiture.ui_tempLabelnum, "20.000");
 
-    lv_obj_clear_flag(ui_tempLabelnum, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
+    lv_obj_clear_flag(lv_refresh.lv_humiture.ui_tempLabelnum, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
                                            LV_OBJ_FLAG_SNAPPABLE);
 
-    lv_obj_set_style_text_font(ui_tempLabelnum, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(lv_refresh.lv_humiture.ui_tempLabelnum, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // ui_humiLabelnum
 
-    ui_humiLabelnum = lv_label_create(ui_Screen1);
+    lv_refresh.lv_humiture.ui_humiLabelnum = lv_label_create(ui_Screen1);
 
-    lv_obj_set_width(ui_humiLabelnum, 40);
-    lv_obj_set_height(ui_humiLabelnum, 50);
+    lv_obj_set_width(lv_refresh.lv_humiture.ui_humiLabelnum, 40);
+    lv_obj_set_height(lv_refresh.lv_humiture.ui_humiLabelnum, 50);
 
-    lv_obj_set_x(ui_humiLabelnum, 43);
-    lv_obj_set_y(ui_humiLabelnum, 0);
+    lv_obj_set_x(lv_refresh.lv_humiture.ui_humiLabelnum, 43);
+    lv_obj_set_y(lv_refresh.lv_humiture.ui_humiLabelnum, 0);
 
-    lv_obj_set_align(ui_humiLabelnum, LV_ALIGN_CENTER);
+    lv_obj_set_align(lv_refresh.lv_humiture.ui_humiLabelnum, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_humiLabelnum, "50.000");
+    lv_label_set_text(lv_refresh.lv_humiture.ui_humiLabelnum, "50.000");
 
-    lv_obj_set_style_text_font(ui_humiLabelnum, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(lv_refresh.lv_humiture.ui_humiLabelnum, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // ui_Labeldegree
 
@@ -256,19 +279,19 @@ void ui_Screen1_screen_init(void)
 
     // ui_btempLabelnum
 
-    ui_btempLabelnum = lv_label_create(ui_Screen1);
+    lv_refresh.lv_humiture.ui_btempLabelnum = lv_label_create(ui_Screen1);
 
-    lv_obj_set_width(ui_btempLabelnum, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_btempLabelnum, LV_SIZE_CONTENT);
+    lv_obj_set_width(lv_refresh.lv_humiture.ui_btempLabelnum, LV_SIZE_CONTENT);
+    lv_obj_set_height(lv_refresh.lv_humiture.ui_btempLabelnum, LV_SIZE_CONTENT);
 
-    lv_obj_set_x(ui_btempLabelnum, 2);
-    lv_obj_set_y(ui_btempLabelnum, 53);
+    lv_obj_set_x(lv_refresh.lv_humiture.ui_btempLabelnum, 2);
+    lv_obj_set_y(lv_refresh.lv_humiture.ui_btempLabelnum, 53);
 
-    lv_obj_set_align(ui_btempLabelnum, LV_ALIGN_CENTER);
+    lv_obj_set_align(lv_refresh.lv_humiture.ui_btempLabelnum, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_btempLabelnum, "25.000");
+    lv_label_set_text(lv_refresh.lv_humiture.ui_btempLabelnum, "25.000");
 
-    lv_obj_set_style_text_font(ui_btempLabelnum, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(lv_refresh.lv_humiture.ui_btempLabelnum, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // ui_btempLabeldegree
 
@@ -287,34 +310,34 @@ void ui_Screen1_screen_init(void)
     // ui_timeLabel
 
     /*Time display*/
-    lv_clock.time_label = lv_label_create(ui_Screen1);
-    lv_obj_set_width(lv_clock.time_label, 100);
-    lv_obj_set_height(lv_clock.time_label, 20);
+    lv_refresh.lv_clock.time_label = lv_label_create(ui_Screen1);
+    lv_obj_set_width(lv_refresh.lv_clock.time_label, 100);
+    lv_obj_set_height(lv_refresh.lv_clock.time_label, 20);
 
-    lv_obj_set_x(lv_clock.time_label, 3);
-    lv_obj_set_y(lv_clock.time_label, -62);
+    lv_obj_set_x(lv_refresh.lv_clock.time_label, 3);
+    lv_obj_set_y(lv_refresh.lv_clock.time_label, -62);
 
-    lv_obj_set_align(lv_clock.time_label, LV_ALIGN_CENTER);
+    lv_obj_set_align(lv_refresh.lv_clock.time_label, LV_ALIGN_CENTER);
 
     /*Date display*/
-    lv_clock.date_label = lv_label_create(ui_Screen1);
-    lv_obj_set_width(lv_clock.date_label, 100);
-    lv_obj_set_height(lv_clock.date_label, 20);
+    lv_refresh.lv_clock.date_label = lv_label_create(ui_Screen1);
+    lv_obj_set_width(lv_refresh.lv_clock.date_label, 100);
+    lv_obj_set_height(lv_refresh.lv_clock.date_label, 20);
 
-    lv_obj_set_x(lv_clock.date_label, 10);
-    lv_obj_set_y(lv_clock.date_label, -80);
+    lv_obj_set_x(lv_refresh.lv_clock.date_label, 10);
+    lv_obj_set_y(lv_refresh.lv_clock.date_label, -80);
 
-    lv_obj_set_align(lv_clock.date_label, LV_ALIGN_CENTER);
+    lv_obj_set_align(lv_refresh.lv_clock.date_label, LV_ALIGN_CENTER);
 
     /*Week display*/
-    lv_clock.weekday_label = lv_label_create(ui_Screen1);
-    lv_obj_set_width(lv_clock.weekday_label, 100);
-    lv_obj_set_height(lv_clock.weekday_label, 20);
+    lv_refresh.lv_clock.weekday_label = lv_label_create(ui_Screen1);
+    lv_obj_set_width(lv_refresh.lv_clock.weekday_label, 100);
+    lv_obj_set_height(lv_refresh.lv_clock.weekday_label, 20);
 
-    lv_obj_set_x(lv_clock.weekday_label, 70);
-    lv_obj_set_y(lv_clock.weekday_label, -62);
+    lv_obj_set_x(lv_refresh.lv_clock.weekday_label, 70);
+    lv_obj_set_y(lv_refresh.lv_clock.weekday_label, -62);
 
-    lv_obj_set_align(lv_clock.weekday_label, LV_ALIGN_CENTER);
+    lv_obj_set_align(lv_refresh.lv_clock.weekday_label, LV_ALIGN_CENTER);
 
     // ui_count
 
@@ -350,7 +373,8 @@ void ui_init(void)
     lv_disp_t *dispp = lv_disp_get_default();
     lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
                                               false, LV_FONT_DEFAULT);
-    lv_timer_t *task_timer = lv_timer_create(clock_date_task_callback, 200, (void *)&lv_clock);
+    lv_timer_t *task_timer = lv_timer_create(refresh_task_callback, 1000, (void *)&lv_refresh);
+
     if (task_timer != NULL)
     {
         lv_disp_set_theme(dispp, theme);

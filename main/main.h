@@ -31,6 +31,7 @@ extern "C"
 #define BIT2_NTP_READY BIT2
 #define BIT3_ALIYUN_CONNECTED BIT3
 #define BIT4_ENV_TOO_HOT BIT4
+#define BIT5_GREE_AC_ON BIT5
 
 #ifdef __cplusplus
 }

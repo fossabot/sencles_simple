@@ -23,4 +23,3 @@ const char *ali_ca_cert = \
     "HMUfpIBvFSDJ3gyICh3WZlXi/EjJKSZp4A==\r\n" \
     "-----END CERTIFICATE-----"
 };
-

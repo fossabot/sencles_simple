@@ -279,7 +279,7 @@ esp_err_t humiture_sht3x_test(void)
     return ESP_OK;
 }
 
-esp_err_t humiture_sht3x_acquire_humiture(float *h, float *t)
+esp_err_t humiture_sht3x_acquire_humiture(float *h, float *t, float *bt)
 {
     if (!is_init) {
         return ESP_FAIL;
@@ -288,10 +288,12 @@ esp_err_t humiture_sht3x_acquire_humiture(float *h, float *t)
     float temperature = 0;
     float humidity = 0;
     esp_err_t ret = sht3x_get_single_shot(sht3x, &temperature, &humidity);
+    float body_temperture = 1.07 * (temperature) + 0.2 * ((humidity) / 100.0) * 6.105 * exp((17.27 * (temperature)) / (237.7 + (temperature))) - 2.7;
 
     if (ret == ESP_OK) {
         *h = humidity;
         *t = temperature;
+        *bt = body_temperature;
         return ESP_OK;
     }
     *t = 0;

@@ -47,7 +47,7 @@ menu "Sensor Hub Options"
                     Set the gpio for the i2cbus sda.
         
             config I2C_SCL_IO_NUM
-                int "GPIO number for the i2cbus sda"
+                int "GPIO number for the i2cbus scl"
                 range 1 48
                 default 36
                 help

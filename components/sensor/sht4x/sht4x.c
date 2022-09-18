@@ -226,7 +226,7 @@ esp_err_t humiture_sht4x_test(void)
     return ESP_OK;
 }
 
-esp_err_t humiture_sht4x_acquire_humiture(float *h, float *t)
+esp_err_t humiture_sht4x_acquire_humiture(float *h, float *t, float *bt)
 {
     if (!is_init)
     {
@@ -236,16 +236,19 @@ esp_err_t humiture_sht4x_acquire_humiture(float *h, float *t)
     float temperature = 0;
     float humidity = 0;
     esp_err_t ret = sht4x_get_single_shot(sht4x, SHT4x_MEASURE_HIGH_PRECISION, &temperature, &humidity);
+    float body_temperture = 1.07 * (temperature) + 0.2 * ((humidity) / 100.0) * 6.105 * exp((17.27 * (temperature)) / (237.7 + (temperature))) - 2.7;
 
     if (ret == ESP_OK)
     {
         *h = humidity;
         *t = temperature;
+        *bt = body_temperture;
         return ESP_OK;
     }
 
     *h = 0;
     *t = 0;
+    *bt = 0;
     return ESP_FAIL;
 }
 

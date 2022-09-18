@@ -461,21 +461,21 @@ esp_err_t rmt_new_ir_gree_encoder(const ir_gree_encoder_config_t *config, rmt_en
     // construct the leading code and ending code with RMT symbol format
     gree_encoder->gree_leading_symbol = (rmt_symbol_word_t){
         .level0 = 1,
-        .duration0 = 9000 * config->resolution / 1000000,
+        .duration0 = 9000ULL * config->resolution / 1000000,
         .level1 = 0,
-        .duration1 = 4500 * config->resolution / 1000000,
+        .duration1 = 4500ULL * config->resolution / 1000000,
     };
     gree_encoder->gree_connect_symbol = (rmt_symbol_word_t){
         .level0 = 1,
         .duration0 = 620 * config->resolution / 1000000,
         .level1 = 0,
-        .duration1 = 20000 * config->resolution / 1000000,
+        .duration1 = 20000ULL * config->resolution / 1000000,
     };
     gree_encoder->gree_lconnect_symbol = (rmt_symbol_word_t){
         .level0 = 1,
         .duration0 = 620 * config->resolution / 1000000,
         .level1 = 0,
-        .duration1 = 40000 * config->resolution / 1000000,
+        .duration1 = 40000ULL * config->resolution / 1000000,
     };
     gree_encoder->gree_low_level = (rmt_symbol_word_t){
         .level0 = 1,
@@ -509,7 +509,6 @@ esp_err_t rmt_new_ir_gree_encoder(const ir_gree_encoder_config_t *config, rmt_en
             .level1 = 0,
             .duration1 = 1660 * config->resolution / 1000000, // T1L=1680us
         },
-        //.flags.msb_first = true,
     };
     ESP_GOTO_ON_ERROR(rmt_new_bytes_encoder(&bytes_encoder_config, &gree_encoder->bytes_encoder), err, TAG, "create bytes encoder failed");
 

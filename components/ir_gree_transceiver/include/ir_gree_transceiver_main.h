@@ -8,7 +8,6 @@
 extern "C"
 {
 #endif
-#include "ir_gree_encoder.h"
 
     void ir_gree_transceiver_main_task(void *arg);
 

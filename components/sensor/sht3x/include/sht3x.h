@@ -215,7 +215,7 @@ extern "C"
      *     - ESP_OK Success
      *     - ESP_FAIL Fail
      */
-    esp_err_t humiture_sht3x_acquire_humiture(float *h, float *t);
+    esp_err_t humiture_sht3x_acquire_humiture(float *h, float *t, float *bt);
 
 #endif
 

@@ -28,21 +28,23 @@
 #include "ir_gree_transceiver_main.h"
 #include "main.h"
 
+
 const char *TAG = "main";
 EventGroupHandle_t all_event;
 
 void app_main(void)
 {
     all_event = xEventGroupCreate();
-    //uint16_t i = 0;
+    xEventGroupClearBits(all_event, 0xff);
+    uint16_t i = 0;
 
-    //xTaskCreatePinnedToCore(initialise_wifi_task, "initialise_wifi", 4096, NULL, 0, NULL, 1);
-    //xTaskCreatePinnedToCore(gui_task, "gui", 4096 * 2, NULL, 2, NULL, 0);
-    //xTaskCreatePinnedToCore(sensor_task, "sensor_hub", 4096, NULL, 0, NULL, 0);
-    //xTaskCreatePinnedToCore(led_task, "led_strip", 4096, NULL, 3, NULL, 1);
+    xTaskCreatePinnedToCore(initialise_wifi_task, "initialise_wifi", 4096, NULL, 0, NULL, 1);
+    xTaskCreatePinnedToCore(sensor_task, "sensor_hub", 4096, NULL, 0, NULL, 0);
+    xTaskCreatePinnedToCore(gui_task, "gui", 4096 * 2, NULL, 2, NULL, 0);
+    xTaskCreatePinnedToCore(led_task, "led_strip", 4096, NULL, 3, NULL, 1);
     xTaskCreatePinnedToCore(ir_gree_transceiver_main_task, "gree_ir", 4096, NULL, 3, NULL, 1);
 
-    /*while (1)
+    while (1)
     {
         EventBits_t uxBits_wifi = xEventGroupWaitBits(all_event, BIT0_WIFI_READY, pdFALSE, pdTRUE, (TickType_t)0);
 
@@ -59,7 +61,7 @@ void app_main(void)
             sntp_init();
             xEventGroupSetBits(all_event, BIT2_NTP_READY);
             ESP_LOGI(TAG, "SNTP Finished! Ready to launch aliyun!");
-            // xTaskCreatePinnedToCore(link_main, "aliyun", 4096, NULL, 0, NULL, 0);
+            xTaskCreatePinnedToCore(link_main, "aliyun", 4096, NULL, 0, NULL, 0);
             break;
         }
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -71,5 +73,5 @@ void app_main(void)
             ESP_LOGI(TAG, "NO Network!!! Turning OFF WIFI!!!");
             break;
         }
-    }*/
+    }
 }

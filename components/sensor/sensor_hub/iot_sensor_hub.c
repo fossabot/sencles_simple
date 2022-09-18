@@ -851,10 +851,11 @@ static void sensor_default_event_handler(void *handler_args, esp_event_base_t ba
     case SENSOR_TEMP_HUMI_DATA_READY:
         ESP_LOGI(TAG, "Timestamp = %llu - SENSOR_TEMP_HUMI_DATA_READY - "
                       "temperature=%.2f"
-                      "  "
+                      "body_temperature=%.2f"
                       "humidity=%.2f",
                  sensor_data->timestamp,
                  sensor_data->humiture.temperature,
+                 sensor_data->humiture.body_temperature,
                  sensor_data->humiture.humidity);
         break;
 

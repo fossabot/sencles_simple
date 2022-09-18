@@ -20,26 +20,18 @@
 #include <sys/cdefs.h>
 #include "freertos/queue.h"
 #include "sensor_hub_main_task.h"
-#include "lvgl_app.h"
-#include "math.h"
 
 #define SENSOR_PERIOD_MS CONFIG_SENSOR_PERIOD_MS
 
-sensor_data_t *sensor_data;
+QueueHandle_t xQueueSenData;
 
 #define TAG "Sensors Monitor"
-
-extern lv_obj_t *ui_humiArc;
-extern lv_obj_t *ui_tempArc;
-extern lv_obj_t *ui_tempLabelnum;
-extern lv_obj_t *ui_humiLabelnum;
-extern lv_obj_t *ui_btempLabelnum;
 
 extern EventGroupHandle_t all_event;
 
 static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
 {
-    sensor_data = (sensor_data_t *)event_data;
+    sensor_data_t *sensor_data = (sensor_data_t *)event_data;
     sensor_type_t sensor_type = (sensor_type_t)((sensor_data->sensor_id) >> 4 & SENSOR_ID_MASK);
 
     if (sensor_type >= SENSOR_TYPE_MAX)
@@ -60,11 +52,11 @@ static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_
                  SENSOR_TYPE_STRING[sensor_type]);
         break;
     case SENSOR_TEMP_HUMI_DATA_READY:
-        lv_label_set_text_fmt(ui_tempLabelnum, "%0.3f", sensor_data->humiture.temperature);
-        lv_label_set_text_fmt(ui_humiLabelnum, "%0.3f", sensor_data->humiture.humidity);
-        lv_arc_set_value(ui_tempArc, (int)sensor_data->humiture.temperature);
-        lv_arc_set_value(ui_humiArc, (int)sensor_data->humiture.humidity);
-
+        ESP_LOGI(TAG, "Timestamp = %llu - SENSOR_TEMP_HUMI_DATA_READY - "
+                      "humi=%.2f, temp=%.2f, body_temp=%.2f",
+                 sensor_data->timestamp,
+                 sensor_data->humiture.humidity, sensor_data->humiture.temperature, sensor_data->humiture.body_temperature);
+        xQueueOverwriteFromISR(xQueueSenData, sensor_data, NULL);
         break;
     case SENSOR_ACCE_DATA_READY:
         ESP_LOGI(TAG, "Timestamp = %llu - SENSOR_ACCE_DATA_READY - "
@@ -100,9 +92,7 @@ static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "Timestamp = %llu - event id = %ld", sensor_data->timestamp, id);
         break;
     }
-    float temp_body = 1.07 * (sensor_data->humiture.temperature) + 0.2 * ((sensor_data->humiture.humidity) / 100.0) * 6.105 * exp((17.27 * (sensor_data->humiture.temperature)) / (237.7 + (sensor_data->humiture.temperature))) - 2.7;
-    lv_label_set_text_fmt(ui_btempLabelnum, "%0.3f", temp_body);
-    if (sensor_data->humiture.temperature > 28)
+    if (sensor_data->humiture.temperature > 27)
     {
         xEventGroupSetBitsFromISR(all_event, BIT4, NULL);
     }
@@ -117,6 +107,9 @@ void sensor_task(void *args)
     (void)args;
 
     ESP_LOGI(TAG, "HELLO");
+
+    /*create Queue for humiture data transfer*/
+    xQueueSenData = xQueueCreate(1, sizeof(sensor_data_t));
 
     /*create the i2c0 bus handle with a resource ID*/
     i2c_config_t i2c_conf = {

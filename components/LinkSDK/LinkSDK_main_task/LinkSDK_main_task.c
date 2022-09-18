@@ -39,17 +39,18 @@
 #include "core_string.h"
 #include "cJSON.h"
 
+#include "sensor_type.h"
+
 #define TAG "Aliyun_service"
 #define TAG_LOG "Aliyun_LOG"
 
-extern QueueHandle_t xQueueHumi;
-extern QueueHandle_t xQueueTemp;
+extern QueueHandle_t xQueueSenData;
 extern EventGroupHandle_t all_event;
 
-extern const uint8_t client_cert_pem_start[] asm("_binary_client_crt_start");
-extern const uint8_t client_cert_pem_end[] asm("_binary_client_crt_end");
-extern const uint8_t client_key_pem_start[] asm("_binary_client_key_start");
-extern const uint8_t client_key_pem_end[] asm("_binary_client_key_end");
+extern const char client_cert_pem_start[] asm("_binary_client_crt_start");
+extern const char client_cert_pem_end[] asm("_binary_client_crt_end");
+extern const char client_key_pem_start[] asm("_binary_client_key_start");
+extern const char client_key_pem_end[] asm("_binary_client_key_end");
 
 /* 位于portfiles/aiot_port文件夹下的系统适配函数集合 */
 extern aiot_sysdep_portfile_t g_aiot_sysdep_portfile;
@@ -232,6 +233,7 @@ void mqtt_recv_handler(void *handle, const aiot_mqtt_recv_t *packet, void *userd
     default:
     {
     }
+    break;
     }
 }
 
@@ -506,9 +508,7 @@ void link_main(void *args)
     void *mqtt_handle = NULL;
     void *dm_handle = NULL;
     uint8_t post_reply = 0;
-    float temp_rx = 0;
-    float humi_rx = 0;
-    float temp_body = 0;
+    sensor_data_t aliyun_recv_data;
 
     /* TODO: 使用X509双向认证时, MQTT连接的服务器域名与通常情况不同 */
     char *host = "x509.itls.cn-shanghai.aliyuncs.com";
@@ -612,17 +612,17 @@ void link_main(void *args)
         goto error_loop;
     }
 
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    vTaskDelay(pdMS_TO_TICKS(2000));
     aiot_mqtt_setopt(mqtt_handle, AIOT_MQTTOPT_PRODUCT_KEY, (void *)g_product_key);
     aiot_mqtt_setopt(mqtt_handle, AIOT_MQTTOPT_DEVICE_NAME, (void *)g_device_name);
     xEventGroupSetBits(all_event, BIT3);
 
     while (1)
     {
+        xQueuePeek(xQueueSenData, &aliyun_recv_data, (TickType_t)0);
+        send_property_post(dm_handle, cJSON_phase(aliyun_recv_data.humiture.temperature, aliyun_recv_data.humiture.humidity, aliyun_recv_data.humiture.body_temperature));
 
-        send_property_post(dm_handle, cJSON_phase(temp_rx, humi_rx, temp_body));
-
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
+        vTaskDelay(pdMS_TO_TICKS(5000));
     }
 
     /* 断开MQTT连接, 一般不会运行到这里 */
@@ -647,8 +647,5 @@ void link_main(void *args)
 
 error_loop:
     ESP_LOGE(TAG, "Aliyun_ERROR");
-    while (1)
-    {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
+    vTaskDelete(NULL);
 }

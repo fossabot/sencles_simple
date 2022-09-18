@@ -148,7 +148,6 @@ extern "C"
      *      - ESP_OK if creating encoder successfully
      */
     esp_err_t rmt_new_ir_gree_encoder(const ir_gree_encoder_config_t *config, rmt_encoder_handle_t *ret_encoder);
-    void ir_gree_transceiver_main_task(void *arg);
 
     void stateReset(GreeProtocol_t *greeproc);
     void setPower(GreeProtocol_t *greeproc, bool state);
