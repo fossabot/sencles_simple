@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "math.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_timer.h"
@@ -31,6 +32,7 @@
 #include "lvgl.h"
 #include "lvgl_app.h"
 #include "driver/gpio.h"
+#include "main.h"
 
 static const char *TAG = "gui_task";
 
@@ -81,22 +83,34 @@ static void increase_lvgl_tick(void *arg)
 
 SemaphoreHandle_t xGuiSemaphore;
 
-void gui_task(void *arg)
+void gui_task(void *pvParameters)
 {
-    (void)arg;
+    all_signals_t *signal = (all_signals_t *)pvParameters;
     xGuiSemaphore = xSemaphoreCreateMutex();
 
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
 
     ESP_LOGI(TAG, "Initialize Backlight GPIO Configuration");
-    gpio_config_t bk_gpio_config = {
-        .mode = GPIO_MODE_OUTPUT,
-        .pin_bit_mask = 1ULL << PIN_NUM_BK_LIGHT};
-    ESP_ERROR_CHECK(gpio_config(&bk_gpio_config));
+    // Prepare and then apply the LEDC PWM timer configuration
+    ledc_timer_config_t ledc_timer = {
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .timer_num = LEDC_TIMER_0,
+        .duty_resolution = LEDC_TIMER_13_BIT,
+        .freq_hz = 5000, // Set output frequency at 5 kHz
+        .clk_cfg = LEDC_AUTO_CLK};
+    ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
 
-    ESP_LOGI(TAG, "Turn off LCD backlight");
-    ESP_ERROR_CHECK(gpio_set_level(PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_OFF_LEVEL));
+    // Prepare and then apply the LEDC PWM channel configuration
+    ledc_channel_config_t ledc_channel = {
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .channel = LEDC_CHANNEL_0,
+        .timer_sel = LEDC_TIMER_0,
+        .intr_type = LEDC_INTR_DISABLE,
+        .gpio_num = PIN_NUM_BK_LIGHT,
+        .duty = 0, // Set duty to 0%
+        .hpoint = 0};
+    ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
 
     ESP_LOGI(TAG, "Initialize SPI bus");
     spi_bus_config_t buscfg = {
@@ -140,7 +154,7 @@ void gui_task(void *arg)
     ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
 
     // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
-    ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
+    ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, false));
 
     ESP_LOGI(TAG, "Initialize LVGL library");
     lv_init();
@@ -176,11 +190,16 @@ void gui_task(void *arg)
     ESP_LOGI(TAG, "Hardware initialization complete!");
 
     ESP_LOGI(TAG, "Initializing LVGL_UI");
-    ui_init();
+    ui_init(signal);
     ESP_LOGI(TAG, "Initialized LVGL_UI");
 
     ESP_LOGI(TAG, "Ready to display the LVGL screen");
-    gpio_set_level(PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_ON_LEVEL);
+
+    vTaskDelay(pdMS_TO_TICKS(2000));
+
+    ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
+    change_backlight(LEDC_CHANNEL_0, 0.1);
+
 
     while (1)
     {
@@ -197,4 +216,13 @@ void gui_task(void *arg)
     free(buf1);
     free(buf2);
     vTaskDelete(NULL);
+}
+
+void change_backlight(ledc_channel_t ledc_channel, double duty)
+{
+    // Set duty
+    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, ledc_channel, (uint32_t)(pow(2, 13) - 1) * duty));
+    // Update duty to apply the new value
+    ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, ledc_channel));
+    ESP_LOGI(TAG,"backlight_duty change to %.2f%%", duty*100);
 }

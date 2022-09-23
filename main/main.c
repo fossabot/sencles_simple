@@ -15,38 +15,51 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "freertos/queue.h"
 #include "esp_wifi.h"
 #include <sys/param.h>
 #include "esp_sntp.h"
 #include "time.h"
 ///////////////////////////////////////////////////////////////
 #include "wifi_smart_config_main_task.h"
-#include "lvgl_hw_gc9a01.h"
+#include "lvgl_hw_main_task.h"
 #include "sensor_hub_main_task.h"
 #include "LinkSDK_main_task.h"
 #include "led_strip_main_task.h"
 #include "ir_gree_transceiver_main.h"
+#include "ir_gree_encoder.h"
 #include "main.h"
 
-
 const char *TAG = "main";
-EventGroupHandle_t all_event;
+all_signals_t signal_de;
+
+TaskHandle_t wifi_task_handle;
+TaskHandle_t sensor_task_handle;
+TaskHandle_t gui_task_handle;
+TaskHandle_t led_task_handle;
+TaskHandle_t gree_task_handle;
+TaskHandle_t aliyun_task_handle;
 
 void app_main(void)
 {
-    all_event = xEventGroupCreate();
-    xEventGroupClearBits(all_event, 0xff);
-    uint16_t i = 0;
 
-    xTaskCreatePinnedToCore(initialise_wifi_task, "initialise_wifi", 4096, NULL, 0, NULL, 1);
-    xTaskCreatePinnedToCore(sensor_task, "sensor_hub", 4096, NULL, 0, NULL, 0);
-    xTaskCreatePinnedToCore(gui_task, "gui", 4096 * 2, NULL, 2, NULL, 0);
-    xTaskCreatePinnedToCore(led_task, "led_strip", 4096, NULL, 3, NULL, 1);
-    xTaskCreatePinnedToCore(ir_gree_transceiver_main_task, "gree_ir", 4096, NULL, 3, NULL, 1);
+    signal_de.all_event = xEventGroupCreate();
+    signal_de.xQueueSenData = xQueueCreate(1, sizeof(sensor_data_t));
+    signal_de.xQueueACData = xQueueCreate(1, sizeof(GreeProtocol_t));
+
+    all_signals_t *signal = &signal_de;
+
+    xEventGroupClearBits(signal->all_event, 0xff);
+
+    xTaskCreatePinnedToCore(initialise_wifi_task, "initialise_wifi", 4096, signal, 0, &wifi_task_handle, 1);
+    xTaskCreatePinnedToCore(sensor_task, "sensor_hub", 4096, signal, 0, &sensor_task_handle, 1);
+    xTaskCreatePinnedToCore(gui_task, "gui", 4096 * 2, signal, 2, &gui_task_handle, 0);
+    xTaskCreatePinnedToCore(led_task, "led_strip", 4096, signal, 3, &led_task_handle, 0);
+    xTaskCreatePinnedToCore(ir_gree_transceiver_main_task, "gree_ir", 4096, signal, 3, &gree_task_handle, 1);
 
     while (1)
     {
-        EventBits_t uxBits_wifi = xEventGroupWaitBits(all_event, BIT0_WIFI_READY, pdFALSE, pdTRUE, (TickType_t)0);
+        EventBits_t uxBits_wifi = xEventGroupWaitBits(signal->all_event, BIT0_WIFI_READY, pdFALSE, pdTRUE, (TickType_t)0);
 
         if (uxBits_wifi & (BIT0_WIFI_READY))
         {
@@ -59,19 +72,12 @@ void app_main(void)
             sntp_setservername(1, "ntp2.aliyun.com");
             sntp_setservername(2, "ntp3.aliyun.com");
             sntp_init();
-            xEventGroupSetBits(all_event, BIT2_NTP_READY);
+            xEventGroupSetBits(signal->all_event, BIT2_NTP_READY);
             ESP_LOGI(TAG, "SNTP Finished! Ready to launch aliyun!");
-            xTaskCreatePinnedToCore(link_main, "aliyun", 4096, NULL, 0, NULL, 0);
+            xTaskCreatePinnedToCore(link_main, "aliyun", 4096, signal, 0, &aliyun_task_handle, 0);
             break;
         }
         vTaskDelay(pdMS_TO_TICKS(1000));
-        i++;
-        ESP_LOGI(TAG, "Waiting for network! %ds are avilable!!", 15 - i);
-        if (i == 15)
-        {
-            esp_wifi_stop();
-            ESP_LOGI(TAG, "NO Network!!! Turning OFF WIFI!!!");
-            break;
+        heap_caps_print_heap_info(MALLOC_CAP_DEFAULT);
         }
-    }
 }

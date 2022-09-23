@@ -736,13 +736,13 @@ uint8_t iot_sensor_scan(bus_handle_t bus, sensor_info_t *buf[], uint8_t num)
     return num_valid;
 }
 
-esp_err_t iot_sensor_handler_register(sensor_handle_t sensor_handle, sensor_event_handler_t handler, sensor_event_handler_instance_t *context)
+esp_err_t iot_sensor_handler_register(sensor_handle_t sensor_handle, sensor_event_handler_t handler, void *handler_args, sensor_event_handler_instance_t *context)
 {
     SENSOR_CHECK(handler != NULL, "handler can not be NULL", ESP_ERR_INVALID_ARG);
     SENSOR_CHECK(sensor_handle != NULL, "sensor handle can not be NULL", ESP_ERR_INVALID_ARG);
     _iot_sensor_t *sensor = (_iot_sensor_t *)sensor_handle;
     SENSOR_CHECK(sensor->event_base != NULL, "sensor event_base can not be NULL", ESP_FAIL);
-    ESP_ERROR_CHECK(sensors_event_handler_instance_register(sensor->event_base, ESP_EVENT_ANY_ID, handler, NULL, context));
+    ESP_ERROR_CHECK(sensors_event_handler_instance_register(sensor->event_base, ESP_EVENT_ANY_ID, handler, handler_args, context));
     return ESP_OK;
 }
 
@@ -756,26 +756,26 @@ esp_err_t iot_sensor_handler_unregister(sensor_handle_t sensor_handle, sensor_ev
     return ESP_OK;
 }
 
-esp_err_t iot_sensor_handler_register_with_type(sensor_type_t sensor_type, int32_t event_id, sensor_event_handler_t handler, sensor_event_handler_instance_t *context)
+esp_err_t iot_sensor_handler_register_with_type(sensor_type_t sensor_type, int32_t event_id, sensor_event_handler_t handler, void *handler_args, sensor_event_handler_instance_t *context)
 {
     SENSOR_CHECK(handler != NULL, "handler can not be NULL", ESP_ERR_INVALID_ARG);
 
     switch (sensor_type)
     {
     case NULL_ID:
-        ESP_ERROR_CHECK(sensors_event_handler_instance_register(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, handler, NULL, context));
+        ESP_ERROR_CHECK(sensors_event_handler_instance_register(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, handler, handler_args, context));
         break;
 
     case HUMITURE_ID:
-        ESP_ERROR_CHECK(sensors_event_handler_instance_register(SENSOR_HUMITURE_EVENTS, event_id, handler, NULL, context));
+        ESP_ERROR_CHECK(sensors_event_handler_instance_register(SENSOR_HUMITURE_EVENTS, event_id, handler, handler_args, context));
         break;
 
     case IMU_ID:
-        ESP_ERROR_CHECK(sensors_event_handler_instance_register(SENSOR_IMU_EVENTS, event_id, handler, NULL, context));
+        ESP_ERROR_CHECK(sensors_event_handler_instance_register(SENSOR_IMU_EVENTS, event_id, handler, handler_args, context));
         break;
 
     case LIGHT_SENSOR_ID:
-        ESP_ERROR_CHECK(sensors_event_handler_instance_register(SENSOR_LIGHTSENSOR_EVENTS, event_id, handler, NULL, context));
+        ESP_ERROR_CHECK(sensors_event_handler_instance_register(SENSOR_LIGHTSENSOR_EVENTS, event_id, handler, handler_args, context));
         break;
 
     default:

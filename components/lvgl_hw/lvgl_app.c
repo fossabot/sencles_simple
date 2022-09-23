@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "lvgl_app.h"
 #include "math.h"
 #include "time.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "sensor_type.h"
+#include "lvgl_app.h"
 
-extern QueueHandle_t xQueueSenData;
 
 ///////////////////// VARIABLES ////////////////////
 lv_obj_t *ui_Screen1;
@@ -49,7 +48,7 @@ typedef struct _lv_refresh_detail
         lv_obj_t *ui_humiLabelnum;
         lv_obj_t *ui_btempLabelnum;
     } lv_humiture;
-
+    all_signals_t *signal;
 } lv_refresh_t;
 
 static lv_refresh_t lv_refresh = {0};
@@ -75,11 +74,11 @@ static void refresh_task_callback(lv_timer_t *timer)
     int second = time_info->tm_sec;
 
     static sensor_data_t lvgl_recv_data ;
-    xQueuePeekFromISR(xQueueSenData, &lvgl_recv_data);
+    lv_refresh_t *refresh = (lv_refresh_t *)(timer->user_data);
+    xQueuePeekFromISR(refresh->signal->xQueueSenData, &lvgl_recv_data);
 
-    if (timer != NULL && timer->user_data != NULL)
+    if (timer != NULL && refresh != NULL)
     {
-        lv_refresh_t *refresh = (lv_refresh_t *)(timer->user_data);
         lv_label_set_text_fmt(refresh->lv_clock.time_label, "%02d:%02d:%02d", hour, minutes, second);
         lv_label_set_text_fmt(refresh->lv_clock.date_label, "%d-%02d-%02d", year, month, day);
         lv_label_set_text_fmt(refresh->lv_clock.weekday_label, "%s", week_day[weekday]);
@@ -368,8 +367,9 @@ void ui_Screen1_screen_init(void)
     lv_label_set_text(ui_countss, "sec");
 }
 
-void ui_init(void)
+void ui_init(all_signals_t *signal)
 {
+    lv_refresh.signal = signal;
     lv_disp_t *dispp = lv_disp_get_default();
     lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
                                               false, LV_FONT_DEFAULT);

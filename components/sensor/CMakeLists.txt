@@ -11,4 +11,4 @@ set(c_srcs
 
 idf_component_register(SRCS "${c_srcs}"
                         INCLUDE_DIRS "sensor_hub/include" "sht3x/include" "sht4x/include"
-                        REQUIRES esp_event  esp_timer bus)
+                        REQUIRES esp_event  esp_timer bus main)

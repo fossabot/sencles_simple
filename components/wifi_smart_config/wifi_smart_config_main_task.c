@@ -14,8 +14,9 @@
 // limitations under the License.
 
 #include "wifi_smart_config_main_task.h"
+#include "main.h"
 
-extern EventGroupHandle_t all_event;
+//extern EventGroupHandle_t all_event;
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t s_wifi_event_group;
@@ -65,8 +66,9 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
+        all_signals_t *signal = (all_signals_t *)arg;
         xEventGroupSetBits(s_wifi_event_group, CONNECTED_BIT);
-        xEventGroupSetBits(all_event, CONNECTED_BIT);
+        xEventGroupSetBits(signal->all_event, CONNECTED_BIT);
     }
     else if (event_base == SC_EVENT && event_id == SC_EVENT_SCAN_DONE)
     {
@@ -114,9 +116,9 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     }
 }
 
-void initialise_wifi_task(void *arg)
+void initialise_wifi_task(void *pvParameters)
 {
-    (void)arg;
+    all_signals_t *signal = (all_signals_t *)pvParameters;
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(nvs_flash_init());
 
@@ -130,7 +132,7 @@ void initialise_wifi_task(void *arg)
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, signal));
     ESP_ERROR_CHECK(esp_event_handler_register(SC_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
@@ -156,9 +158,9 @@ void initialise_wifi_task(void *arg)
     vTaskDelete(NULL);
 }
 
-void smartconfig_task(void *parm)
+void smartconfig_task(void *pvParameters)
 {
-    (void)parm;
+    all_signals_t *signal = (all_signals_t *)pvParameters;
     EventBits_t uxBits;
     ESP_ERROR_CHECK(esp_smartconfig_set_type(SC_TYPE_ESPTOUCH));
     smartconfig_start_config_t cfg = SMARTCONFIG_START_CONFIG_DEFAULT()
@@ -169,13 +171,13 @@ void smartconfig_task(void *parm)
         if (uxBits & CONNECTED_BIT)
         {
             ESP_LOGI(TAG, "WiFi Connected to ap");
-            xEventGroupSetBits(all_event, CONNECTED_BIT);
+            xEventGroupSetBits(signal->all_event, CONNECTED_BIT);
         }
         if (uxBits & ESPTOUCH_DONE_BIT)
         {
             ESP_LOGI(TAG, "smartconfig over");
             esp_smartconfig_stop();
-            xEventGroupSetBits(all_event, ESPTOUCH_DONE_BIT);
+            xEventGroupSetBits(signal->all_event, ESPTOUCH_DONE_BIT);
             break;
         }
     }

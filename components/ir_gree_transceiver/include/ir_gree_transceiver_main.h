@@ -9,7 +9,7 @@ extern "C"
 {
 #endif
 
-    void ir_gree_transceiver_main_task(void *arg);
+    void ir_gree_transceiver_main_task(void *pvParameters);
 
 #ifdef __cplusplus
 }

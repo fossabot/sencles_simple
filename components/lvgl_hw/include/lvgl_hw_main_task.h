@@ -16,8 +16,10 @@
 extern "C"
 {
 #endif
+#include "driver/ledc.h"
 
-    void gui_task(void *arg);
+    void gui_task(void *pvParameters);
+    void change_backlight(ledc_channel_t ledc_channel, double duty);
 
 #ifdef __cplusplus
 }

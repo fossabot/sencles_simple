@@ -172,7 +172,7 @@ extern "C"
      *     - ESP_OK Success
      *     - ESP_FAIL Fail
      */
-    esp_err_t iot_sensor_handler_register(sensor_handle_t sensor_handle, sensor_event_handler_t handler, sensor_event_handler_instance_t *context);
+    esp_err_t iot_sensor_handler_register(sensor_handle_t sensor_handle, sensor_event_handler_t handler, void *handler_args, sensor_event_handler_instance_t *context);
 
     /**
      * @brief Unregister a event handler from a sensor's event.
@@ -202,7 +202,7 @@ extern "C"
      *     - ESP_OK Success
      *     - ESP_FAIL Fail
      */
-    esp_err_t iot_sensor_handler_register_with_type(sensor_type_t sensor_type, int32_t event_id, sensor_event_handler_t handler, sensor_event_handler_instance_t *context);
+    esp_err_t iot_sensor_handler_register_with_type(sensor_type_t sensor_type, int32_t event_id, sensor_event_handler_t handler, void *handler_args, sensor_event_handler_instance_t *context);
 
     /**
      * @brief Unregister a event handler from a event.

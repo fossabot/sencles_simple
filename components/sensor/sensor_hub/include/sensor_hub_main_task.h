@@ -29,7 +29,7 @@ extern "C"
 {
 #endif
 
-    void sensor_task(void *args);
+    void sensor_task(void *pvParameters);
 
 #ifdef __cplusplus
 }

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _MAIN_GROUP_CONFIG_H_
-#define _MAIN_GROUP_CONFIG_H_
+#ifndef _MAIN_H_
+#define _MAIN_H_
 
 #ifdef __cplusplus
 extern "C"
@@ -23,8 +23,14 @@ extern "C"
 #include "stdio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+#include "freertos/queue.h"
 
-    extern EventGroupHandle_t all_event;
+    typedef struct _all_signals
+    {
+        EventGroupHandle_t all_event;
+        QueueHandle_t xQueueSenData;
+        QueueHandle_t xQueueACData;
+    } all_signals_t;
 
 #define BIT0_WIFI_READY BIT0
 #define BIT1_SC_OVER BIT1

@@ -20,17 +20,19 @@
 #include <sys/cdefs.h>
 #include "freertos/queue.h"
 #include "sensor_hub_main_task.h"
+#include "main.h"
 
 #define SENSOR_PERIOD_MS CONFIG_SENSOR_PERIOD_MS
 
-QueueHandle_t xQueueSenData;
+//QueueHandle_t xQueueSenData;
 
 #define TAG "Sensors Monitor"
 
-extern EventGroupHandle_t all_event;
+//extern EventGroupHandle_t all_event;
 
 static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
 {
+    all_signals_t *signal = (all_signals_t *)handler_args;
     sensor_data_t *sensor_data = (sensor_data_t *)event_data;
     sensor_type_t sensor_type = (sensor_type_t)((sensor_data->sensor_id) >> 4 & SENSOR_ID_MASK);
 
@@ -56,7 +58,7 @@ static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_
                       "humi=%.2f, temp=%.2f, body_temp=%.2f",
                  sensor_data->timestamp,
                  sensor_data->humiture.humidity, sensor_data->humiture.temperature, sensor_data->humiture.body_temperature);
-        xQueueOverwriteFromISR(xQueueSenData, sensor_data, NULL);
+        xQueueOverwriteFromISR(signal->xQueueSenData, sensor_data, NULL);
         break;
     case SENSOR_ACCE_DATA_READY:
         ESP_LOGI(TAG, "Timestamp = %llu - SENSOR_ACCE_DATA_READY - "
@@ -94,22 +96,21 @@ static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_
     }
     if (sensor_data->humiture.temperature > 27)
     {
-        xEventGroupSetBitsFromISR(all_event, BIT4, NULL);
+        xEventGroupSetBitsFromISR(signal->all_event, BIT4, NULL);
     }
     else
     {
-        xEventGroupClearBitsFromISR(all_event, BIT4);
+        xEventGroupClearBitsFromISR(signal->all_event, BIT4);
     }
 }
 
-void sensor_task(void *args)
+void sensor_task(void *pvParameters)
 {
-    (void)args;
-
+    all_signals_t *signal = (all_signals_t *)pvParameters;
     ESP_LOGI(TAG, "HELLO");
 
-    /*create Queue for humiture data transfer*/
-    xQueueSenData = xQueueCreate(1, sizeof(sensor_data_t));
+
+
 
     /*create the i2c0 bus handle with a resource ID*/
     i2c_config_t i2c_conf = {
@@ -128,7 +129,7 @@ void sensor_task(void *args)
     }
 
     /*register handler with NULL specific typeID, thus all events posted to sensor_loop will be handled*/
-    ESP_ERROR_CHECK(iot_sensor_handler_register_with_type(NULL_ID, NULL_ID, sensorEventHandler, NULL));
+    ESP_ERROR_CHECK(iot_sensor_handler_register_with_type(NULL_ID, NULL_ID, sensorEventHandler, signal, NULL));
 
     /*create sensors based on sensor scan result*/
     sensor_info_t *sensor_infos[10];

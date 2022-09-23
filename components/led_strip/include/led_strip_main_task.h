@@ -29,7 +29,7 @@ extern "C"
         blue,
     } led_strip_color_t;
 
-    void led_task(void *arg);
+    void led_task(void *pvParameters);
 
 #ifdef __cplusplus
 }

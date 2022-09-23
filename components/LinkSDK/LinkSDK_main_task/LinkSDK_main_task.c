@@ -38,13 +38,15 @@
 #include "aiot_dm_api.h"
 #include "core_string.h"
 #include "cJSON.h"
+#include "main.h"
 
 #include "sensor_type.h"
+#include "ir_gree_encoder.h"
 
-#define TAG "Aliyun_service"
+#define TAG "Aliyun_task"
 #define TAG_LOG "Aliyun_LOG"
 
-extern QueueHandle_t xQueueSenData;
+
 extern EventGroupHandle_t all_event;
 
 extern const char client_cert_pem_start[] asm("_binary_client_crt_start");
@@ -68,22 +70,25 @@ static char *g_device_name = NULL;
 int32_t state_logcb(int32_t code, char *message)
 {
     ESP_LOGI(TAG_LOG, "%s", message);
-    // printf("%s", message);
     return 0;
 }
 
-static inline char *cJSON_phase(float temp, float humi, float temp_body)
+static inline char *cJSON_phase(float temp, float humi, float temp_body, uint8_t ac_p, uint8_t ac_t)
 {
     cJSON *cjson_data = NULL;
     cJSON *cjson_humi = NULL;
     cJSON *cjson_temp = NULL;
     cJSON *cjson_temp_body = NULL;
+    cJSON *cjson_ac_power = NULL;
+    cJSON *cjson_ac_temp = NULL;
     char *str = NULL;
 
     cjson_data = cJSON_CreateObject();
     cjson_temp = cJSON_CreateObject();
     cjson_humi = cJSON_CreateObject();
     cjson_temp_body = cJSON_CreateObject();
+    cjson_ac_power = cJSON_CreateObject();
+    cjson_ac_temp = cJSON_CreateObject();
 
     /* 添加一个嵌套的JSON数据（添加一个链表节点） */
 
@@ -96,8 +101,15 @@ static inline char *cJSON_phase(float temp, float humi, float temp_body)
     cJSON_AddNumberToObject(cjson_temp_body, "value", temp_body);
     cJSON_AddItemToObject(cjson_data, "CurrentBodytemp", cjson_temp_body);
 
+    cJSON_AddNumberToObject(cjson_ac_power, "value", ac_p);
+    cJSON_AddItemToObject(cjson_data, "AC_Power", cjson_ac_power);
+
+    cJSON_AddNumberToObject(cjson_ac_temp, "value", ac_t);
+    cJSON_AddItemToObject(cjson_data, "AC_Temp", cjson_ac_temp);
+
     /* 打印JSON对象(整条链表)的所有数据 */
     str = cJSON_Print(cjson_data);
+    cJSON_Delete(cjson_data);
     return str;
 }
 
@@ -501,14 +513,16 @@ int32_t send_event_post(void *dm_handle, char *event_id, char *params)
     return aiot_dm_send(dm_handle, &msg);
 }
 
-void link_main(void *args)
+void link_main(void *pvParameters)
 {
-    (void)args;
+    all_signals_t *signal = (all_signals_t *)pvParameters;
     int32_t res = STATE_SUCCESS;
     void *mqtt_handle = NULL;
     void *dm_handle = NULL;
     uint8_t post_reply = 0;
-    sensor_data_t aliyun_recv_data;
+    sensor_data_t aliyun_recv_sensor_data;
+    GreeProtocol_t aliyun_recv_ac_data;
+
 
     /* TODO: 使用X509双向认证时, MQTT连接的服务器域名与通常情况不同 */
     char *host = "x509.itls.cn-shanghai.aliyuncs.com";
@@ -594,7 +608,7 @@ void link_main(void *args)
 
     /* 创建一个单独的线程, 专用于执行aiot_mqtt_process, 它会自动发送心跳保活, 以及重发QoS1的未应答报文 */
     g_mqtt_process_task_running = 1;
-    xTaskCreatePinnedToCore(mqtt_process_task, "mqtt_process", 2048, mqtt_handle, 0, &process_Handle, 1);
+    xTaskCreatePinnedToCore(mqtt_process_task, "mqtt_process", 2048, mqtt_handle, 0, &process_Handle, 0);
     while (process_Handle == NULL)
     {
         ESP_LOGE(TAG, "create mqtt_process_task failed: %ld", res);
@@ -602,7 +616,7 @@ void link_main(void *args)
 
     /* 创建一个单独的线程用于执行aiot_mqtt_recv, 它会循环收取服务器下发的MQTT消息, 并在断线时自动重连 */
     g_mqtt_recv_task_running = 1;
-    xTaskCreatePinnedToCore(mqtt_recv_task, "recv_process", 4096, mqtt_handle, 0, &recv_Handle, 1);
+    xTaskCreatePinnedToCore(mqtt_recv_task, "recv_process", 4096, mqtt_handle, 0, &recv_Handle, 0);
     if (recv_Handle == NULL)
     {
         ESP_LOGE(TAG, "create mqtt_recv_task failed: %ld", res);
@@ -615,14 +629,21 @@ void link_main(void *args)
     vTaskDelay(pdMS_TO_TICKS(2000));
     aiot_mqtt_setopt(mqtt_handle, AIOT_MQTTOPT_PRODUCT_KEY, (void *)g_product_key);
     aiot_mqtt_setopt(mqtt_handle, AIOT_MQTTOPT_DEVICE_NAME, (void *)g_device_name);
-    xEventGroupSetBits(all_event, BIT3);
+    xEventGroupSetBits(signal->all_event, BIT3);
 
     while (1)
     {
-        xQueuePeek(xQueueSenData, &aliyun_recv_data, (TickType_t)0);
-        send_property_post(dm_handle, cJSON_phase(aliyun_recv_data.humiture.temperature, aliyun_recv_data.humiture.humidity, aliyun_recv_data.humiture.body_temperature));
+        xQueuePeek(signal->xQueueSenData, &aliyun_recv_sensor_data, (TickType_t)0);
+        xQueuePeek(signal->xQueueACData, &aliyun_recv_ac_data, (TickType_t)0);
+        char *result = cJSON_phase(aliyun_recv_sensor_data.humiture.temperature,
+                                   aliyun_recv_sensor_data.humiture.humidity,
+                                   aliyun_recv_sensor_data.humiture.body_temperature,
+                                   aliyun_recv_ac_data.GreeProtocol_bit_t.Power,
+                                   aliyun_recv_ac_data.GreeProtocol_bit_t.Temp + 16);
+        send_property_post(dm_handle, result);
+        cJSON_free(result);
 
-        vTaskDelay(pdMS_TO_TICKS(5000));
+        vTaskDelay(pdMS_TO_TICKS(60000U)); // 1min 上报一次
     }
 
     /* 断开MQTT连接, 一般不会运行到这里 */

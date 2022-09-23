@@ -10,43 +10,23 @@
 
 static const char *TAG = "gree_encoder";
 
-#define GETBITS8(data, offset, size) \
-    (((data) & (((uint8_t)UINT8_MAX >> (8 - (size))) << (offset))) >> (offset))
-
 // Constants
-const uint8_t kKelvinatorAuto = 0; // (temp = 25C)
-const uint8_t kKelvinatorCool = 1;
-const uint8_t kKelvinatorDry = 2; // (temp = 25C, but not shown)
-const uint8_t kKelvinatorFan = 3;
-const uint8_t kKelvinatorHeat = 4;
-const uint8_t kKelvinatorBasicFanMax = 3;
-const uint8_t kKelvinatorFanAuto = 0;
-const uint8_t kKelvinatorFanMin = 1;
-const uint8_t kKelvinatorFanMax = 5;
-const uint8_t kKelvinatorMinTemp = 16;  // 16C
-const uint8_t kKelvinatorMaxTemp = 30;  // 30C
-const uint8_t kKelvinatorAutoTemp = 25; // 25C
 
-const uint8_t kKelvinatorSwingVOff = 0b0000;         // 0
-const uint8_t kKelvinatorSwingVAuto = 0b0001;        // 1
-const uint8_t kKelvinatorSwingVHighest = 0b0010;     // 2
-const uint8_t kKelvinatorSwingVUpperMiddle = 0b0011; // 3
-const uint8_t kKelvinatorSwingVMiddle = 0b0100;      // 4
-const uint8_t kKelvinatorSwingVLowerMiddle = 0b0101; // 5
-const uint8_t kKelvinatorSwingVLowest = 0b0110;      // 6
-const uint8_t kKelvinatorSwingVLowAuto = 0b0111;     // 7
-const uint8_t kKelvinatorSwingVMiddleAuto = 0b1001;  // 9
-const uint8_t kKelvinatorSwingVHighAuto = 0b1011;    // 11
+const uint8_t Gree_MinTemp = 16;  // 16C
+const uint8_t Gree_MaxTemp = 30;  // 30C
+const uint8_t Gree_AutoTemp = 25; // 25C
+
+const uint8_t Gree_BasicFanMax = 3;
 
 typedef struct
 {
-    rmt_encoder_t base;                    // the base "class", declares the standard encoder interface
-    rmt_encoder_t *copy_encoder;           // use the copy_encoder to encode the leading and ending pulse
-    rmt_encoder_t *bytes_encoder;          // use the bytes_encoder to encode the data
-    rmt_symbol_word_t gree_leading_symbol; // GREE leading code with RMT representation
-    rmt_symbol_word_t gree_connect_symbol; // GREE connect code with RMT representation
-    rmt_symbol_word_t gree_lconnect_symbol;// GREE long connect code with RMT representation
-    rmt_symbol_word_t gree_ending_symbol;  // GREE ending code with RMT representation
+    rmt_encoder_t base;                     // the base "class", declares the standard encoder interface
+    rmt_encoder_t *copy_encoder;            // use the copy_encoder to encode the leading and ending pulse
+    rmt_encoder_t *bytes_encoder;           // use the bytes_encoder to encode the data
+    rmt_symbol_word_t gree_leading_symbol;  // GREE leading code with RMT representation
+    rmt_symbol_word_t gree_connect_symbol;  // GREE connect code with RMT representation
+    rmt_symbol_word_t gree_lconnect_symbol; // GREE long connect code with RMT representation
+    rmt_symbol_word_t gree_ending_symbol;   // GREE ending code with RMT representation
 
     rmt_symbol_word_t gree_low_level;
     rmt_symbol_word_t gree_high_level;
@@ -483,7 +463,7 @@ esp_err_t rmt_new_ir_gree_encoder(const ir_gree_encoder_config_t *config, rmt_en
         .level1 = 0,
         .duration1 = 580 * config->resolution / 1000000,
     };
-        gree_encoder->gree_high_level = (rmt_symbol_word_t){
+    gree_encoder->gree_high_level = (rmt_symbol_word_t){
         .level0 = 1,
         .duration0 = 620 * config->resolution / 1000000,
         .level1 = 0,
@@ -530,32 +510,43 @@ err:
     return ret;
 }
 
+/// Set the raw state of the object.
+/// @param[in] new_code The raw state from the native IR message.
+esp_err_t setRaw(GreeProtocol_t *greeproc, uint8_t new_code[])
+{
+    memcpy(greeproc->raw, new_code, 16);
+    return ESP_OK;
+}
+
+/// Get the raw state of the object, suitable to be sent with the appropriate
+/// IRsend object method.
+/// @return A PTR to the internal state.
+esp_err_t getRaw(GreeProtocol_t *greeproc, uint8_t *raw)
+{
+    esp_err_t ret = procotol_fixup(greeproc); // Ensure correct settings before sending.
+    *raw = greeproc->raw[0];
+    return ret;
+}
+
 /// Reset the internals of the object to a known good state.
-void stateReset(GreeProtocol_t *greeproc)
+esp_err_t stateReset(GreeProtocol_t *greeproc)
 {
     for (uint8_t i = 0; i < 16; i++)
         greeproc->raw[i] = 0x00;
     greeproc->raw[3] = 0x50;
     greeproc->raw[11] = 0x70;
-}
-
-/// Set the raw state of the object.
-/// @param[in] new_code The raw state from the native IR message.
-void setRaw(GreeProtocol_t *greeproc, uint8_t new_code[])
-{
-    memcpy(greeproc->raw, new_code, 16);
+    return ESP_OK;
 }
 
 /// Calculate the checksum for a given block of state.
 /// @param[in] block A pointer to a block to calc the checksum of.
-/// @param[in] length Length of the block array to checksum.
 /// @return The calculated checksum value.
 /// @note Many Bothans died to bring us this information.
-uint8_t calcBlockChecksum(uint8_t *block)
+__always_inline uint8_t calcBlockChecksum(uint8_t *block)
 {
     uint8_t sum = 0b1010;
     // Sum the lower half of the first 4 bytes of this block.
-    for (uint8_t i = 0; i < 4 ; i++, block++)
+    for (uint8_t i = 0; i < 4; i++, block++)
         sum += (*block & 0b1111);
     // then sum the upper half of the next 3 bytes.
     for (uint8_t i = 4; i < 8 - 1; i++, block++)
@@ -565,53 +556,30 @@ uint8_t calcBlockChecksum(uint8_t *block)
 }
 
 /// Calculate the checksum for the internal state.
-void checksum(GreeProtocol_t *greeproc)
+__always_inline void checksum(GreeProtocol_t *greeproc)
 {
     greeproc->GreeProtocol_bit_t.Sum1 = calcBlockChecksum(greeproc->raw);
     greeproc->GreeProtocol_bit_t.Sum2 = calcBlockChecksum(greeproc->raw + 8);
 }
 
 /// Fix up any odd conditions for the current state.
-void procotol_fixup(GreeProtocol_t *greeproc)
+esp_err_t procotol_fixup(GreeProtocol_t *greeproc)
 {
+    esp_err_t ret1;
     // X-Fan mode is only valid in COOL or DRY modes.
-    if (greeproc->GreeProtocol_bit_t.Mode != kKelvinatorCool && greeproc->GreeProtocol_bit_t.Mode != kKelvinatorDry)
-        setXFan(greeproc, false);
+    if (greeproc->GreeProtocol_bit_t.Mode != opmode_Cool && greeproc->GreeProtocol_bit_t.Mode != opmode_Dry)
+        ret1 = setXFan(greeproc, false);
     // Duplicate to the 2nd command chunk.
     greeproc->raw[8] = greeproc->raw[0];
     greeproc->raw[9] = greeproc->raw[1];
     greeproc->raw[10] = greeproc->raw[2];
     checksum(greeproc); // Calculate the checksums
-}
-
-/// Get the raw state of the object, suitable to be sent with the appropriate
-/// IRsend object method.
-/// @return A PTR to the internal state.
-uint8_t *getRaw(GreeProtocol_t *greeproc)
-{
-    procotol_fixup(greeproc); // Ensure correct settings before sending.
-    return greeproc->raw;
-}
-
-/// Verify the checksum is valid for a given state.
-/// @param[in] state The array to verify the checksum of.
-/// @param[in] length The size of the state.
-/// @return A boolean indicating if it is valid.
-bool validChecksum(uint8_t state[])
-{
-    for (uint16_t offset = 0; offset + 7 < 16; offset += 8)
-    {
-        // Top 4 bits of the last byte in the block is the block's checksum.
-        if (GETBITS8(state[offset + 7], 4, 4) !=
-            calcBlockChecksum(state + offset))
-            return false;
-    }
-    return true;
+    return (ret1 == 0) ? ESP_OK : ESP_FAIL;
 }
 
 /// Set the internal state to have the desired power.
 /// @param[in] on The desired power state.
-void setPower(GreeProtocol_t *greeproc, bool state)
+esp_err_t setPower(GreeProtocol_t *greeproc, bool state)
 {
     if (state)
     {
@@ -621,10 +589,9 @@ void setPower(GreeProtocol_t *greeproc, bool state)
     {
         greeproc->GreeProtocol_bit_t.Power = 0;
     }
+        return ESP_OK;
 }
 
-/// Get the power setting from the internal state.
-/// @return A boolean indicating if the power setting.
 bool getPower(GreeProtocol_t *greeproc)
 {
     return greeproc->GreeProtocol_bit_t.Power;
@@ -632,41 +599,43 @@ bool getPower(GreeProtocol_t *greeproc)
 
 /// Set the temperature setting.
 /// @param[in] degrees The temperature in degrees celsius.
-void setTemp(GreeProtocol_t *greeproc, uint8_t degrees)
+esp_err_t setTemp(GreeProtocol_t *greeproc, uint8_t degrees)
 {
-    uint8_t temp = kKelvinatorMinTemp >= degrees ? kKelvinatorMinTemp : degrees;
-    temp = kKelvinatorMaxTemp <= temp ? kKelvinatorMaxTemp : temp;
-    greeproc->GreeProtocol_bit_t.Temp = temp - kKelvinatorMinTemp;
+    uint8_t temp = Gree_MinTemp >= degrees ? Gree_MinTemp : degrees;
+    temp = Gree_MaxTemp <= temp ? Gree_MaxTemp : temp;
+    greeproc->GreeProtocol_bit_t.Temp = temp - Gree_MinTemp;
+        return ESP_OK;
 }
 
 /// Get the current temperature setting.
 /// @return Get current setting for temp. in degrees celsius.
 uint8_t getTemp(GreeProtocol_t *greeproc)
 {
-    return greeproc->GreeProtocol_bit_t.Temp + kKelvinatorMinTemp;
+    return greeproc->GreeProtocol_bit_t.Temp + Gree_MinTemp;
 }
 
 /// Set the speed of the fan.
 /// @param[in] speed 0 is auto, 1-5 is the speed
-void setFan(GreeProtocol_t *greeproc, uint8_t speed)
+esp_err_t setFan(GreeProtocol_t *greeproc, fanspeed_t speed)
 {
-    uint8_t fan = kKelvinatorFanMax <= speed ? kKelvinatorFanMax : speed; // Bounds check
+    fanspeed_t fan = fanspeed_Max <= speed ? fanspeed_Max : speed; // Bounds check
 
     // Only change things if we need to.
     if (fan != greeproc->GreeProtocol_bit_t.Fan)
     {
         // Set the basic fan values.
-        greeproc->GreeProtocol_bit_t.BasicFan = kKelvinatorBasicFanMax <= fan ? kKelvinatorBasicFanMax : fan;
+        greeproc->GreeProtocol_bit_t.BasicFan = Gree_BasicFanMax <= fan ? Gree_BasicFanMax : fan;
         // Set the advanced(?) fan value.
         greeproc->GreeProtocol_bit_t.Fan = fan;
         // Turbo mode is turned off if we change the fan settings.
         setTurbo(greeproc, false);
     }
+        return ESP_OK;
 }
 
 /// Get the current fan speed setting.
 /// @return The current fan speed.
-uint8_t getFan(GreeProtocol_t *greeproc)
+fanspeed_t getFan(GreeProtocol_t *greeproc)
 {
     return greeproc->GreeProtocol_bit_t.Fan;
 }
@@ -680,32 +649,33 @@ uint8_t getMode(GreeProtocol_t *greeproc)
 
 /// Set the desired operation mode.
 /// @param[in] mode The desired operation mode.
-void setMode(GreeProtocol_t *greeproc, uint8_t mode)
+esp_err_t setMode(GreeProtocol_t *greeproc, opmode_t mode)
 {
     switch (mode)
     {
-    case kKelvinatorAuto:
-    case kKelvinatorDry:
+    case opmode_Auto:
+    case opmode_Dry:
         // When the remote is set to Auto or Dry, it defaults to 25C and doesn't
         // show it.
-        setTemp(greeproc, kKelvinatorAutoTemp);
+        setTemp(greeproc, Gree_AutoTemp);
         // FALL-THRU
-    case kKelvinatorHeat:
-    case kKelvinatorCool:
-    case kKelvinatorFan:
+    case opmode_Heat:
+    case opmode_Cool:
+    case opmode_Fan:
         greeproc->GreeProtocol_bit_t.Mode = mode;
         break;
     default:
-        setTemp(greeproc, kKelvinatorAutoTemp);
-        greeproc->GreeProtocol_bit_t.Mode = kKelvinatorAuto;
+        setTemp(greeproc, Gree_AutoTemp);
+        greeproc->GreeProtocol_bit_t.Mode = opmode_Auto;
         break;
     }
+    return ESP_OK;
 }
 
 /// Set the Vertical Swing mode of the A/C.
 /// @param[in] automatic Do we use the automatic setting?
 /// @param[in] position The position/mode to set the vanes to.
-void setSwingVertical(GreeProtocol_t *greeproc, bool automatic, uint8_t position)
+esp_err_t setSwingVertical(GreeProtocol_t *greeproc, bool automatic, swingv_t position)
 {
     greeproc->GreeProtocol_bit_t.SwingAuto = (automatic || greeproc->GreeProtocol_bit_t.SwingH);
     uint8_t new_position = position;
@@ -713,30 +683,31 @@ void setSwingVertical(GreeProtocol_t *greeproc, bool automatic, uint8_t position
     {
         switch (position)
         {
-        case kKelvinatorSwingVHighest:
-        case kKelvinatorSwingVUpperMiddle:
-        case kKelvinatorSwingVMiddle:
-        case kKelvinatorSwingVLowerMiddle:
-        case kKelvinatorSwingVLowest:
+        case swingv_Highest:
+        case swingv_Upper_Middle:
+        case swingv_Middle:
+        case swingv_Lower_Middle:
+        case swingv_Lowest:
             break;
         default:
-            new_position = kKelvinatorSwingVOff;
+            new_position = swingv_Off;
         }
     }
     else
     {
         switch (position)
         {
-        case kKelvinatorSwingVAuto:
-        case kKelvinatorSwingVLowAuto:
-        case kKelvinatorSwingVMiddleAuto:
-        case kKelvinatorSwingVHighAuto:
+        case swingv_Auto:
+        case swingv_Low_Auto:
+        case swingv_Middle_Auto:
+        case swingv_High_Auto:
             break;
         default:
-            new_position = kKelvinatorSwingVAuto;
+            new_position = swingv_Auto;
         }
     }
     greeproc->GreeProtocol_bit_t.SwingV = new_position;
+    return (ESP_OK);
 }
 
 /// Get the Vertical Swing Automatic mode setting of the A/C.
@@ -755,7 +726,7 @@ uint8_t getSwingVerticalPosition(GreeProtocol_t *greeproc)
 
 /// Control the current Quiet setting.
 /// @param[in] on The desired setting.
-void setQuiet(GreeProtocol_t *greeproc, bool state)
+esp_err_t setQuiet(GreeProtocol_t *greeproc, bool state)
 {
     if (state)
     {
@@ -765,6 +736,7 @@ void setQuiet(GreeProtocol_t *greeproc, bool state)
     {
         greeproc->GreeProtocol_bit_t.Quiet = 0;
     }
+        return ESP_OK;
 }
 
 /// Is the Quiet setting on?
@@ -776,7 +748,7 @@ bool getQuiet(GreeProtocol_t *greeproc)
 
 /// Control the current Ion Filter setting.
 /// @param[in] on The desired setting.
-void setIonFilter(GreeProtocol_t *greeproc, bool state)
+esp_err_t setIonFilter(GreeProtocol_t *greeproc, bool state)
 {
     if (state)
     {
@@ -786,6 +758,7 @@ void setIonFilter(GreeProtocol_t *greeproc, bool state)
     {
         greeproc->GreeProtocol_bit_t.IonFilter = 0;
     }
+    return ESP_OK;
 }
 
 /// Is the Ion Filter setting on?
@@ -798,7 +771,7 @@ bool getIonFilter(GreeProtocol_t *greeproc)
 /// Control the current Light setting.
 /// i.e. The LED display on the A/C unit that shows the basic settings.
 /// @param[in] on The desired setting.
-void setLight(GreeProtocol_t *greeproc, bool state)
+esp_err_t setLight(GreeProtocol_t *greeproc, bool state)
 {
     if (state)
     {
@@ -808,6 +781,7 @@ void setLight(GreeProtocol_t *greeproc, bool state)
     {
         greeproc->GreeProtocol_bit_t.Light = 0;
     }
+    return ESP_OK;
 }
 
 /// Is the Light (Display) setting on?
@@ -822,7 +796,7 @@ bool getLight(GreeProtocol_t *greeproc)
 /// A/C device.
 /// @note XFan mode is only valid in Cool or Dry mode.
 /// @param[in] on The desired setting.
-void setXFan(GreeProtocol_t *greeproc, bool state)
+esp_err_t setXFan(GreeProtocol_t *greeproc, bool state)
 {
     if (state)
     {
@@ -832,6 +806,7 @@ void setXFan(GreeProtocol_t *greeproc, bool state)
     {
         greeproc->GreeProtocol_bit_t.XFan = 0;
     }
+    return ESP_OK;
 }
 
 /// Is the XFan setting on?
@@ -844,7 +819,7 @@ bool getXFan(GreeProtocol_t *greeproc)
 /// Control the current Turbo setting.
 /// @note Turbo mode is turned off if the fan speed is changed.
 /// @param[in] on The desired setting.
-void setTurbo(GreeProtocol_t *greeproc, bool state)
+esp_err_t setTurbo(GreeProtocol_t *greeproc, bool state)
 {
     if (state)
     {
@@ -854,6 +829,7 @@ void setTurbo(GreeProtocol_t *greeproc, bool state)
     {
         greeproc->GreeProtocol_bit_t.Turbo = 0;
     }
+    return ESP_OK;
 }
 
 /// Is the Turbo setting on?

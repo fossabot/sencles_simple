@@ -15,16 +15,19 @@
 #include "sensor_hub_main_task.h"
 #include "main.h"
 
-extern EventGroupHandle_t all_event;
+//extern EventGroupHandle_t all_event;
+
+//QueueHandle_t xQueueACData;
 
 #define IR_RESOLUTION_HZ 1000000 // 1MHz resolution, 1 tick = 1us
 #define IR_TX_GPIO_NUM 47
 
 static const char *TAG = "GREE_IR";
 
-void ir_gree_transceiver_main_task(void *arg)
+void ir_gree_transceiver_main_task(void *pvParameters)
 {
-    (void)arg;
+    all_signals_t *signal = (all_signals_t *)pvParameters;
+
     ESP_LOGI(TAG, "create GREE RMT TX channel");
     rmt_tx_channel_config_t tx_channel_cfg = {
         .clk_src = RMT_CLK_SRC_DEFAULT,
@@ -63,8 +66,8 @@ void ir_gree_transceiver_main_task(void *arg)
 
     while (1)
     {
-        EventBits_t uxBits_hot = xEventGroupWaitBits(all_event, BIT4_ENV_TOO_HOT, pdFALSE, pdTRUE, (TickType_t)0);
-        EventBits_t uxBits_ac = xEventGroupWaitBits(all_event, BIT5_GREE_AC_ON, pdFALSE, pdTRUE, (TickType_t)0);
+        EventBits_t uxBits_hot = xEventGroupWaitBits(signal->all_event, BIT4_ENV_TOO_HOT, pdFALSE, pdTRUE, (TickType_t)0);
+        EventBits_t uxBits_ac = xEventGroupWaitBits(signal->all_event, BIT5_GREE_AC_ON, pdFALSE, pdTRUE, (TickType_t)0);
         if ((uxBits_hot & (BIT4_ENV_TOO_HOT)) ^ (uxBits_ac & (BIT5_GREE_AC_ON)))
         {
 
@@ -78,20 +81,22 @@ void ir_gree_transceiver_main_task(void *arg)
                 setSwingVertical(&code, true, 0);
                 setLight(&code, true);
                 procotol_fixup(&code);
+                xQueueSend(signal->xQueueACData, &code, (TickType_t)0);
                 ESP_ERROR_CHECK(rmt_transmit(tx_channel, gree_encoder, &code, sizeof(code), &transmit_config));
 /*                 ESP_LOGI(TAG,"Power is % \n ",);
                 getPower(GreeProtocol_t *greeproc)
                 getTemp(GreeProtocol_t *greeproc)
                 getFan(GreeProtocol_t *greeproc)
                 getMode(GreeProtocol_t *greeproc) */
-                xEventGroupSetBits(all_event, BIT5_GREE_AC_ON);
+                xEventGroupSetBits(signal->all_event, BIT5_GREE_AC_ON);
             }
             if(!(uxBits_hot & (BIT4_ENV_TOO_HOT)) && uxBits_ac & (BIT5_GREE_AC_ON))
             {
                 setTemp(&code, 27);
                 procotol_fixup(&code);
+                xQueueSend(signal->xQueueACData, &code, (TickType_t)0);
                 ESP_ERROR_CHECK(rmt_transmit(tx_channel, gree_encoder, &code, sizeof(code), &transmit_config));
-                xEventGroupClearBits(all_event, BIT5_GREE_AC_ON);
+                xEventGroupClearBits(signal->all_event, BIT5_GREE_AC_ON);
             }
             vTaskDelay(pdMS_TO_TICKS(10*60000));
         }

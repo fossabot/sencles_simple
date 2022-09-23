@@ -30,7 +30,7 @@
 #include "esp_netif.h"
 #include "esp_smartconfig.h"
 
-void initialise_wifi_task(void *arg);
-void smartconfig_task(void *parm);
+void initialise_wifi_task(void *pvParameters);
+void smartconfig_task(void *pvParameters);
 
 #endif

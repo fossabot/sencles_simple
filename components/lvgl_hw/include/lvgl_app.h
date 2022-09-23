@@ -21,8 +21,9 @@ extern "C"
 #endif
 
 #include "lvgl.h"
+#include "main.h"
 
-    void ui_init(void);
+    void ui_init(all_signals_t *signal);
 
 #ifdef __cplusplus
 }

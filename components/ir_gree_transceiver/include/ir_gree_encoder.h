@@ -78,12 +78,11 @@ extern "C"
 
     typedef enum
     {
-        opmode_Off = -1,
         opmode_Auto = 0,
         opmode_Cool = 1,
-        opmode_Heat = 2,
-        opmode_Dry = 3,
-        opmode_Fan = 4,
+        opmode_Dry = 2,
+        opmode_Fan = 3,
+        opmode_Heat = 4,
     } opmode_t;
 
     /// Common A/C settings for Fan Speeds.
@@ -100,34 +99,17 @@ extern "C"
     /// Common A/C settings for Vertical Swing.
     typedef enum
     {
-        swingv_Off = -1,
-        swingv_Auto = 0,
-        swingv_Highest = 1,
-        swingv_High = 2,
-        swingv_Middle = 3,
-        swingv_Low = 4,
-        swingv_Lowest = 5,
+        swingv_Off = 0,
+        swingv_Auto = 1,
+        swingv_Highest = 2,
+        swingv_Upper_Middle = 3,
+        swingv_Middle = 4,
+        swingv_Lower_Middle = 5,
+        swingv_Lowest = 6,
+        swingv_Low_Auto = 7,
+        swingv_Middle_Auto = 9,
+        swingv_High_Auto = 11,
     } swingv_t;
-
-    /// Structure to hold a common A/C state.
-    typedef struct state
-    {
-        bool power;
-        opmode_t mode;
-        float degrees;
-        bool celsius;
-        fanspeed_t fanspeed;
-        swingv_t swingv;
-        bool quiet;
-        bool turbo;
-        bool econo;
-        bool light;
-        bool filter;
-        bool clean;
-        bool beep;
-        int16_t sleep;
-        int16_t clock;
-    } state_t;
 
     /**
      * @brief Type of IR NEC encoder configuration
@@ -149,35 +131,34 @@ extern "C"
      */
     esp_err_t rmt_new_ir_gree_encoder(const ir_gree_encoder_config_t *config, rmt_encoder_handle_t *ret_encoder);
 
-    void stateReset(GreeProtocol_t *greeproc);
-    void setPower(GreeProtocol_t *greeproc, bool state);
+    esp_err_t stateReset(GreeProtocol_t *greeproc);
+    esp_err_t setPower(GreeProtocol_t *greeproc, bool state);
     bool getPower(GreeProtocol_t *greeproc);
-    void setTemp(GreeProtocol_t *greeproc, uint8_t degrees);
+    esp_err_t setTemp(GreeProtocol_t *greeproc, uint8_t degrees);
     uint8_t getTemp(GreeProtocol_t *greeproc);
-    void setFan(GreeProtocol_t *greeproc, uint8_t speed);
-    uint8_t getFan(GreeProtocol_t *greeproc);
-    void setMode(GreeProtocol_t *greeproc, uint8_t mode);
+    esp_err_t setFan(GreeProtocol_t *greeproc, fanspeed_t speed);
+    fanspeed_t getFan(GreeProtocol_t *greeproc);
+    esp_err_t setMode(GreeProtocol_t *greeproc, opmode_t mode);
     uint8_t getMode(GreeProtocol_t *greeproc);
-    void setSwingVertical(GreeProtocol_t *greeproc, bool automatic, uint8_t position);
+    esp_err_t setSwingVertical(GreeProtocol_t *greeproc, bool automatic, swingv_t position);
     bool getSwingVerticalAuto(GreeProtocol_t *greeproc);
     uint8_t getSwingVerticalPosition(GreeProtocol_t *greeproc);
-    void setSwingHorizontal(GreeProtocol_t *greeproc, bool state);
+    esp_err_t setSwingHorizontal(GreeProtocol_t *greeproc, bool state);
     bool getSwingHorizontal(GreeProtocol_t *greeproc);
-    void setQuiet(GreeProtocol_t *greeproc, bool state);
+    esp_err_t setQuiet(GreeProtocol_t *greeproc, bool state);
     bool getQuiet(GreeProtocol_t *greeproc);
-    void setIonFilter(GreeProtocol_t *greeproc, bool state);
+    esp_err_t setIonFilter(GreeProtocol_t *greeproc, bool state);
     bool getIonFilter(GreeProtocol_t *greeproc);
-    void setLight(GreeProtocol_t *greeproc, bool state);
+    esp_err_t setLight(GreeProtocol_t *greeproc, bool state);
     bool getLight(GreeProtocol_t *greeproc);
-    void setXFan(GreeProtocol_t *greeproc, bool state);
+    esp_err_t setXFan(GreeProtocol_t *greeproc, bool state);
     bool getXFan(GreeProtocol_t *greeproc);
-    void setTurbo(GreeProtocol_t *greeproc, bool state);
+    esp_err_t setTurbo(GreeProtocol_t *greeproc, bool state);
     bool getTurbo(GreeProtocol_t *greeproc);
-    void procotol_fixup(GreeProtocol_t *greeproc);
-    uint8_t *getRaw(GreeProtocol_t *greeproc);
-    void setRaw(GreeProtocol_t *greeproc, uint8_t new_code[]);
-    uint8_t calcBlockChecksum(uint8_t *block);
-    bool validChecksum(uint8_t state[]);
+    esp_err_t procotol_fixup(GreeProtocol_t *greeproc);
+esp_err_t getRaw(GreeProtocol_t *greeproc, uint8_t *raw);
+    esp_err_t setRaw(GreeProtocol_t *greeproc, uint8_t new_code[]);
+
 
 #ifdef __cplusplus
 }

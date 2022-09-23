@@ -35,9 +35,9 @@ esp_err_t color_breathe(rmt_channel_handle_t tx_channel, rmt_encoder_handle_t en
                         uint8_t chase_speed_ms, uint8_t loop_num, uint32_t *time_minus,
                         rmt_transmit_config_t *config);
 
-void led_task(void *arg)
+void led_task(void *pvParameters)
 {
-    (void)arg;
+    all_signals_t *signal = (all_signals_t *)pvParameters;
 
     rmt_channel_handle_t led_chan = NULL;
     rmt_encoder_handle_t led_encoder = NULL;
@@ -69,7 +69,7 @@ void led_task(void *arg)
     ESP_LOGI(TAG, "Start LED");
     while (1)
     {
-        EventBits_t uxBits_hot = xEventGroupWaitBits(all_event, BIT4_ENV_TOO_HOT, pdFALSE, pdTRUE, (TickType_t)0);
+        EventBits_t uxBits_hot = xEventGroupWaitBits(signal->all_event, BIT4_ENV_TOO_HOT, pdFALSE, pdTRUE, (TickType_t)0);
         uint32_t time = 0;
 
         if (uxBits_hot & (BIT4_ENV_TOO_HOT))
