@@ -17,6 +17,7 @@ extern "C"
      */
     typedef union GreeProtocol
     {
+        uint32_t data_pack[4];
         uint8_t raw[16]; ///< The state in IR code form.
         struct GreeProtocol_bit
         {

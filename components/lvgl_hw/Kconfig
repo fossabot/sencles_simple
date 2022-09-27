@@ -29,13 +29,6 @@ menu "LVGL_Hardware Configuration"
         help
             Set the clock for the spibus LCD.
 
-    config LCD_BK_LIGHT_ON_LEVEL
-        int "backlight on level"
-        range 0 1
-        default 1
-        help
-            Set the backlight on level.
-
     config PIN_NUM_DATA0
         int "data pin for spibus"
         range 1 48

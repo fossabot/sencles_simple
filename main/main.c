@@ -51,11 +51,11 @@ void app_main(void)
 
     xEventGroupClearBits(signal->all_event, 0xff);
 
-    xTaskCreatePinnedToCore(initialise_wifi_task, "initialise_wifi", 4096, signal, 0, &wifi_task_handle, 1);
-    xTaskCreatePinnedToCore(sensor_task, "sensor_hub", 4096, signal, 0, &sensor_task_handle, 1);
-    xTaskCreatePinnedToCore(gui_task, "gui", 4096 * 2, signal, 2, &gui_task_handle, 0);
-    xTaskCreatePinnedToCore(led_task, "led_strip", 4096, signal, 3, &led_task_handle, 0);
-    xTaskCreatePinnedToCore(ir_gree_transceiver_main_task, "gree_ir", 4096, signal, 3, &gree_task_handle, 1);
+    xTaskCreatePinnedToCore(initialise_wifi_task, "initialise_wifi", 4096, signal, 0, &wifi_task_handle, 0);
+    xTaskCreatePinnedToCore(sensor_task, "sensor_hub", 4096, signal, 0, &sensor_task_handle, 0);
+    xTaskCreatePinnedToCore(gui_task, "gui", 4096 * 2, signal, 2, &gui_task_handle, 1);
+    xTaskCreatePinnedToCore(led_task, "led_strip", 4096, signal, 3, &led_task_handle, 1);
+    xTaskCreatePinnedToCore(ir_gree_transceiver_main_task, "gree_ir", 4096, signal, 3, &gree_task_handle, 0);
 
     while (1)
     {
@@ -74,7 +74,7 @@ void app_main(void)
             sntp_init();
             xEventGroupSetBits(signal->all_event, BIT2_NTP_READY);
             ESP_LOGI(TAG, "SNTP Finished! Ready to launch aliyun!");
-            xTaskCreatePinnedToCore(link_main, "aliyun", 4096, signal, 0, &aliyun_task_handle, 0);
+            xTaskCreatePinnedToCore(link_main, "aliyun", 4096, signal, 0, &aliyun_task_handle, 1);
             break;
         }
         vTaskDelay(pdMS_TO_TICKS(1000));

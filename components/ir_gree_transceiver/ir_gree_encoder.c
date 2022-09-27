@@ -59,7 +59,7 @@ static size_t rmt_encode_ir_gree(rmt_encoder_t *encoder, rmt_channel_handle_t ch
         // fall-through
 
     case 1: // send data four bytes at a time
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[0], sizeof(uint8_t), &session_state);
+        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->data_pack[0], sizeof(uint32_t), &session_state);
         if (session_state & RMT_ENCODING_COMPLETE)
         {
             gree_encoder->state = 2; // we can only switch to next state when current encoder finished
@@ -70,35 +70,37 @@ static size_t rmt_encode_ir_gree(rmt_encoder_t *encoder, rmt_channel_handle_t ch
             goto out; // yield if there's no free space to put other encoding artifacts
         }
     // fall-through
-    case 2: // send data four bytes at a time
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[1], sizeof(uint8_t), &session_state);
+
+    case 2: // send identifier 0b010
+        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_low_level, sizeof(rmt_symbol_word_t), &session_state);
         if (session_state & RMT_ENCODING_COMPLETE)
         {
-            gree_encoder->state = 3; // we can only switch to next state when current encoder finished
+            gree_encoder->state = 3;
         }
         if (session_state & RMT_ENCODING_MEM_FULL)
         {
             state |= RMT_ENCODING_MEM_FULL;
             goto out; // yield if there's no free space to put other encoding artifacts
         }
-    // fall-through
-    case 3: // send data four bytes at a time
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[2], sizeof(uint8_t), &session_state);
+        // fall-through
+    case 3: // send identifier 0b010
+        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_high_level, sizeof(rmt_symbol_word_t), &session_state);
         if (session_state & RMT_ENCODING_COMPLETE)
         {
-            gree_encoder->state = 4; // we can only switch to next state when current encoder finished
+            gree_encoder->state = 4;
         }
+
         if (session_state & RMT_ENCODING_MEM_FULL)
         {
             state |= RMT_ENCODING_MEM_FULL;
             goto out; // yield if there's no free space to put other encoding artifacts
         }
     // fall-through
-    case 4: // send data four bytes at a time
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[3], sizeof(uint8_t), &session_state);
+    case 4: // send identifier 0b010
+        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_low_level, sizeof(rmt_symbol_word_t), &session_state);
         if (session_state & RMT_ENCODING_COMPLETE)
         {
-            gree_encoder->state = 5; // we can only switch to next state when current encoder finished
+            gree_encoder->state = 5;
         }
         if (session_state & RMT_ENCODING_MEM_FULL)
         {
@@ -107,8 +109,8 @@ static size_t rmt_encode_ir_gree(rmt_encoder_t *encoder, rmt_channel_handle_t ch
         }
         // fall-through
 
-    case 5: // send identifier 0b010
-        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_low_level, sizeof(rmt_symbol_word_t), &session_state);
+    case 5: // send connect code
+        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_connect_symbol, sizeof(rmt_symbol_word_t), &session_state);
         if (session_state & RMT_ENCODING_COMPLETE)
         {
             gree_encoder->state = 6;
@@ -119,21 +121,22 @@ static size_t rmt_encode_ir_gree(rmt_encoder_t *encoder, rmt_channel_handle_t ch
             goto out; // yield if there's no free space to put other encoding artifacts
         }
         // fall-through
-    case 6: // send identifier 0b010
-        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_high_level, sizeof(rmt_symbol_word_t), &session_state);
+
+    case 6: // send second four bytes
+        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->data_pack[1], sizeof(uint32_t), &session_state);
         if (session_state & RMT_ENCODING_COMPLETE)
         {
-            gree_encoder->state = 7;
+            gree_encoder->state = 7; // back to the initial encoding session
         }
-
         if (session_state & RMT_ENCODING_MEM_FULL)
         {
             state |= RMT_ENCODING_MEM_FULL;
             goto out; // yield if there's no free space to put other encoding artifacts
         }
     // fall-through
-    case 7: // send identifier 0b010
-        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_low_level, sizeof(rmt_symbol_word_t), &session_state);
+
+    case 7: // send long connect code
+        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_lconnect_symbol, sizeof(rmt_symbol_word_t), &session_state);
         if (session_state & RMT_ENCODING_COMPLETE)
         {
             gree_encoder->state = 8;
@@ -145,70 +148,71 @@ static size_t rmt_encode_ir_gree(rmt_encoder_t *encoder, rmt_channel_handle_t ch
         }
         // fall-through
 
-    case 8: // send connect code
+    case 8: // send SECOND leading code
+        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_leading_symbol, sizeof(rmt_symbol_word_t), &session_state);
+        if (session_state & RMT_ENCODING_COMPLETE)
+        {
+            gree_encoder->state = 9; // we can only switch to next state when current encoder finished
+        }
+        if (session_state & RMT_ENCODING_MEM_FULL)
+        {
+            state |= RMT_ENCODING_MEM_FULL;
+            goto out; // yield if there's no free space to put other encoding artifacts
+        }
+        // fall-through
+
+    case 9: // send data four bytes at a time
+        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->data_pack[2], sizeof(uint32_t), &session_state);
+        if (session_state & RMT_ENCODING_COMPLETE)
+        {
+            gree_encoder->state = 10; // we can only switch to next state when current encoder finished
+        }
+        if (session_state & RMT_ENCODING_MEM_FULL)
+        {
+            state |= RMT_ENCODING_MEM_FULL;
+            goto out; // yield if there's no free space to put other encoding artifacts
+        }
+                // fall-through
+
+    case 10: // send identifier 0b010
+        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_low_level, sizeof(rmt_symbol_word_t), &session_state);
+        if (session_state & RMT_ENCODING_COMPLETE)
+        {
+            gree_encoder->state = 11;
+        }
+        if (session_state & RMT_ENCODING_MEM_FULL)
+        {
+            state |= RMT_ENCODING_MEM_FULL;
+            goto out; // yield if there's no free space to put other encoding artifacts
+        }
+    // fall-through
+    case 11: // send identifier 0b010
+        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_high_level, sizeof(rmt_symbol_word_t), &session_state);
+        if (session_state & RMT_ENCODING_COMPLETE)
+        {
+            gree_encoder->state = 12;
+        }
+        if (session_state & RMT_ENCODING_MEM_FULL)
+        {
+            state |= RMT_ENCODING_MEM_FULL;
+            goto out; // yield if there's no free space to put other encoding artifacts
+        }
+    // fall-through
+    case 12: // send identifier 0b010
+        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_low_level, sizeof(rmt_symbol_word_t), &session_state);
+        if (session_state & RMT_ENCODING_COMPLETE)
+        {
+            gree_encoder->state = 13;
+        }
+        if (session_state & RMT_ENCODING_MEM_FULL)
+        {
+            state |= RMT_ENCODING_MEM_FULL;
+            goto out; // yield if there's no free space to put other encoding artifacts
+        }
+        // fall-through
+
+    case 13: // send connect code
         encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_connect_symbol, sizeof(rmt_symbol_word_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 9;
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-        // fall-through
-
-    case 9: // send second four bytes
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[4], sizeof(uint8_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 10; // back to the initial encoding session
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-    // fall-through
-    case 10: // send second four bytes
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[5], sizeof(uint8_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 11; // back to the initial encoding session
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-    // fall-through
-    case 11: // send second four bytes
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[6], sizeof(uint8_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 12; // back to the initial encoding session
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-    // fall-through
-    case 12: // send second four bytes
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[7], sizeof(uint8_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 13; // back to the initial encoding session
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-        // fall-through
-
-    case 13: // send long connect code
-        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_lconnect_symbol, sizeof(rmt_symbol_word_t), &session_state);
         if (session_state & RMT_ENCODING_COMPLETE)
         {
             gree_encoder->state = 14;
@@ -220,123 +224,11 @@ static size_t rmt_encode_ir_gree(rmt_encoder_t *encoder, rmt_channel_handle_t ch
         }
         // fall-through
 
-    case 14: // send SECOND leading code
-        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_leading_symbol, sizeof(rmt_symbol_word_t), &session_state);
+    case 14: // send second four bytes
+        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->data_pack[3], sizeof(uint32_t), &session_state);
         if (session_state & RMT_ENCODING_COMPLETE)
         {
-            gree_encoder->state = 15; // we can only switch to next state when current encoder finished
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-        // fall-through
-
-    case 15: // send data four bytes at a time
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[8], sizeof(uint8_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 16; // we can only switch to next state when current encoder finished
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-        // fall-through
-    case 16: // send data four bytes at a time
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[9], sizeof(uint8_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 17; // we can only switch to next state when current encoder finished
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-        // fall-through
-    case 17: // send data four bytes at a time
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[10], sizeof(uint8_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 18; // we can only switch to next state when current encoder finished
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-        // fall-through
-    case 18: // send data four bytes at a time
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[11], sizeof(uint8_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 19; // we can only switch to next state when current encoder finished
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-        // fall-through
-
-    case 19: // send identifier 0b010
-        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_low_level, sizeof(rmt_symbol_word_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 20;
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-    // fall-through
-    case 20: // send identifier 0b010
-        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_high_level, sizeof(rmt_symbol_word_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 21;
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-    // fall-through
-    case 21: // send identifier 0b010
-        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_low_level, sizeof(rmt_symbol_word_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 22;
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-        // fall-through
-
-    case 22: // send connect code
-        encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_connect_symbol, sizeof(rmt_symbol_word_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 23;
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-        // fall-through
-
-    case 23: // send second four bytes
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[12], sizeof(uint8_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 24; // back to the initial encoding session
+            gree_encoder->state = 15; // back to the initial encoding session
         }
         if (session_state & RMT_ENCODING_MEM_FULL)
         {
@@ -345,49 +237,8 @@ static size_t rmt_encode_ir_gree(rmt_encoder_t *encoder, rmt_channel_handle_t ch
         }
 
     // fall-through
-    case 24: // send second four bytes
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[13], sizeof(uint8_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 25; // back to the initial encoding session
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
 
-        // fall-through
-
-    case 25: // send second four bytes
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[14], sizeof(uint8_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 26; // back to the initial encoding session
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-
-        // fall-through
-
-    case 26: // send second four bytes
-        encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, &scan_code->raw[15], sizeof(uint8_t), &session_state);
-        if (session_state & RMT_ENCODING_COMPLETE)
-        {
-            gree_encoder->state = 27; // back to the initial encoding session
-        }
-        if (session_state & RMT_ENCODING_MEM_FULL)
-        {
-            state |= RMT_ENCODING_MEM_FULL;
-            goto out; // yield if there's no free space to put other encoding artifacts
-        }
-
-        // fall-through
-
-    case 27: // send end code
+    case 15: // send end code
         encoded_symbols += copy_encoder->encode(copy_encoder, channel, &gree_encoder->gree_ending_symbol, sizeof(rmt_symbol_word_t), &session_state);
         if (session_state & RMT_ENCODING_COMPLETE)
         {
