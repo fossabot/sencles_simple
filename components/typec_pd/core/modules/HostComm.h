@@ -21,13 +21,13 @@
 #include "hcmd.h"
 #include "Port.h"
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
 /**
  * @brief Intialize the host com
  * @param[in] port starting address of the port structures
  * @param[in] num number of ports defined
  */
-void HCom_Init(Port_t *port, FSC_U8 num);
+void HCom_Init(Port_t *port, uint8_t num);
 
 /**
  * @brief Function to process the hostCom messages. Called when the input buffer
@@ -38,13 +38,13 @@ void HCom_Process(void);
 /**
  * @brief Returns pointer to input buffer of length HCOM_MSG_LENGTH
  */
-FSC_U8* HCom_InBuf(void);
+uint8_t* HCom_InBuf(void);
 
 /**
  * @brief Returns pointer to output buffer of length HCOM_MSG_LENGTH
  */
-FSC_U8* HCom_OutBuf(void);
+uint8_t* HCom_OutBuf(void);
 
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 
 #endif	/* HOSTCOMM_H */

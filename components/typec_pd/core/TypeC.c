@@ -25,9 +25,9 @@
 #include "AnalogInput.h"
 #endif /* PLATFORM_PIC32_ADC */
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
 #include "Log.h"
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 
 void StateMachineTypeC(Port_t *port)
 {
@@ -39,7 +39,7 @@ void StateMachineTypeC(Port_t *port)
         return;
     }
 
-    port->TCIdle = FALSE;
+    port->TCIdle = false;
 
     if (platform_get_device_irq_state(port->PortID))
     {
@@ -49,7 +49,7 @@ void StateMachineTypeC(Port_t *port)
         DeviceRead(port->I2cAddr, regInterrupt, 1,
                    &port->Registers.Status.byte[6]);
         
-        if(port->SendFastGoodCRC == TRUE && port->Registers.Status.I_CRC_CHK) {
+        if(port->SendFastGoodCRC == true && port->Registers.Status.I_CRC_CHK) {
             /* Transmit pre-loaded GoodCRC message */
             port->Registers.Control.TX_START = 1;
             DeviceWrite(port->I2cAddr, regControl0, 1,
@@ -61,7 +61,7 @@ void StateMachineTypeC(Port_t *port)
 
             /* Read out CRC */
             DeviceRead(port->I2cAddr, regFIFO, 4, port->ProtocolRxBuffer);
-            ProtocolGetRxPacket(port, FALSE);
+            ProtocolGetRxPacket(port, false);
 
             /* Reset Message Header */
             port->FastGoodCRCBuffer[5] = 0x81;
@@ -76,7 +76,7 @@ void StateMachineTypeC(Port_t *port)
 
     if (port->USBPDActive)
     {
-        port->PEIdle = FALSE;
+        port->PEIdle = false;
         
         /* Protocol operations */
         USBPDProtocol(port);
@@ -84,16 +84,16 @@ void StateMachineTypeC(Port_t *port)
         /* Policy Engine operations */
         USBPDPolicyEngine(port);
 
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
         /* Extended messaging may require additional chunk handling
          * before idling.
          */
         if (port->ExtTxOrRx != NoXfer)
         {
             /* Don't allow system to idle */
-            port->PEIdle = FALSE;
+            port->PEIdle = false;
         }
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
     }
 
     switch (port->ConnState)
@@ -107,26 +107,26 @@ void StateMachineTypeC(Port_t *port)
     case Unattached:
         StateMachineUnattached(port);
         break;
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
     case AttachWaitSink:
         StateMachineAttachWaitSink(port);
         break;
     case AttachedSink:
         StateMachineAttachedSink(port);
         break;
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
     case TryWaitSink:
         StateMachineTryWaitSink(port);
         break;
-#endif /* FSC_HAVE_DRP */
-#endif /* FSC_HAVE_SNK */
-#if (defined(FSC_HAVE_DRP) || \
-     (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)))
+#endif /* CONFIG_FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_SNK */
+#if (defined(CONFIG_FSC_HAVE_DRP) || \
+     (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)))
     case TrySink:
         StateMachineTrySink(port);
         break;
-#endif /* FSC_HAVE_DRP || (FSC_HAVE_SNK && FSC_HAVE_ACCMODE)) */
-#ifdef FSC_HAVE_SRC
+#endif /* CONFIG_FSC_HAVE_DRP || (CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE)) */
+#ifdef CONFIG_FSC_HAVE_SRC
     case UnattachedSourceOnly:
             StateMachineUnattachedSourceOnly(port);
             break;
@@ -136,7 +136,7 @@ void StateMachineTypeC(Port_t *port)
     case AttachedSource:
         StateMachineAttachedSource(port);
         break;
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
     case TryWaitSource:
         StateMachineTryWaitSource(port);
         break;
@@ -146,22 +146,22 @@ void StateMachineTypeC(Port_t *port)
     case UnattachedSource:
         StateMachineUnattachedSource(port);
         break;
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
     case DebugAccessorySource:
         StateMachineDebugAccessorySource(port);
         break;
-#endif /* FSC_HAVE_SRC */
-#ifdef FSC_HAVE_ACCMODE
+#endif /* CONFIG_FSC_HAVE_SRC */
+#ifdef CONFIG_FSC_HAVE_ACCMODE
     case AudioAccessory:
         StateMachineAudioAccessory(port);
         break;
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
     case DebugAccessorySink:
         StateMachineDebugAccessorySink(port);
         break;
-#endif /* FSC_HAVE_SNK */
-#endif /* FSC_HAVE_ACCMODE */
-#if (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE))
+#endif /* CONFIG_FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_ACCMODE */
+#if (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE))
     case AttachWaitAccessory:
         StateMachineAttachWaitAccessory(port);
         break;
@@ -171,7 +171,7 @@ void StateMachineTypeC(Port_t *port)
     case PoweredAccessory:
         StateMachinePoweredAccessory(port);
         break;
-#endif /* FSC_HAVE_SNK && FSC_HAVE_ACCMODE */
+#endif /* CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE */
     case IllegalCable:
         StateMachineIllegalCable(port);
         break;
@@ -184,7 +184,7 @@ void StateMachineTypeC(Port_t *port)
     port->Registers.Status.Interrupt1 = 0;
     port->Registers.Status.InterruptAdv = 0;
 
-    } while (port->TCIdle == FALSE || port->PEIdle == FALSE);
+    } while (port->TCIdle == false || port->PEIdle == false);
 }
 
 void StateMachineDisabled(Port_t *port)
@@ -202,7 +202,7 @@ void StateMachineErrorRecovery(Port_t *port)
 
 void StateMachineUnattachedSourceOnly(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     if (TimerExpired(&port->LoopCountTimer))
     {
@@ -220,7 +220,7 @@ void StateMachineUnattachedSourceOnly(Port_t *port)
 
 void StateMachineUnattached(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     if (TimerExpired(&port->LoopCountTimer))
     {
@@ -238,7 +238,7 @@ void StateMachineUnattached(Port_t *port)
 
         switch (port->Registers.Status.TOGSS)
         {
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
         case 0x5: /* Rp detected on CC1 */
             port->CCPin = CC1;
             SetStateAttachWaitSink(port);
@@ -247,68 +247,68 @@ void StateMachineUnattached(Port_t *port)
             port->CCPin = CC2;
             SetStateAttachWaitSink(port);
             break;
-#endif /* FSC_HAVE_SNK */
-#if (defined(FSC_HAVE_SRC) || \
-     (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)))
+#endif /* CONFIG_FSC_HAVE_SNK */
+#if (defined(CONFIG_FSC_HAVE_SRC) || \
+     (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)))
         case 0x1: /* Rd detected on CC1 */
             port->CCPin = CCNone; /* Wait to re-check orientation */
-#if (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE))
+#if (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE))
             if ((port->PortConfig.PortType == USBTypeC_Sink) &&
                 ((port->PortConfig.audioAccSupport) ||
                  (port->PortConfig.poweredAccSupport)))
             {
                 SetStateAttachWaitAccessory(port);
             }
-#endif /* FSC_HAVE_SNK && FSC_HAVE_ACCMODE */
-#if defined(FSC_HAVE_SRC) && defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)
+#endif /* CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE */
+#if defined(CONFIG_FSC_HAVE_SRC) && defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)
             else
-#endif /* FSC_HAVE_SRC && FSC_HAVE_SNK && FSC_HAVE_ACCMODE */
-#ifdef FSC_HAVE_SRC
+#endif /* CONFIG_FSC_HAVE_SRC && CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE */
+#ifdef CONFIG_FSC_HAVE_SRC
             {
                 SetStateAttachWaitSource(port);
             }
-#endif /* FSC_HAVE_SRC */
+#endif /* CONFIG_FSC_HAVE_SRC */
             break;
         case 0x2: /* Rd detected on CC2 */
             port->CCPin = CCNone; /* Wait to re-check orientation */
-#if (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE))
+#if (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE))
             if ((port->PortConfig.PortType == USBTypeC_Sink) &&
                 ((port->PortConfig.audioAccSupport) ||
                  (port->PortConfig.poweredAccSupport)))
             {
                 SetStateAttachWaitAccessory(port);
             }
-#endif /* FSC_HAVE_SNK && FSC_HAVE_ACCMODE */
-#if defined(FSC_HAVE_SRC) && defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)
+#endif /* CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE */
+#if defined(CONFIG_FSC_HAVE_SRC) && defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)
             else
-#endif /* FSC_HAVE_SRC && FSC_HAVE_SNK && FSC_HAVE_ACCMODE */
-#ifdef FSC_HAVE_SRC
+#endif /* CONFIG_FSC_HAVE_SRC && CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE */
+#ifdef CONFIG_FSC_HAVE_SRC
             {
                 SetStateAttachWaitSource(port);
             }
-#endif /* FSC_HAVE_SRC */
+#endif /* CONFIG_FSC_HAVE_SRC */
             break;
         case 0x7: /* Ra detected on both CC1 and CC2 */
             port->CCPin = CCNone;
-#if (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE))
+#if (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE))
             if ((port->PortConfig.PortType == USBTypeC_Sink) &&
                 ((port->PortConfig.audioAccSupport) ||
                  (port->PortConfig.poweredAccSupport)))
             {
                     SetStateAttachWaitAccessory(port);
             }
-#endif /* defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE) */
-#if defined(FSC_HAVE_SRC) && defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)
+#endif /* defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE) */
+#if defined(CONFIG_FSC_HAVE_SRC) && defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)
             else
-#endif /* FSC_HAVE_SRC && FSC_HAVE_SNK && FSC_HAVE_ACCMODE */
-#if defined(FSC_HAVE_SRC)
+#endif /* CONFIG_FSC_HAVE_SRC && CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE */
+#if defined(CONFIG_FSC_HAVE_SRC)
             if (port->PortConfig.PortType != USBTypeC_Sink)
             {
                     SetStateAttachWaitSource(port);
             }
-#endif /* FSC_HAVE_SRC */
+#endif /* CONFIG_FSC_HAVE_SRC */
             break;
-#endif /* FSC_HAVE_SRC || (FSC_HAVE_SNK && FSC_HAVE_ACCMODE) */
+#endif /* CONFIG_FSC_HAVE_SRC || (CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE) */
         default:
             /* Shouldn't get here, but just in case reset everything... */
             port->Registers.Control.TOGGLE = 0;
@@ -328,10 +328,10 @@ void StateMachineUnattached(Port_t *port)
     }
 }
 
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
 void StateMachineAttachWaitSink(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     debounceCC(port);
 
@@ -353,14 +353,14 @@ void StateMachineAttachWaitSink(Port_t *port)
         if(port->CCTerm == CCTypeOpen)
         {
             /* Other pin is open as well - detach. */
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
             if (port->PortConfig.PortType == USBTypeC_DRP)
             {
                 SetStateUnattachedSource(port);
                 return;
             }
             else
-#endif // FSC_HAVE_DRP
+#endif // CONFIG_FSC_HAVE_DRP
             {
                 SetStateUnattached(port);
                 return;
@@ -393,14 +393,14 @@ void StateMachineAttachWaitSink(Port_t *port)
             else if(port->VCONNTerm == CCTypeOpen)
             {
                 /* Rp-Open */
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
                 if ((port->PortConfig.PortType == USBTypeC_DRP) &&
                      port->PortConfig.SrcPreferred)
                 {
                     SetStateTrySource(port);
                 }
                 else
-#endif // FSC_HAVE_DRP
+#endif // CONFIG_FSC_HAVE_DRP
                 {
                     SetStateAttachedSink(port);
                 }
@@ -412,13 +412,13 @@ void StateMachineAttachWaitSink(Port_t *port)
         }
     }
 }
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 
-#ifdef FSC_HAVE_SRC
+#ifdef CONFIG_FSC_HAVE_SRC
 void StateMachineAttachWaitSource(Port_t *port)
 {
-    FSC_BOOL ccPinIsRa = FALSE;
-    port->TCIdle = TRUE;
+    bool ccPinIsRa = false;
+    port->TCIdle = true;
 
     /* Update source current - can only toggle with Default and may be using
      * 3A advertisement to prevent non-compliant cable looping.
@@ -453,7 +453,7 @@ void StateMachineAttachWaitSource(Port_t *port)
         {
             /* CC pin may have switched (compliance test) - swap here */
             port->CCPin = (port->CCPin == CC1) ? CC2 : CC1;
-            setStateSource(port, FALSE);
+            setStateSource(port, false);
             return;
         }
     }
@@ -464,10 +464,10 @@ void StateMachineAttachWaitSource(Port_t *port)
         {
             /* The toggle state machine may have stopped on an Ra - swap here */
             port->CCPin = (port->CCPin == CC1) ? CC2 : CC1;
-            setStateSource(port, FALSE);
+            setStateSource(port, false);
             return;
         }
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
         else if (port->VCONNTerm == CCTypeOpen &&
                  port->PortConfig.PortType == USBTypeC_DRP)
         {
@@ -479,7 +479,7 @@ void StateMachineAttachWaitSource(Port_t *port)
             SetStateUnattached(port);
             return;
         }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
     }
 
     /* Wait on CC Debounce for connection */
@@ -487,13 +487,13 @@ void StateMachineAttachWaitSource(Port_t *port)
     {
         if (ccPinIsRa)
         {
-#ifdef FSC_HAVE_ACCMODE
+#ifdef CONFIG_FSC_HAVE_ACCMODE
             if (port->PortConfig.audioAccSupport &&
                 (port->VCONNTerm == CCTypeRa))
             {
                 SetStateAudioAccessory(port);
             } else
-#endif /* FSC_HAVE_ACCMODE */
+#endif /* CONFIG_FSC_HAVE_ACCMODE */
             if (TimerDisabled(&port->StateTimer) ||
                 TimerExpired(&port->StateTimer))
             {
@@ -527,13 +527,13 @@ void StateMachineAttachWaitSource(Port_t *port)
             /* One pin Rd */
             if (VbusVSafe0V(port))
             {
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
                 if (port->PortConfig.SnkPreferred)
                 {
                     SetStateTrySink(port);
                 }
                 else
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
                 {
                     SetStateAttachedSource(port);
                 }
@@ -557,12 +557,12 @@ void StateMachineAttachWaitSource(Port_t *port)
         }
     }
 }
-#endif /* FSC_HAVE_SRC */
+#endif /* CONFIG_FSC_HAVE_SRC */
 
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
 void StateMachineAttachedSink(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     /* Monitor for VBus drop to detach
      * Round up detach threshold to help check slow discharge or noise on VBus
@@ -598,12 +598,12 @@ void StateMachineAttachedSink(Port_t *port)
         UpdateSinkCurrent(port, port->CCTermPDDebounce);
     }
 }
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 
-#ifdef FSC_HAVE_SRC
+#ifdef CONFIG_FSC_HAVE_SRC
 void StateMachineAttachedSource(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     switch (port->TypeCSubState)
     {
@@ -616,13 +616,13 @@ void StateMachineAttachedSource(Port_t *port)
 
         if ((port->CCTerm == CCTypeOpen) && (!port->IsPRSwap))
         {
-            platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, FALSE,
-                                         FALSE);
-            platform_set_vbus_discharge(port->PortID, TRUE);
+            platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, false,
+                                         false);
+            platform_set_vbus_discharge(port->PortID, true);
 
             notify_observers(CC_NO_ORIENT, port->I2cAddr, 0);
 
-            USBPDDisable(port, TRUE);
+            USBPDDisable(port, true);
 
             
             /* VConn discharge */
@@ -654,7 +654,7 @@ void StateMachineAttachedSource(Port_t *port)
         }
         break;
     case 1:
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
         if ((port->PortConfig.PortType == USBTypeC_DRP) &&
              port->PortConfig.SrcPreferred)
         {
@@ -665,11 +665,11 @@ void StateMachineAttachedSource(Port_t *port)
 
             return;
         }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 
         if (VbusVSafe0V(port) || TimerExpired(&port->StateTimer))
         {
-            platform_set_vbus_discharge(port->PortID, FALSE);
+            platform_set_vbus_discharge(port->PortID, false);
             SetStateUnattached(port);
         }
         else
@@ -682,12 +682,12 @@ void StateMachineAttachedSource(Port_t *port)
         break;
     }
 }
-#endif /* FSC_HAVE_SRC */
+#endif /* CONFIG_FSC_HAVE_SRC */
 
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
 void StateMachineTryWaitSink(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     debounceCC(port);
 
@@ -702,7 +702,7 @@ void StateMachineTryWaitSink(Port_t *port)
         TimerDisable(&port->StateTimer);
 
         /* Turn off discharge that was enabled before exiting AttachedSource */
-        platform_set_vbus_discharge(port->PortID, FALSE);
+        platform_set_vbus_discharge(port->PortID, false);
     }
 
     if (isVSafe5V(port))
@@ -710,7 +710,7 @@ void StateMachineTryWaitSink(Port_t *port)
         if ((port->CCTermCCDebounce > CCTypeOpen) &&
             (port->CCTermCCDebounce < CCTypeUndefined))
         {
-            platform_set_vbus_discharge(port->PortID, FALSE);
+            platform_set_vbus_discharge(port->PortID, false);
             SetStateAttachedSink(port);
         }
     }
@@ -719,12 +719,12 @@ void StateMachineTryWaitSink(Port_t *port)
         TimerStart(&port->VBusPollTimer, tVBusPollShort);
     }
 }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
 void StateMachineTrySource(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     debounceCC(port);
 
@@ -736,7 +736,7 @@ void StateMachineTrySource(Port_t *port)
         /* If the CC pin is Rd for at least tPDDebounce */
         SetStateAttachedSource(port);
     }
-    else if (TimerExpired(&port->StateTimer) && VbusVSafe0V(port)
+    else if ((TimerExpired(&port->StateTimer) && VbusVSafe0V(port))
             || TimerExpired(&port->PolicyStateTimer))
     {
         TimerDisable(&port->StateTimer);
@@ -746,12 +746,12 @@ void StateMachineTrySource(Port_t *port)
         SetStateTryWaitSink(port);
     }
 }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 
-#ifdef FSC_HAVE_SRC
+#ifdef CONFIG_FSC_HAVE_SRC
 void StateMachineDebugAccessorySource(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     updateVCONNSource(port);
 
@@ -771,14 +771,14 @@ void StateMachineDebugAccessorySource(Port_t *port)
             && (port->CCTermPDDebounce < CCTypeUndefined)
             && (port->VCONNTerm >= CCTypeRdUSB)
             && (port->VCONNTerm < CCTypeUndefined)
-            && port->USBPDActive == FALSE)
+            && port->USBPDActive == false)
     {
         if (port->CCTermPDDebounce > port->VCONNTerm)
         {
             port->CCPin = port->Registers.Switches.MEAS_CC1 ? CC1 :
                          (port->Registers.Switches.MEAS_CC2 ? CC2 : CCNone);
 
-            USBPDEnable(port, TRUE, SOURCE);
+            USBPDEnable(port, true, SOURCE);
         }
         else if (port->VCONNTerm > port->CCTermPDDebounce)
         {
@@ -786,16 +786,16 @@ void StateMachineDebugAccessorySource(Port_t *port)
             port->CCPin = port->Registers.Switches.MEAS_CC1 ? CC1 :
                          (port->Registers.Switches.MEAS_CC2 ? CC2 : CCNone);
 
-            USBPDEnable(port, TRUE, SOURCE);
+            USBPDEnable(port, true, SOURCE);
         }
     }
 }
-#endif /* FSC_HAVE_SRC */
+#endif /* CONFIG_FSC_HAVE_SRC */
 
-#ifdef FSC_HAVE_ACCMODE
+#ifdef CONFIG_FSC_HAVE_ACCMODE
 void StateMachineAudioAccessory(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     debounceCC(port);
 
@@ -805,14 +805,14 @@ void StateMachineAudioAccessory(Port_t *port)
         SetStateUnattached(port);
     }
 }
-#endif /* FSC_HAVE_ACCMODE */
+#endif /* CONFIG_FSC_HAVE_ACCMODE */
 
-#if (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE))
+#if (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE))
 void StateMachineAttachWaitAccessory(Port_t *port)
 {
-    FSC_BOOL ccIsRa = FALSE;
+    bool ccIsRa = false;
 
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     updateVCONNSource(port);
     ccIsRa = IsCCPinRa(port);
@@ -829,8 +829,8 @@ void StateMachineAttachWaitAccessory(Port_t *port)
     {
             /* The toggle state machine may have stopped on an Ra - swap here */
             port->CCPin = (port->CCPin == CC1) ? CC2 : CC1;
-            setStateSource(port, FALSE);
-            port->TCIdle = FALSE;
+            setStateSource(port, false);
+            port->TCIdle = false;
             return;
     }
     else if ((port->CCTerm == CCTypeOpen && port->VCONNTerm == CCTypeRa) ||
@@ -893,7 +893,7 @@ void StateMachineAttachWaitAccessory(Port_t *port)
 
 void StateMachinePoweredAccessory(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     debounceCC(port);
 
@@ -901,8 +901,8 @@ void StateMachinePoweredAccessory(Port_t *port)
     {
         SetStateUnattached(port);
     }
-#ifdef FSC_HAVE_VDM
-    else if (port->mode_entered == TRUE)
+#ifdef CONFIG_FSC_HAVE_VDM
+    else if (port->mode_entered == true)
     {
         /* Disable tAMETimeout if we enter a mode */
         TimerDisable(&port->StateTimer);
@@ -916,7 +916,7 @@ void StateMachinePoweredAccessory(Port_t *port)
             DeviceWrite(port->I2cAddr, regMask, 1, &port->Registers.Mask.byte);
         }
     }
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
     else if (TimerExpired(&port->StateTimer))
     {
         /* If we have timed out and haven't entered an alternate mode... */
@@ -933,7 +933,7 @@ void StateMachinePoweredAccessory(Port_t *port)
 
 void StateMachineUnsupportedAccessory(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     debounceCC(port);
 
@@ -942,13 +942,13 @@ void StateMachineUnsupportedAccessory(Port_t *port)
         SetStateUnattached(port);
     }
 }
-#endif /* (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE) */
+#endif /* (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE) */
 
-#if (defined(FSC_HAVE_DRP) || \
-     (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)))
+#if (defined(CONFIG_FSC_HAVE_DRP) || \
+     (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)))
 void StateMachineTrySink(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     switch (port->TypeCSubState)
     {
@@ -976,7 +976,7 @@ void StateMachineTrySink(Port_t *port)
             }
         }
 
-#ifdef FSC_HAVE_ACCMODE
+#ifdef CONFIG_FSC_HAVE_ACCMODE
         else if ((port->PortConfig.PortType == USBTypeC_Sink) &&
                  (TimerExpired(&port->StateTimer) ||
                   TimerDisabled(&port->StateTimer)) &&
@@ -984,15 +984,15 @@ void StateMachineTrySink(Port_t *port)
         {
             SetStateUnsupportedAccessory(port);
         }
-#endif /* FSC_HAVE_ACCMODE */
+#endif /* CONFIG_FSC_HAVE_ACCMODE */
 
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
         else if ((port->PortConfig.PortType == USBTypeC_DRP) &&
                  (port->CCTermPDDebounce == CCTypeOpen))
         {
             SetStateTryWaitSource(port);
         }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
         else
         {
             TimerStart(&port->VBusPollTimer, tVBusPollShort);
@@ -1003,12 +1003,12 @@ void StateMachineTrySink(Port_t *port)
     }
 
 }
-#endif /* FSC_HAVE_DRP || (FSC_HAVE_SNK && FSC_HAVE_ACCMODE) */
+#endif /* CONFIG_FSC_HAVE_DRP || (CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE) */
 
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
 void StateMachineTryWaitSource(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     debounceCC(port);
 
@@ -1042,12 +1042,12 @@ void StateMachineTryWaitSource(Port_t *port)
         TimerStart(&port->VBusPollTimer, tVBusPollShort);
     }
 }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
 void StateMachineUnattachedSource(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     debounceCC(port);
     updateVCONNSource(port);
@@ -1077,12 +1077,12 @@ void StateMachineUnattachedSource(Port_t *port)
         SetStateUnattached(port);
     }
 }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
 void StateMachineDebugAccessorySink(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     debounceCC(port);
     updateVCONNSink(port);
@@ -1095,14 +1095,14 @@ void StateMachineDebugAccessorySink(Port_t *port)
             && (port->CCTermPDDebounce < CCTypeUndefined)
             && (port->VCONNTerm >= CCTypeRdUSB)
             && (port->VCONNTerm < CCTypeUndefined)
-            && port->USBPDActive == FALSE)
+            && port->USBPDActive == false)
     {
         if (port->CCTermPDDebounce > port->VCONNTerm)
         {
             port->CCPin = port->Registers.Switches.MEAS_CC1 ? CC1 :
                          (port->Registers.Switches.MEAS_CC2 ? CC2 : CCNone);
 
-            USBPDEnable(port, TRUE, SINK);
+            USBPDEnable(port, true, SINK);
         }
         else if (port->VCONNTerm > port->CCTermPDDebounce)
         {
@@ -1110,16 +1110,16 @@ void StateMachineDebugAccessorySink(Port_t *port)
             port->CCPin = port->Registers.Switches.MEAS_CC1 ? CC1 :
                          (port->Registers.Switches.MEAS_CC2 ? CC2 : CCNone);
 
-            USBPDEnable(port, TRUE, SINK);
+            USBPDEnable(port, true, SINK);
         }
     }
 }
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 
 /* State Machine Configuration */
 void SetStateDisabled(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     SetTypeCState(port, Disabled);
     TimerDisable(&port->StateTimer);
@@ -1129,7 +1129,7 @@ void SetStateDisabled(Port_t *port)
 
 void SetStateErrorRecovery(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     SetTypeCState(port, ErrorRecovery);
     TimerStart(&port->StateTimer, tErrorRecovery);
@@ -1139,7 +1139,7 @@ void SetStateErrorRecovery(Port_t *port)
 
 void SetStateUnattachedSourceOnly(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     SetTypeCState(port, UnattachedSourceOnly);
 
@@ -1196,7 +1196,7 @@ void SetStateUnattached(Port_t *port)
         return;
     }
     
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     SetTypeCState(port, Unattached);
 
@@ -1224,7 +1224,7 @@ void SetStateUnattached(Port_t *port)
         /* DRP - Configure Rp/Rd toggling */
         port->Registers.Control.MODE = 0x1;
     }
-#ifdef FSC_HAVE_ACCMODE
+#ifdef CONFIG_FSC_HAVE_ACCMODE
     else if((port->PortConfig.PortType == USBTypeC_Sink) &&
             ((port->PortConfig.audioAccSupport) ||
              (port->PortConfig.poweredAccSupport)))
@@ -1232,7 +1232,7 @@ void SetStateUnattached(Port_t *port)
         /* Sink + Acc - Configure Rp/Rd toggling */
         port->Registers.Control.MODE = 0x1;
     }
-#endif /* FSC_HAVE_ACCMODE */
+#endif /* CONFIG_FSC_HAVE_ACCMODE */
     else if (port->PortConfig.PortType == USBTypeC_Source)
     {
         /* Source - Look for Rd */
@@ -1255,10 +1255,10 @@ void SetStateUnattached(Port_t *port)
     TimerStart(&port->LoopCountTimer, tLoopReset);
 }
 
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
 void SetStateAttachWaitSink(Port_t *port)
 {
-    port->TCIdle = FALSE;
+    port->TCIdle = false;
 
     SetTypeCState(port, AttachWaitSink);
 
@@ -1282,7 +1282,7 @@ void SetStateAttachWaitSink(Port_t *port)
     /* Check for a possible C-to-A cable situation */
     if (isVSafe5V(port))
     {
-        port->C2ACable = TRUE;
+        port->C2ACable = true;
     }
 
     /* Check for detach before continuing - FUSB302-210*/
@@ -1295,7 +1295,7 @@ void SetStateAttachWaitSink(Port_t *port)
 
 void SetStateDebugAccessorySink(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
     port->loopCounter = 0;
 
     SetTypeCState(port, DebugAccessorySink);
@@ -1309,12 +1309,12 @@ void SetStateDebugAccessorySink(Port_t *port)
 
     TimerStart(&port->StateTimer, tOrientedDebug);
 }
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 
-#ifdef FSC_HAVE_SRC
+#ifdef CONFIG_FSC_HAVE_SRC
 void SetStateAttachWaitSource(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     SetTypeCState(port, AttachWaitSource);
 
@@ -1325,14 +1325,14 @@ void SetStateAttachWaitSource(Port_t *port)
         return;
     }
 
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, FALSE, FALSE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, false, false);
 
     /* Disabling the toggle bit here may cause brief pulldowns (they are the
      * default), so call setStateSource first to set pullups,
      * then disable the toggle bit, then re-run DetectCCPinSource to make sure
      * we have the correct pin selected.
      */
-    setStateSource(port, FALSE);
+    setStateSource(port, false);
 
     /* To help prevent detection of a non-compliant cable, briefly set the
      * advertised current to 3A here.  It will be reset after tAttachWaitAdv
@@ -1351,7 +1351,7 @@ void SetStateAttachWaitSource(Port_t *port)
 
     /* Recheck for termination / orientation */
     DetectCCPinSource(port);
-    setStateSource(port, FALSE);
+    setStateSource(port, false);
 
     /* Enable interrupts */
     port->Registers.Mask.M_COMP_CHNG = 0;
@@ -1360,17 +1360,17 @@ void SetStateAttachWaitSource(Port_t *port)
     /* After a delay, switch to the appropriate advertisement pullup */
     TimerStart(&port->StateTimer, tAttachWaitAdv);
 }
-#endif /* FSC_HAVE_SRC */
+#endif /* CONFIG_FSC_HAVE_SRC */
 
-#ifdef FSC_HAVE_ACCMODE
+#ifdef CONFIG_FSC_HAVE_ACCMODE
 void SetStateAttachWaitAccessory(Port_t *port)
 {
-    port->TCIdle = FALSE;
+    port->TCIdle = false;
 
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, FALSE, FALSE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, false, false);
     SetTypeCState(port, AttachWaitAccessory);
 
-    setStateSource(port, FALSE);
+    setStateSource(port, false);
 
     port->Registers.Control.TOGGLE = 0;
     DeviceWrite(port->I2cAddr, regControl2, 1,&port->Registers.Control.byte[2]);
@@ -1381,34 +1381,34 @@ void SetStateAttachWaitAccessory(Port_t *port)
 
     TimerDisable(&port->StateTimer);
 }
-#endif /* FSC_HAVE_ACCMODE */
+#endif /* CONFIG_FSC_HAVE_ACCMODE */
 
-#ifdef FSC_HAVE_SRC
+#ifdef CONFIG_FSC_HAVE_SRC
 void SetStateAttachedSource(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     SetTypeCState(port, AttachedSource);
 
-    setStateSource(port, TRUE);
+    setStateSource(port, true);
 
     /* Enable 5V VBus */
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_5V, TRUE, TRUE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_5V, true, true);
 
     notify_observers((port->CCPin == CC1) ? CC1_ORIENT : CC2_ORIENT,
                      port->I2cAddr, 0);
 
-    USBPDEnable(port, TRUE, SOURCE);
+    USBPDEnable(port, true, SOURCE);
 
     /* Start delay to check for illegal cable looping */
     TimerStart(&port->StateTimer, tIllegalCable);
 }
-#endif /* FSC_HAVE_SRC */
+#endif /* CONFIG_FSC_HAVE_SRC */
 
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
 void SetStateAttachedSink(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     /* Default to 5V detach threshold */
     port->DetachThreshold = VBUS_MV_VSAFE5V_DISC;
@@ -1425,12 +1425,12 @@ void SetStateAttachedSink(Port_t *port)
     port->CCTerm = DecodeCCTerminationSink(port);
     UpdateSinkCurrent(port, port->CCTerm);
 
-    USBPDEnable(port, TRUE, SINK);
+    USBPDEnable(port, true, SINK);
     TimerDisable(&port->StateTimer);
 }
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
 void RoleSwapToAttachedSink(Port_t *port)
 {
     SetTypeCState(port, AttachedSink);
@@ -1466,15 +1466,15 @@ void RoleSwapToAttachedSink(Port_t *port)
     TimerDisable(&port->PDDebounceTimer);
     TimerStart(&port->CCDebounceTimer, tCCDebounce);
 }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
 void RoleSwapToAttachedSource(Port_t *port)
 {
     port->Registers.Measure.MEAS_VBUS = 0;
     DeviceWrite(port->I2cAddr, regMeasure, 1, &port->Registers.Measure.byte);
 
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_5V, TRUE, TRUE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_5V, true, true);
     SetTypeCState(port, AttachedSource);
     port->sourceOrSink = SOURCE;
     resetDebounceVariables(port);
@@ -1503,12 +1503,12 @@ void RoleSwapToAttachedSource(Port_t *port)
     TimerDisable(&port->PDDebounceTimer);
     TimerStart(&port->CCDebounceTimer, tCCDebounce);
 }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
 void SetStateTryWaitSink(Port_t *port)
 {
-    port->TCIdle = FALSE;
+    port->TCIdle = false;
 
     /* Mask all */
     port->Registers.Mask.byte = 0xFF;
@@ -1518,7 +1518,7 @@ void SetStateTryWaitSink(Port_t *port)
     port->Registers.MaskAdv.M_GCRCSENT = 1;
     DeviceWrite(port->I2cAddr, regMaskb, 1, &port->Registers.MaskAdv.byte[1]);
 
-    USBPDDisable(port, TRUE);
+    USBPDDisable(port, true);
 
     SetTypeCState(port, TryWaitSink);
 
@@ -1526,31 +1526,31 @@ void SetStateTryWaitSink(Port_t *port)
 
     TimerDisable(&port->StateTimer);
 }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
 void SetStateTrySource(Port_t *port)
 {
-    port->TCIdle = FALSE;
+    port->TCIdle = false;
 
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, FALSE, FALSE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, false, false);
     SetTypeCState(port, TrySource);
 
-    setStateSource(port, FALSE);
+    setStateSource(port, false);
 
     TimerStart(&port->StateTimer, tDRPTry);
     TimerStart(&port->PolicyStateTimer, tTryTimeout);    
 }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 
-#if (defined(FSC_HAVE_DRP) || \
-     (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)))
+#if (defined(CONFIG_FSC_HAVE_DRP) || \
+     (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)))
 void SetStateTrySink(Port_t *port)
 {
-    port->TCIdle = FALSE;
+    port->TCIdle = false;
 
     SetTypeCState(port, TrySink);
-    USBPDDisable(port, TRUE);
+    USBPDDisable(port, true);
     setStateSink(port);
 
     /* Enable interrupts */
@@ -1559,73 +1559,73 @@ void SetStateTrySink(Port_t *port)
 
     TimerStart(&port->StateTimer, tDRPTry);
 }
-#endif /* FSC_HAVE_DRP || (FSC_HAVE_SNK && FSC_HAVE_ACCMODE) */
+#endif /* CONFIG_FSC_HAVE_DRP || (CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE) */
 
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
 void SetStateTryWaitSource(Port_t *port)
 {
-    port->TCIdle = FALSE;
+    port->TCIdle = false;
 
     port->Registers.Mask.M_COMP_CHNG = 0;
     DeviceWrite(port->I2cAddr, regMask, 1, &port->Registers.Mask.byte);
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, FALSE, FALSE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, false, false);
 
     SetTypeCState(port, TryWaitSource);
 
-    setStateSource(port, FALSE);
+    setStateSource(port, false);
 
     TimerStart(&port->StateTimer, tDRPTry);
 }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 
-#ifdef FSC_HAVE_SRC
+#ifdef CONFIG_FSC_HAVE_SRC
 void SetStateDebugAccessorySource(Port_t *port)
 {
     port->Registers.Mask.M_COMP_CHNG = 0;
     DeviceWrite(port->I2cAddr, regMask, 1, &port->Registers.Mask.byte);
-    port->TCIdle = FALSE;
+    port->TCIdle = false;
     port->loopCounter = 0;
 
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_5V, TRUE, TRUE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_5V, true, true);
     SetTypeCState(port, DebugAccessorySource);
 
-    setStateSource(port, FALSE);
+    setStateSource(port, false);
 
     TimerStart(&port->StateTimer, tOrientedDebug);
 }
-#endif /* FSC_HAVE_SRC */
+#endif /* CONFIG_FSC_HAVE_SRC */
 
-#ifdef FSC_HAVE_ACCMODE
+#ifdef CONFIG_FSC_HAVE_ACCMODE
 void SetStateAudioAccessory(Port_t *port)
 {
-    port->TCIdle = FALSE;
+    port->TCIdle = false;
 
     port->loopCounter = 0;
 
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, FALSE, FALSE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, false, false);
     SetTypeCState(port, AudioAccessory);
 
-    setStateSource(port, FALSE);
+    setStateSource(port, false);
 
     port->Registers.Mask.M_COMP_CHNG = 0;
     DeviceWrite(port->I2cAddr, regMask, 1, &port->Registers.Mask.byte);
 
     TimerDisable(&port->StateTimer);
 }
-#endif /* FSC_HAVE_ACCMODE */
+#endif /* CONFIG_FSC_HAVE_ACCMODE */
 
-#if (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE))
+#if (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE))
 void SetStatePoweredAccessory(Port_t *port)
 {
-    port->TCIdle = FALSE;
+    port->TCIdle = false;
 
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, FALSE, FALSE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, false, false);
 
     /* NOTE: Leave commented - Enable the 5V output for debugging */
-    /*platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_5V, TRUE, TRUE);*/
+    /*platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_5V, true, true);*/
 
     SetTypeCState(port, PoweredAccessory);
-    setStateSource(port, TRUE);
+    setStateSource(port, true);
 
     /* If the current is default set it to 1.5A advert (Must be 1.5 or 3.0) */
     if (port->Registers.Control.HOST_CUR != 0x2)
@@ -1638,52 +1638,52 @@ void SetStatePoweredAccessory(Port_t *port)
     notify_observers((port->CCPin == CC1) ? CC1_ORIENT : CC2_ORIENT,
                      port->I2cAddr, 0);
 
-    USBPDEnable(port, TRUE, SOURCE);
+    USBPDEnable(port, true, SOURCE);
 
     TimerStart(&port->StateTimer, tAMETimeout);
 }
 
 void SetStateUnsupportedAccessory(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     /* Mask for COMP */
     port->Registers.Mask.M_COMP_CHNG = 0;
     DeviceWrite(port->I2cAddr, regMask, 1, &port->Registers.Mask.byte);
 
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, FALSE, FALSE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, false, false);
     SetTypeCState(port, UnsupportedAccessory);
-    setStateSource(port, FALSE);
+    setStateSource(port, false);
 
     /* Must advertise default current */
     port->Registers.Control.HOST_CUR = 0x1;
     DeviceWrite(port->I2cAddr, regControl0, 1,
                 &port->Registers.Control.byte[0]);
-    USBPDDisable(port, TRUE);
+    USBPDDisable(port, true);
 
     TimerDisable(&port->StateTimer);
 
     notify_observers(ACC_UNSUPPORTED, port->I2cAddr, 0);
 }
-#endif /* (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)) */
+#endif /* (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)) */
 
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
 void SetStateUnattachedSource(Port_t *port)
 {
     /* Currently only implemented for AttachWaitSnk to Unattached for DRP */
-    port->TCIdle = FALSE;
+    port->TCIdle = false;
 
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, FALSE, FALSE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, false, false);
     SetTypeCState(port, UnattachedSource);
     port->CCPin = CCNone;
 
-    setStateSource(port, FALSE);
+    setStateSource(port, false);
 
-    USBPDDisable(port, TRUE);
+    USBPDDisable(port, true);
 
     TimerStart(&port->StateTimer, tTOG2);
 }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 
 /* Type C Support Routines */
 void updateSourceCurrent(Port_t *port)
@@ -1784,22 +1784,22 @@ CCTermType DecodeCCTermination(Port_t *port)
 {
     switch (port->sourceOrSink)
     {
-#if (defined(FSC_HAVE_SRC) || \
-     (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)))
+#if (defined(CONFIG_FSC_HAVE_SRC) || \
+     (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)))
     case SOURCE:
         return DecodeCCTerminationSource(port);
-#endif /* FSC_HAVE_SRC || (FSC_HAVE_SNK && FSC_HAVE_ACCMODE) */
-#ifdef FSC_HAVE_SNK
+#endif /* CONFIG_FSC_HAVE_SRC || (CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE) */
+#ifdef CONFIG_FSC_HAVE_SNK
     case SINK:
         return DecodeCCTerminationSink(port);
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
     default:
         return CCTypeUndefined;
     }
 }
 
-#if (defined(FSC_HAVE_SRC) || \
-     (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)))
+#if (defined(CONFIG_FSC_HAVE_SRC) || \
+     (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)))
 CCTermType DecodeCCTerminationSource(Port_t *port)
 {
     CCTermType Termination = CCTypeUndefined;
@@ -1887,9 +1887,9 @@ CCTermType DecodeCCTerminationSource(Port_t *port)
     return Termination;
 }
 
-FSC_BOOL IsCCPinRa(Port_t *port)
+bool IsCCPinRa(Port_t *port)
 {
-    FSC_BOOL isRa = FALSE;
+    bool isRa = false;
     regMeasure_t saved_measure = port->Registers.Measure;
 
     /* Make sure MEAS_VBUS is cleared */
@@ -1903,7 +1903,7 @@ FSC_BOOL IsCCPinRa(Port_t *port)
     platform_delay_10us(25);
     DeviceRead(port->I2cAddr, regStatus0, 1, &port->Registers.Status.byte[4]);
 
-    isRa = (port->Registers.Status.COMPARATOR == 0) ? TRUE : FALSE;
+    isRa = (port->Registers.Status.COMPARATOR == 0) ? true : false;
 
     /* Restore Measure register */
     port->Registers.Measure = saved_measure;
@@ -1911,9 +1911,9 @@ FSC_BOOL IsCCPinRa(Port_t *port)
 
     return isRa;
 }
-#endif /* FSC_HAVE_SRC || (FSC_HAVE_SNK && FSC_HAVE_ACCMODE) */
+#endif /* CONFIG_FSC_HAVE_SRC || (CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE) */
 
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
 CCTermType DecodeCCTerminationSink(Port_t *port)
 {
     CCTermType Termination;
@@ -1945,9 +1945,9 @@ CCTermType DecodeCCTerminationSink(Port_t *port)
 
     return Termination;
 }
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
 void UpdateSinkCurrent(Port_t *port, CCTermType term)
 {
     switch (term)
@@ -1969,7 +1969,7 @@ void UpdateSinkCurrent(Port_t *port, CCTermType term)
         break;
     }
 }
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 
 void UpdateCurrentAdvert(Port_t *port, USBTypeCCurrent Current)
 {
@@ -1981,33 +1981,33 @@ void UpdateCurrentAdvert(Port_t *port, USBTypeCCurrent Current)
     }
 }
 
-FSC_BOOL VbusVSafe0V(Port_t *port)
+bool VbusVSafe0V(Port_t *port)
 {
-    return (!isVBUSOverVoltage(port, VBUS_MV_VSAFE0V)) ? TRUE : FALSE;
+    return (!isVBUSOverVoltage(port, VBUS_MV_VSAFE0V)) ? true : false;
 }
 
-FSC_BOOL isVSafe5V(Port_t *port)
+bool isVSafe5V(Port_t *port)
 {
     return isVBUSOverVoltage(port, VBUS_MV_VSAFE5V_L);
 }
 
-FSC_BOOL isVBUSOverVoltage(Port_t *port, FSC_U16 vbus_mv)
+bool isVBUSOverVoltage(Port_t *port, uint16_t vbus_mv)
 {
     /* PPS Implementation requires better resolution vbus measurements than
      * the MDAC can provide.  If available on the platform, use an ADC
      * channel to measure the current vbus voltage.
      */
 #ifdef PLATFORM_PIC32_ADC
-    FSC_U16 adc = ReadADCChannel(4);
-    FSC_U16 arg = vbus_mv / 23;
+    uint16_t adc = ReadADCChannel(4);
+    uint16_t arg = vbus_mv / 23;
 
-    return (arg <= adc) ? TRUE : FALSE;
+    return (arg <= adc) ? true : false;
 #else
     regMeasure_t measure;
 
-    FSC_U8 val;
-    FSC_BOOL ret;
-    FSC_BOOL mdacUpdated = FALSE;
+    uint8_t val;
+    bool ret;
+    bool mdacUpdated = false;
 
     /* Setup for VBUS measurement */
     measure.byte = 0;
@@ -2024,7 +2024,7 @@ FSC_BOOL isVBUSOverVoltage(Port_t *port, FSC_U16 vbus_mv)
     {
         /* Update only if required */
         DeviceWrite(port->I2cAddr, regMeasure, 1, &measure.byte);
-        mdacUpdated = TRUE;
+        mdacUpdated = true;
         /* Delay to allow measurement to settle */
         platform_delay_10us(35);
     }
@@ -2034,9 +2034,9 @@ FSC_BOOL isVBUSOverVoltage(Port_t *port, FSC_U16 vbus_mv)
     val &= 0x20;
 
     /* Determine return value based on COMP */
-    ret = (val) ? TRUE : FALSE;
+    ret = (val) ? true : false;
 
-    if (mdacUpdated == TRUE)
+    if (mdacUpdated == true)
     {
         /* Restore register values */
         DeviceWrite(port->I2cAddr, regMeasure, 1, &port->Registers.Measure.byte);
@@ -2049,7 +2049,7 @@ FSC_BOOL isVBUSOverVoltage(Port_t *port, FSC_U16 vbus_mv)
 void DetectCCPinSource(Port_t *port)
 {
     CCTermType CCTerm;
-    FSC_BOOL CC1IsRa = FALSE;
+    bool CC1IsRa = false;
 
     if (port->Registers.DeviceID.VERSION_ID == VERSION_302A)
     {
@@ -2073,7 +2073,7 @@ void DetectCCPinSource(Port_t *port)
     }
     else if (CCTerm == CCTypeRa)
     {
-        CC1IsRa = TRUE;
+        CC1IsRa = true;
     }
 
     if (port->Registers.DeviceID.VERSION_ID == VERSION_302A)
@@ -2144,10 +2144,10 @@ void resetDebounceVariables(Port_t *port)
     port->VCONNTerm = CCTypeUndefined;
 }
 
-#ifdef FSC_DEBUG
-FSC_BOOL GetLocalRegisters(Port_t *port, FSC_U8 * data, FSC_S32 size)
+#ifdef CONFIG_CONFIG_FSC_DEBUG
+bool GetLocalRegisters(Port_t *port, uint8_t * data, int32_t size)
 {
-    if (size != 23) return FALSE;
+    if (size != 23) return false;
 
     data[0] = port->Registers.DeviceID.byte;
     data[1] = port->Registers.Switches.byte[0];
@@ -2173,9 +2173,9 @@ FSC_BOOL GetLocalRegisters(Port_t *port, FSC_U8 * data, FSC_S32 size)
     data[21] = port->Registers.Status.byte[5];
     data[22] = port->Registers.Status.byte[6];
 
-    return TRUE;
+    return true;
 }
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 
 void debounceCC(Port_t *port)
 {
@@ -2234,14 +2234,14 @@ void debounceCC(Port_t *port)
     }
 }
 
-#if (defined(FSC_HAVE_SRC) || \
-     (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)))
+#if (defined(CONFIG_FSC_HAVE_SRC) || \
+     (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)))
 void updateVCONNSource(Port_t *port)
 {
     /* Assumes PUs have been set */
 
     /* Save current Switches */
-    FSC_U8 saveRegister = port->Registers.Switches.byte[0];
+    uint8_t saveRegister = port->Registers.Switches.byte[0];
 
     /* Toggle measure to VCONN */
     ToggleMeasure(port);
@@ -2272,7 +2272,7 @@ void updateVCONNSource(Port_t *port)
                 &port->Registers.Switches.byte[0]);
 }
 
-void setStateSource(Port_t *port, FSC_BOOL vconn)
+void setStateSource(Port_t *port, bool vconn)
 {
     port->sourceOrSink = SOURCE;
     resetDebounceVariables(port);
@@ -2339,13 +2339,13 @@ void setStateSource(Port_t *port, FSC_BOOL vconn)
     TimerDisable(&port->PDDebounceTimer);
     TimerStart(&port->CCDebounceTimer, tCCDebounce);
 }
-#endif /* FSC_HAVE_SRC || (FSC_HAVE_SNK && FSC_HAVE_ACCMODE)) */
+#endif /* CONFIG_FSC_HAVE_SRC || (CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE)) */
 
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
 void setStateSink(Port_t *port)
 {
     /* Disable the vbus outputs */
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, FALSE, FALSE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, false, false);
 
     port->sourceOrSink = SINK;
     resetDebounceVariables(port);
@@ -2398,18 +2398,18 @@ void updateVCONNSink(Port_t *port)
     ToggleMeasure(port);
 }
 
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 
 void clearState(Port_t *port)
 {
     /* Disable the vbus outputs */
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, FALSE, FALSE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, false, false);
 
-#ifdef FSC_HAVE_PPS_SOURCE
+#ifdef CONFIG_FSC_HAVE_PPS_SOURCE
     platform_set_pps_voltage(port->PortID, 0);
-#endif /* FSC_HAVE_PPS_SOURCE */
+#endif /* CONFIG_FSC_HAVE_PPS_SOURCE */
 
-    USBPDDisable(port, TRUE);
+    USBPDDisable(port, true);
 
     /* Mask/disable interrupts */
     port->Registers.Mask.byte = 0xFF;
@@ -2446,12 +2446,12 @@ void clearState(Port_t *port)
 
 void SetStateIllegalCable(Port_t *port)
 {
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     port->loopCounter = 0;
 
-    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, FALSE, FALSE);
-    platform_set_vbus_discharge(port->PortID, TRUE);
+    platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, false, false);
+    platform_set_vbus_discharge(port->PortID, true);
 
     /* Disable toggle */
     port->Registers.Control.TOGGLE = 0;
@@ -2541,7 +2541,7 @@ void StateMachineIllegalCable(Port_t *port)
      * waits for a change in termination.
      * NOTE: In most cases this requires VBUS bleed resistor (~7kohm)
      */
-    port->TCIdle = TRUE;
+    port->TCIdle = true;
 
     if (port->Registers.Status.I_COMP_CHNG == 1)
     {
@@ -2549,7 +2549,7 @@ void StateMachineIllegalCable(Port_t *port)
 
         if (port->CCTerm == CCTypeOpen)
         {
-            platform_set_vbus_discharge(port->PortID, FALSE);
+            platform_set_vbus_discharge(port->PortID, false);
 
             SetStateUnattached(port);
         }

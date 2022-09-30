@@ -21,9 +21,9 @@
 #include "PDProtocol.h"
 #include "fusb30x.h"
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 #include "vdm_callbacks.h"
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
 /* Forward Declarations */
 static void SetPortDefaultConfiguration(Port_t *port);
@@ -32,9 +32,9 @@ void InitializeTypeCVariables(Port_t *port);
 void InitializePDProtocolVariables(Port_t *port);
 void InitializePDPolicyVariables(Port_t *port);
 
-void PortInit(Port_t *port, FSC_U8 i2cAddr)
+void PortInit(Port_t *port, uint8_t i2cAddr)
 {
-    FSC_U8 i;
+    uint8_t i;
 
     port->I2cAddr = i2cAddr;
     port->PortConfig.PdRevPreferred = PD_Specification_Revision;
@@ -69,10 +69,10 @@ void SetTypeCState(Port_t *port, ConnectionState state)
     port->ConnState = state;
     port->TypeCSubState = 0;
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
     WriteStateLog(&port->TypeCStateLog, port->ConnState,
                   platform_get_log_time());
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 }
 
 void SetPEState(Port_t *port, PolicyState_t state)
@@ -81,13 +81,13 @@ void SetPEState(Port_t *port, PolicyState_t state)
     port->PolicySubIndex = 0;
 
     port->PDTxStatus = txIdle;
-    port->WaitingOnHR = FALSE;
-    port->WaitInSReady = FALSE;
+    port->WaitingOnHR = false;
+    port->WaitInSReady = false;
     notify_observers(PD_STATE_CHANGED, port->I2cAddr, 0);
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
     WriteStateLog(&port->PDStateLog, port->PolicyState,
                   platform_get_log_time());
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 }
 
 /**
@@ -96,19 +96,19 @@ void SetPEState(Port_t *port, PolicyState_t state)
  */
 static void SetPortDefaultConfiguration(Port_t *port)
 {
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
     port->PortConfig.SinkRequestMaxVoltage   = 0;
     port->PortConfig.SinkRequestMaxPower     = PD_Power_as_Sink;
     port->PortConfig.SinkRequestOpPower      = PD_Power_as_Sink;
-    port->PortConfig.SinkGotoMinCompatible   = FALSE;
+    port->PortConfig.SinkGotoMinCompatible   = false;
     port->PortConfig.SinkUSBSuspendOperation = No_USB_Suspend_May_Be_Set;
     port->PortConfig.SinkUSBCommCapable      = USB_Comms_Capable;
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 
-#ifdef FSC_HAVE_ACCMODE
+#ifdef CONFIG_FSC_HAVE_ACCMODE
     port->PortConfig.audioAccSupport   =Type_C_Supports_Audio_Accessory;
     port->PortConfig.poweredAccSupport =Type_C_Supports_Vconn_Powered_Accessory;
-#endif /* FSC_HAVE_ACCMODE */
+#endif /* CONFIG_FSC_HAVE_ACCMODE */
 
     port->PortConfig.RpVal = utccDefault;
 
@@ -169,7 +169,7 @@ static void SetPortDefaultConfiguration(Port_t *port)
         port->PortConfig.PortType = USBTypeC_DRP;
     }
 
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
     if (port->PortConfig.PortType == USBTypeC_DRP)
     {
         port->PortConfig.SrcPreferred = Type_C_Implements_Try_SRC;
@@ -177,15 +177,15 @@ static void SetPortDefaultConfiguration(Port_t *port)
     }
     else
     {
-        port->PortConfig.SrcPreferred = FALSE;
-        port->PortConfig.SnkPreferred = FALSE;
+        port->PortConfig.SrcPreferred = false;
+        port->PortConfig.SnkPreferred = false;
     }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 }
 
 void InitializeRegisters(Port_t *port)
 {
-    FSC_U8 reset = 0x01;
+    uint8_t reset = 0x01;
     DeviceWrite(port->I2cAddr, regReset, 1, &reset);
 
     DeviceRead(port->I2cAddr, regDeviceID, 1, &port->Registers.DeviceID.byte);
@@ -234,25 +234,25 @@ void InitializeTypeCVariables(Port_t *port)
     port->Registers.Control4.TOG_USRC_EXIT = 0;
     DeviceWrite(port->I2cAddr, regControl4, 1, &port->Registers.Control4.byte);
 
-    port->TCIdle = TRUE;
-    port->SMEnabled = FALSE;
+    port->TCIdle = true;
+    port->SMEnabled = false;
 
     SetTypeCState(port, Disabled);
 
     port->DetachThreshold = VBUS_MV_VSAFE5V_DISC;
     port->CCPin = CCNone;
-    port->C2ACable = FALSE;
+    port->C2ACable = false;
 
     resetDebounceVariables(port);
 
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
     /* Clear the current advertisement initially */
     port->SinkCurrent = utccNone;
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
     InitializeStateLog(&port->TypeCStateLog);
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 }
 
 void InitializePDProtocolVariables(Port_t *port)
@@ -268,25 +268,25 @@ void InitializePDProtocolVariables(Port_t *port)
     port->FastGoodCRCBuffer[8] = EOP;
     port->FastGoodCRCBuffer[9] = TXOFF;
     
-    port->DoTxFlush = FALSE;
+    port->DoTxFlush = false;
 }
 
 void InitializePDPolicyVariables(Port_t *port)
 {
-    port->isContractValid = FALSE;
+    port->isContractValid = false;
 
-    port->IsHardReset = FALSE;
-    port->IsPRSwap = FALSE;
+    port->IsHardReset = false;
+    port->IsPRSwap = false;
 
-    port->WaitingOnHR = FALSE;
+    port->WaitingOnHR = false;
 
-    port->PEIdle = TRUE;
-    port->USBPDActive = FALSE;
-    port->USBPDEnabled = TRUE;
+    port->PEIdle = true;
+    port->USBPDActive = false;
+    port->USBPDEnabled = true;
 
-#ifdef FSC_DEBUG
-    port->SourceCapsUpdated = FALSE;
-#endif /* FSC_DEBUG */
+#ifdef CONFIG_CONFIG_FSC_DEBUG
+    port->SourceCapsUpdated = false;
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 
     /* Source Caps & Header */
     port->src_cap_header.word = 0;
@@ -304,18 +304,18 @@ void InitializePDPolicyVariables(Port_t *port)
 
     VIF_InitializeSnkCaps(port->snk_caps);
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
     InitializeVdmManager(port);
     vdmInitDpm(port);
     port->AutoModeEntryObjPos = -1;
     port->discoverIdCounter = 0;
-    port->cblPresent = FALSE;
+    port->cblPresent = false;
     port->cblRstState = CBL_RST_DISABLED;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
     InitializeStateLog(&port->PDStateLog);
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 }
 
 void SetConfiguredCurrent(Port_t *port)

@@ -27,14 +27,14 @@
 #ifdef CONFIG_SENSOR_LIGHT_INCLUDED_VEML6040
 #include "veml6040.h"
 #endif
-#ifdef CONFIG_SENSOR_LIGHT_INCLUDED_VEML6075
-#include "veml6075.h"
+#ifdef CONFIG_SENSOR_LIGHT_INCLUDED_VEML7700
+#include "veml7700.h"
 #endif
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 static esp_err_t null_function(void) { return ESP_ERR_NOT_SUPPORTED; }
-static esp_err_t null_acquire_light_function(float *l) { return ESP_ERR_NOT_SUPPORTED; }
+static esp_err_t null_acquire_light_function(float *l, float *w) { return ESP_ERR_NOT_SUPPORTED; }
 static esp_err_t null_acquire_rgbw_function(float *r, float *g, float *b, float *w) { return ESP_ERR_NOT_SUPPORTED; }
 static esp_err_t null_acquire_uv_function(float *uv, float *uva, float *uvb) { return ESP_ERR_NOT_SUPPORTED; }
 #pragma GCC diagnostic pop
@@ -54,7 +54,7 @@ typedef struct _light_implementation
     esp_err_t (*init)(bus_handle_t);
     esp_err_t (*deinit)(void);
     esp_err_t (*test)(void);
-    esp_err_t (*acquire_light)(float *l);
+    esp_err_t (*acquire_light)(float *l, float *w);
     esp_err_t (*acquire_rgbw)(float *r, float *g, float *b, float *w);
     esp_err_t (*acquire_uv)(float *uv, float *uva, float *uvb);
     esp_err_t (*sleep)(void);
@@ -96,15 +96,15 @@ static const light_sensor_impl_t light_sensor_implementations[] = {
         .wakeup = null_function,
     },
 #endif
-#ifdef CONFIG_SENSOR_LIGHT_INCLUDED_VEML6075
+#ifdef CONFIG_SENSOR_LIGHT_INCLUDED_VEML7700
     {
-        .id = VEML6075_ID,
-        .init = light_sensor_veml6075_init,
-        .deinit = light_sensor_veml6075_deinit,
-        .test = light_sensor_veml6075_test,
-        .acquire_light = null_acquire_light_function,
+        .id = VEML7700_ID,
+        .init = light_sensor_veml7700_init,
+        .deinit = light_sensor_veml7700_deinit,
+        .test = light_sensor_veml7700_test,
+        .acquire_light = light_sensor_veml7700_acquire_light,
         .acquire_rgbw = null_acquire_rgbw_function,
-        .acquire_uv = light_sensor_veml6075_acquire_uv,
+        .acquire_uv = null_acquire_uv_function,
         .sleep = null_function,
         .wakeup = null_function,
     },
@@ -188,11 +188,11 @@ esp_err_t light_sensor_test(sensor_light_handle_t sensor)
     return ret;
 }
 
-esp_err_t light_sensor_acquire_light(sensor_light_handle_t sensor, float *lux)
+esp_err_t light_sensor_acquire_light(sensor_light_handle_t sensor, float *lux, float *white)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     sensor_light_t *p_sensor = (sensor_light_t *)(sensor);
-    esp_err_t ret = p_sensor->impl->acquire_light(lux);
+    esp_err_t ret = p_sensor->impl->acquire_light(lux, white);
     return ret;
 }
 
@@ -254,7 +254,7 @@ esp_err_t light_sensor_acquire(sensor_light_handle_t sensor, sensor_data_group_t
     sensor_light_t *p_sensor = (sensor_light_t *)(sensor);
     esp_err_t ret;
     int i = 0;
-    ret = p_sensor->impl->acquire_light(&data_group->sensor_data[i].light);
+    ret = p_sensor->impl->acquire_light(&data_group->sensor_data[i].light.light, &data_group->sensor_data[i].light.white);
     if (ESP_OK == ret)
     {
         data_group->sensor_data[i].event_id = SENSOR_LIGHT_DATA_READY;

@@ -16,7 +16,7 @@
  ******************************************************************************/
 #include "Log.h"
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
 
 void InitializeStateLog(StateLog *log)
 {
@@ -25,11 +25,11 @@ void InitializeStateLog(StateLog *log)
     log->Start = 0;
 }
 
-FSC_BOOL WriteStateLog(StateLog *log, FSC_U16 state, FSC_U32 time)
+bool WriteStateLog(StateLog *log, uint16_t state, uint32_t time)
 {
     if(!IsStateLogFull(log))
     {
-        FSC_U8 index = log->End;
+        uint8_t index = log->End;
         log->logQueue[index].state = state;
         log->logQueue[index].time_s = time >> 16;     /* Upper 16: seconds */
         log->logQueue[index].time_ms = time & 0xFFFF; /* Lower 16: 0.1ms */
@@ -42,20 +42,20 @@ FSC_BOOL WriteStateLog(StateLog *log, FSC_U16 state, FSC_U32 time)
 
         log->Count += 1;
 
-        return TRUE;
+        return true;
     }
     else
     {
-        return FALSE;
+        return false;
     }
 }
 
-FSC_BOOL ReadStateLog(StateLog *log, FSC_U16 * state,
-                      FSC_U16 * time_ms, FSC_U16 * time_s)
+bool ReadStateLog(StateLog *log, uint16_t * state,
+                      uint16_t * time_ms, uint16_t * time_s)
 {
     if(!IsStateLogEmpty(log))
     {
-        FSC_U8 index = log->Start;
+        uint8_t index = log->Start;
         *state = log->logQueue[index].state;
         *time_ms = log->logQueue[index].time_ms;
         *time_s = log->logQueue[index].time_s;
@@ -67,22 +67,22 @@ FSC_BOOL ReadStateLog(StateLog *log, FSC_U16 * state,
         }
 
         log->Count -= 1;
-        return TRUE;
+        return true;
     }
     else
     {
-        return FALSE;
+        return false;
     }
 }
 
-FSC_U32 GetStateLog(StateLog *log, FSC_U8 *data, FSC_U8 bufLen)
+uint32_t GetStateLog(StateLog *log, uint8_t *data, uint8_t bufLen)
 {
-    FSC_S32 i;
-    FSC_S32 entries = log->Count;
-    FSC_U16 state_temp;
-    FSC_U16 time_tms_temp;
-    FSC_U16 time_s_temp;
-    FSC_U32 len = 0;
+    int32_t i;
+    int32_t entries = log->Count;
+    uint16_t state_temp;
+    uint16_t time_tms_temp;
+    uint16_t time_s_temp;
+    uint32_t len = 0;
 
     for (i = 0; i < entries; i++)
     {
@@ -90,9 +90,9 @@ FSC_U32 GetStateLog(StateLog *log, FSC_U8 *data, FSC_U8 bufLen)
         if (ReadStateLog(log, &state_temp, &time_tms_temp, &time_s_temp))
         {
             data[len++] = state_temp;
-            data[len++] = (FSC_U8) time_tms_temp;
+            data[len++] = (uint8_t) time_tms_temp;
             data[len++] = (time_tms_temp >> 8);
-            data[len++] = (FSC_U8) time_s_temp;
+            data[len++] = (uint8_t) time_s_temp;
             data[len++] = (time_s_temp) >> 8;
             bufLen -= 5;
         }
@@ -100,15 +100,15 @@ FSC_U32 GetStateLog(StateLog *log, FSC_U8 *data, FSC_U8 bufLen)
 
     return len;
 }
-FSC_BOOL IsStateLogFull(StateLog *log)
+bool IsStateLogFull(StateLog *log)
 {
-    return (log->Count == LOG_SIZE) ? TRUE : FALSE;
+    return (log->Count == LOG_SIZE) ? true : false;
 }
 
-FSC_BOOL IsStateLogEmpty(StateLog *log)
+bool IsStateLogEmpty(StateLog *log)
 {
-    return (!log->Count) ? TRUE : FALSE;
+    return (!log->Count) ? true : false;
 }
 
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 

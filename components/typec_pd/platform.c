@@ -1,9 +1,9 @@
 #include "platform.h"
 
-void platform_set_vbus_lvl_enable(FSC_U8 port,
+void platform_set_vbus_lvl_enable(uint8_t port,
                                   VBUS_LVL level,
-                                  FSC_BOOL enable,
-                                  FSC_BOOL disableOthers)
+                                  bool enable,
+                                  bool disableOthers)
 {
     unsigned int i;
 
@@ -19,7 +19,7 @@ void platform_set_vbus_lvl_enable(FSC_U8 port,
     }
 
     /* Turn off other levels, if requested */
-    if (disableOthers || ((level == VBUS_LVL_ALL) && (enable == FALSE)))
+    if (disableOthers || ((level == VBUS_LVL_ALL) && (enable == false)))
     {
         i = 0;
 
@@ -28,12 +28,12 @@ void platform_set_vbus_lvl_enable(FSC_U8 port,
             if( i == level ) continue;
 
             /* Turn off the other level(s) */
-            platform_set_vbus_lvl_enable( i, FALSE, FALSE );
+            platform_set_vbus_lvl_enable( i, level, false, false);
         } while (++i < VBUS_LVL_ALL);
     }
 }
 
-FSC_BOOL platform_get_vbus_lvl_enable(FSC_U8 port, VBUS_LVL level)
+bool platform_get_vbus_lvl_enable(uint8_t port, VBUS_LVL level)
 {
     /* Additional VBUS levels can be added here as needed. */
     switch (level) {
@@ -46,28 +46,28 @@ FSC_BOOL platform_get_vbus_lvl_enable(FSC_U8 port, VBUS_LVL level)
         break;
     }
 
-    return FALSE;
+    return false;
 }
 
-void platform_set_vbus_discharge(FSC_U8 port, FSC_BOOL enable)
+void platform_set_vbus_discharge(uint8_t port, bool enable)
 {
     /* Enable/Disable the discharge path */
     /* TODO - Implement as needed on platforms that support this feature. */
 }
 
-FSC_BOOL platform_get_device_irq_state(FSC_U8 port)
+bool platform_get_device_irq_state(uint8_t port)
 {
     /* Return the state of the device interrupt signal. */
-    return FALSE;
+    return false;
 }
 
-FSC_BOOL platform_i2c_write(FSC_U8 SlaveAddress,
-                            FSC_U8 RegAddrLength,
-                            FSC_U8 DataLength,
-                            FSC_U8 PacketSize,
-                            FSC_U8 IncSize,
-                            FSC_U32 RegisterAddress,
-                            FSC_U8* Data)
+bool platform_i2c_write(uint8_t SlaveAddress,
+                            uint8_t RegAddrLength,
+                            uint8_t DataLength,
+                            uint8_t PacketSize,
+                            uint8_t IncSize,
+                            uint32_t RegisterAddress,
+                            uint8_t* Data)
 {
     /* Write some data! */
 
@@ -76,16 +76,16 @@ FSC_BOOL platform_i2c_write(FSC_U8 SlaveAddress,
      * Return FALSE otherwise.
      */
 
-    return FALSE;
+    return false;
 }
 
-FSC_BOOL platform_i2c_read( FSC_U8 SlaveAddress,
-                            FSC_U8 RegAddrLength,
-                            FSC_U8 DataLength,
-                            FSC_U8 PacketSize,
-                            FSC_U8 IncSize,
-                            FSC_U32 RegisterAddress,
-                            FSC_U8* Data)
+bool platform_i2c_read( uint8_t SlaveAddress,
+                            uint8_t RegAddrLength,
+                            uint8_t DataLength,
+                            uint8_t PacketSize,
+                            uint8_t IncSize,
+                            uint32_t RegisterAddress,
+                            uint8_t* Data)
 {
     /* Read some data! */
 
@@ -94,7 +94,7 @@ FSC_BOOL platform_i2c_read( FSC_U8 SlaveAddress,
      * Return FALSE otherwise.
      */
 
-    return FALSE;
+    return false;
 }
 
 /*****************************************************************************
@@ -103,30 +103,30 @@ FSC_BOOL platform_i2c_read( FSC_U8 SlaveAddress,
 * Return:          None
 * Description:     Perform a software delay in intervals of 10us.
 ******************************************************************************/
-void platform_delay_10us(FSC_U32 delayCount)
+void platform_delay_10us(uint32_t delayCount)
 {
     /*fusb_Delay10us(delayCount); */
 }
 
-void platform_set_pps_voltage(FSC_U32 mv)
+void platform_set_pps_voltage(uint8_t port, uint32_t mv)
 {
 }
 
-FSC_U16 platform_get_pps_voltage(void)
-{
-    return 0;
-}
-
-void platform_set_pps_current(FSC_U32 ma)
-{
-}
-
-FSC_U16 platform_get_pps_current(void)
+uint16_t platform_get_pps_voltage(uint8_t port)
 {
     return 0;
 }
 
-FSC_U32 platform_get_system_time(void)
+void platform_set_pps_current(uint8_t port, uint32_t ma)
+{
+}
+
+uint16_t platform_get_pps_current(uint8_t port)
+{
+    return 0;
+}
+
+uint32_t platform_get_system_time(void)
 {
     return 0;
 }

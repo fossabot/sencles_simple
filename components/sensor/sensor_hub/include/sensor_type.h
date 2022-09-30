@@ -42,6 +42,19 @@ typedef struct
 #endif
 
 /**
+ * @brief light sensor type
+ *
+ */
+#ifndef LIGHT_T
+typedef struct
+{
+    float light;
+    float white;
+} light_t;
+#define LIGHT_T light_t
+#endif
+
+/**
  * @brief imu sensor type
  *
  */
@@ -174,6 +187,7 @@ typedef enum
     SENSOR_TEMP_HUMI_DATA_READY, /*!< Temperature && Relative humidity data ready */
     SENSOR_BARO_DATA_READY,      /*!< Pressure data ready */
     SENSOR_LIGHT_DATA_READY,     /*!< Light data ready */
+    SENSOR_LIGHT_WHITE_DATA_READY,
     SENSOR_RGBW_DATA_READY,      /*!< Color data ready */
     SENSOR_UV_DATA_READY,        /*!< ultraviolet data ready */
     SENSOR_PROXI_DATA_READY,     /*!< Distance data ready */
@@ -204,7 +218,7 @@ typedef struct
         axis3_t mag;         /*!< Magnetometer.        unit: Gauss       */
         humiture_t humiture; /*!< Temperature & Relative humidity.    unit:percent/decgree   */
         float baro;          /*!< Pressure.            unit: pascal (Pa)  */
-        float light;         /*!< Light.               unit: lux          */
+        light_t light;       /*!< Light.               unit: lux          */
         rgbw_t rgbw;         /*!< Color.               unit: lux          */
         uv_t uv;             /*!< ultraviole           unit: lux          */
         float proximity;     /*!< Distance.            unit: centimeters  */

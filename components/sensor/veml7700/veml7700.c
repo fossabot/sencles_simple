@@ -1,4 +1,4 @@
-// Copyright 2020-2021 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2022 JeongYeham 
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,248 +15,429 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "veml6075.h"
+#include "veml7700.h"
 
-veml6075_handle_t veml6075_create(i2c_bus_handle_t bus, uint8_t dev_addr)
+const char *VEML7700_TAG = "VEML7700";
+
+/**
+ * @brief Proper resolution multipliers mapped to gain-integration time combination.
+ *
+ * @note Source: Official Vishay VEML7700 Application Note, rev. 20-Sep-2019
+ *
+ * @link https://www.vishay.com/docs/84323/designingveml7700.pdf
+ */
+const float resolution_map[VEML7700_IT_OPTIONS_COUNT][VEML7700_GAIN_OPTIONS_COUNT] = {
+	{0.0036, 0.0072, 0.0288, 0.0576},
+	{0.0072, 0.0144, 0.0576, 0.1152},
+	{0.0144, 0.0288, 0.1152, 0.2304},
+	{0.0288, 0.0576, 0.2304, 0.4608},
+	{0.0576, 0.1152, 0.4608, 0.9216},
+	{9.1152, 0.2304, 0.9216, 1.8432}};
+/**
+ * @brief Maximum luminocity mapped to gain-integration time combination.
+ *
+ * @note Source: Official Vishay VEML7700 Application Note, rev. 20-Sep-2019
+ *
+ * @link https://www.vishay.com/docs/84323/designingveml7700.pdf
+ */
+const uint32_t maximums_map[VEML7700_IT_OPTIONS_COUNT][VEML7700_GAIN_OPTIONS_COUNT] = {
+	{236, 472, 1887, 3775},
+	{472, 944, 3775, 7550},
+	{944, 1887, 7550, 15099},
+	{1887, 3775, 15099, 30199},
+	{3775, 7550, 30199, 60398},
+	{7550, 15099, 60398, 120796}};
+
+/**
+ * @brief List of all possible values for configuring sensor gain.
+ *
+ */
+const uint8_t gain_values[VEML7700_GAIN_OPTIONS_COUNT] = {
+	VEML7700_GAIN_2,
+	VEML7700_GAIN_1,
+	VEML7700_GAIN_1_8,
+	VEML7700_GAIN_1_4};
+
+/**
+ * @brief List of all possible values for configuring sensor integration time.
+ *
+ */
+const uint8_t integration_time_values[VEML7700_IT_OPTIONS_COUNT] = {
+	VEML7700_IT_800MS,
+	VEML7700_IT_400MS,
+	VEML7700_IT_200MS,
+	VEML7700_IT_100MS,
+	VEML7700_IT_50MS,
+	VEML7700_IT_25MS};
+
+veml7700_handle_t veml7700_create(i2c_bus_handle_t bus, uint8_t dev_addr)
 {
-    veml6075_dev_t *sens = (veml6075_dev_t *) calloc(1, sizeof(veml6075_dev_t));
-    sens->i2c_dev = i2c_bus_device_create(bus, dev_addr, i2c_bus_get_current_clk_speed(bus));
-    if (sens->i2c_dev == NULL) {
-        free(sens);
-        return NULL;
-    }
-    sens->dev_addr = dev_addr;
-    return (veml6075_handle_t) sens;
+	veml7700_dev_t *sens = (veml7700_dev_t *)calloc(1, sizeof(veml7700_dev_t));
+	sens->optimal_signal = xEventGroupCreate();
+	xEventGroupClearBits(sens->optimal_signal, 0xff);
+	sens->i2c_dev = i2c_bus_device_create(bus, dev_addr, i2c_bus_get_current_clk_speed(bus));
+	if (sens->i2c_dev == NULL)
+	{
+		free(sens);
+		return NULL;
+	}
+	sens->dev_addr = dev_addr;
+	return (veml7700_handle_t)sens;
 }
 
-esp_err_t veml6075_delete(veml6075_handle_t *sensor)
+esp_err_t veml7700_delete(veml7700_handle_t *sensor)
 {
-    if (*sensor == NULL) {
-        return ESP_OK;
-    }
-    veml6075_dev_t *sens = (veml6075_dev_t *)(*sensor);
-    i2c_bus_device_delete(&sens->i2c_dev);
-    free(sens);
-    *sensor = NULL;
-    return ESP_OK;
+	if (*sensor == NULL)
+	{
+		return ESP_OK;
+	}
+	veml7700_dev_t *sens = (veml7700_dev_t *)(*sensor);
+	i2c_bus_device_delete(&sens->i2c_dev);
+	free(sens);
+	*sensor = NULL;
+	return ESP_OK;
 }
 
-esp_err_t veml6075_set_mode(veml6075_handle_t sensor, veml6075_config_t *device_info)
+esp_err_t veml7700_optimize_configuration(veml7700_handle_t sensor, float *lux)
 {
-    if (sensor == NULL) {
-        return ESP_FAIL;
-    }
-    veml6075_dev_t *sens = (veml6075_dev_t *) sensor;
-    uint8_t cmd_buf[2] = {0x00};
-    cmd_buf[0] = device_info->integration_time << 4
-                 | device_info->trigger << 2
-                 | device_info->mode << 1
-                 | device_info->switch_en;
-    sens->config.integration_time = device_info->integration_time;
-    sens->config.trigger          = device_info->trigger;
-    sens->config.mode             = device_info->mode;
-    sens->config.switch_en        = device_info->switch_en;
-    cmd_buf[1] = 0x00;
-    esp_err_t ret = i2c_bus_write_bytes(sens->i2c_dev, VEML6075_RW_CFG, 2, cmd_buf);
-    return ret;
+	veml7700_dev_t *sens = (veml7700_dev_t *)(sensor);
+	int gain_index = veml7700_get_gain_index(sens->config.gain);
+	int it_index = veml7700_get_it_index(sens->config.integration_time);
+	if (ceil(*lux) >= maximums_map[it_index][gain_index])
+	{ // Decrease resolution
+		// Make sure we haven't reached the upper luminocity limit
+		if (sens->config.maximum_lux == veml7700_get_maximum_lux())
+		{
+			ESP_LOGI(VEML7700_TAG, "Already configured for maximum luminocity.");
+			return ESP_OK;
+		}
+		for (size_t i = it_index; i < 5; i++)
+		{
+			if (i == it_index)
+			{
+				for (size_t j = gain_index; j < 3; j++)
+				{
+					if (sens->config.integration_time / resolution_map[i][j] > 100)
+					{
+						sens->config.integration_time = integration_time_values[i];
+						sens->config.gain = gain_values[j];
+						break;
+					}
+				}
+			}
+			else
+			{
+				for (size_t j = 0; j < 3; j++)
+				{
+					if (sens->config.integration_time / resolution_map[i][j] > 100)
+					{
+						sens->config.integration_time = integration_time_values[i];
+						sens->config.gain = gain_values[j];
+						break;
+					}
+				}
+			}
+		}
+		veml7700_send_config(sensor);
+	}
+	else if (*lux < veml7700_get_lower_maximum_lux(sensor, lux))
+	{ // Increase resolution
+		// Make sure this isn't the smallest maximum
+		if (sens->config.maximum_lux == veml7700_get_lowest_maximum_lux())
+		{
+			ESP_LOGI(VEML7700_TAG, "Already configured with maximum resolution.");
+			return ESP_FAIL;
+		}
+		for (size_t i = it_index + 1; i > 0; i--)
+		{
+			if (i == it_index)
+			{
+				for (size_t j = gain_index + 1; j > 0; j--)
+				{
+					if (sens->config.integration_time / resolution_map[i][j] > 100)
+					{
+						sens->config.integration_time = integration_time_values[i];
+						sens->config.gain = gain_values[j];
+						break;
+					}
+				}
+			}
+			else
+			{
+				for (size_t j = 4; j > 0; j--)
+				{
+					if (sens->config.integration_time / resolution_map[i][j] > 100)
+					{
+						sens->config.integration_time = integration_time_values[i];
+						sens->config.gain = gain_values[j];
+						break;
+					}
+				}
+			}
+		}
+		veml7700_send_config(sensor);
+	}
+	else
+	{
+		ESP_LOGI(VEML7700_TAG, "Configuration already optimal.");
+		return ESP_OK;
+	}
+
+	ESP_LOGD(VEML7700_TAG, "Configuration optimized.");
+	return ESP_OK;
 }
 
-esp_err_t veml6075_get_mode(veml6075_handle_t sensor, veml6075_config_t *device_info)
+uint32_t veml7700_get_current_maximum_lux(veml7700_handle_t sensor)
 {
-    if (sensor == NULL) {
-        return ESP_FAIL;
-    }
-    veml6075_dev_t *sens = (veml6075_dev_t *) sensor;
-    uint8_t data_buf[2] = {0x00};
-    esp_err_t ret = i2c_bus_read_bytes(sens->i2c_dev, VEML6075_RW_CFG, 2, data_buf);
+	veml7700_dev_t *sens = (veml7700_dev_t *)(sensor);
+	int gain_index = veml7700_get_gain_index(sens->config.gain);
+	int it_index = veml7700_get_it_index(sens->config.integration_time);
 
-    if (ret != ESP_OK) {
-        return ret;
-    }
-    sens->config.integration_time = device_info->integration_time = (data_buf[0] & 0x70) >> 4;
-    sens->config.trigger          = device_info->trigger = (data_buf[0] & 0x04) >> 2;
-    sens->config.mode             = device_info->mode = (data_buf[0] & 0x02) >> 1;
-    sens->config.switch_en        = device_info->switch_en = (data_buf[0] & 0x01);
-    return ret;
+	return maximums_map[it_index][gain_index];
 }
 
-static int veml6075_read(veml6075_handle_t sensor, uint8_t cmd_code)
+uint32_t veml7700_get_lower_maximum_lux(veml7700_handle_t sensor, float *lux)
 {
-    if (sensor == NULL) {
-        return 0;
-    }
-    uint8_t data_buf[2] = {0x00, 0x00};
-    veml6075_dev_t *sens = (veml6075_dev_t *) sensor;
-    esp_err_t ret = i2c_bus_read_bytes(sens->i2c_dev, cmd_code, 2, data_buf);
-    if (ret != ESP_OK) {
-        printf("READ ERROR,ERROR ID:%d", ret);
-        return VEML6075_I2C_ERR_RES;
-    }
-    uint16_t value = (data_buf[1] << 8) | data_buf[0];
-    return (int)value;
+	veml7700_dev_t *sens = (veml7700_dev_t *)(sensor);
+	int gain_index = veml7700_get_gain_index(sens->config.gain);
+	int it_index = veml7700_get_it_index(sens->config.integration_time);
+
+	// Find the next smallest 'maximum' value in the mapped maximum luminocities
+	if ((gain_index > 0) && (it_index > 0))
+	{
+		if (maximums_map[it_index][gain_index - 1] >= maximums_map[it_index - 1][gain_index])
+		{
+			return maximums_map[it_index][gain_index - 1];
+		}
+		else
+		{
+			return maximums_map[it_index - 1][gain_index];
+		}
+	}
+	else if ((gain_index > 0) && (it_index == 0))
+	{
+		return maximums_map[it_index][gain_index - 1];
+	}
+	else
+	{
+		return maximums_map[it_index - 1][gain_index];
+	}
 }
 
-esp_err_t veml6075_get_raw_data(veml6075_handle_t sensor)
+uint32_t veml7700_get_lowest_maximum_lux()
 {
-    if (sensor == NULL) {
-        return ESP_FAIL;
-    }
-    veml6075_dev_t *sens = (veml6075_dev_t *)(sensor);
-    sens->raw_data.raw_uva  = veml6075_read(sensor, VEML6075_READ_UVA);
-    sens->raw_data.raw_uvb  = veml6075_read(sensor, VEML6075_READ_UVB);
-    sens->raw_data.raw_dark = veml6075_read(sensor, VEML6075_READ_DARK);
-    sens->raw_data.raw_vis  = veml6075_read(sensor, VEML6075_READ_VIS);
-    sens->raw_data.raw_ir   = veml6075_read(sensor, VEML6075_READ_IR);
-    return ESP_OK;
+	return maximums_map[0][0];
 }
 
-float veml6075_get_uva(veml6075_handle_t sensor)
+uint32_t veml7700_get_maximum_lux()
 {
-    float comp_vis;
-    float comp_ir;
-    float comp_uva;
-    if (ESP_OK != veml6075_get_raw_data(sensor)) {
-        return 0;
-    }
-    veml6075_dev_t *sens = (veml6075_dev_t *)(sensor);
-    comp_vis = sens->raw_data.raw_vis - sens->raw_data.raw_dark;
-    comp_ir  = sens->raw_data.raw_ir - sens->raw_data.raw_dark;
-    comp_uva = sens->raw_data.raw_uva - sens->raw_data.raw_dark;
-    comp_uva -= (VEML6075_UVI_UVA_VIS_COEFF * comp_vis) - (VEML6075_UVI_UVA_IR_COEFF * comp_ir);
-    return comp_uva;
+	return maximums_map[VEML7700_IT_OPTIONS_COUNT - 1][VEML7700_GAIN_OPTIONS_COUNT - 1];
 }
 
-float veml6075_get_uvb(veml6075_handle_t sensor)
+int veml7700_get_gain_index(uint8_t gain)
 {
-    float comp_vis;
-    float comp_ir;
-    float comp_uvb;
-    if (ESP_OK != veml6075_get_raw_data(sensor)) {
-        return 0;
-    }
-    veml6075_dev_t *sens = (veml6075_dev_t *)(sensor);
-    comp_vis = sens->raw_data.raw_vis - sens->raw_data.raw_dark;
-    comp_ir  = sens->raw_data.raw_ir - sens->raw_data.raw_dark;
-    comp_uvb = sens->raw_data.raw_uvb - sens->raw_data.raw_dark;
-    comp_uvb -= (VEML6075_UVI_UVB_VIS_COEFF * comp_vis) - (VEML6075_UVI_UVB_IR_COEFF * comp_ir);
-    return comp_uvb;
+	return indexOf(gain, gain_values, VEML7700_GAIN_OPTIONS_COUNT);
 }
 
-float veml6075_get_uv_index(veml6075_handle_t sensor)
+int veml7700_get_it_index(uint8_t integration_time)
 {
-    float uva_weighted;
-    float uvb_weighted;
-    if (ESP_OK != veml6075_get_raw_data(sensor)) {
-        return 0;
-    }
-    uva_weighted = veml6075_get_uva(sensor) * VEML6075_UVI_UVA_RESPONSE;
-    uvb_weighted = veml6075_get_uvb(sensor) * VEML6075_UVI_UVB_RESPONSE;
-    return (uva_weighted + uvb_weighted) / 2.0;
+	return indexOf(integration_time, integration_time_values, VEML7700_IT_OPTIONS_COUNT);
 }
 
-uint16_t veml6075_get_raw_uva(veml6075_handle_t sensor)
+uint8_t indexOf(uint8_t elm, const uint8_t *ar, uint8_t len)
 {
-    if (ESP_OK != veml6075_get_raw_data(sensor)) {
-        return 0;
-    }
-    veml6075_dev_t *sens = (veml6075_dev_t *)(sensor);
-    return sens->raw_data.raw_uva;
+	while (len--)
+	{
+		if (ar[len] == elm)
+		{
+			return len;
+		}
+	}
+	return -1;
 }
 
-uint16_t veml6075_get_raw_uvb(veml6075_handle_t sensor)
+esp_err_t veml7700_send_config(veml7700_handle_t sensor)
 {
-    if (ESP_OK != veml6075_get_raw_data(sensor)) {
-        return 0;
-    }
-    veml6075_dev_t *sens = (veml6075_dev_t *)(sensor);
-    return sens->raw_data.raw_uvb;
+	veml7700_dev_t *sens = (veml7700_dev_t *)(sensor);
+	uint16_t config_data = ((sens->config.gain << 11) |
+							(sens->config.integration_time << 6) |
+							(sens->config.persistance << 4) |
+							(sens->config.interrupt_enable << 1) |
+							(sens->config.shutdown << 0));
+
+	// Set the resolution on the configuration struct
+	sens->config.resolution = veml7700_get_resolution(sensor);
+	// Set the current maximum value on the configuration struct
+	sens->config.maximum_lux = veml7700_get_current_maximum_lux(sensor);
+
+	uint8_t send_config_data[2];
+	send_config_data[0] = (uint8_t)config_data & 0x0f;
+	send_config_data[1] = config_data >> 8 & 0x0f;
+	return i2c_bus_write_bytes(sens->i2c_dev, VEML7700_ALS_CONFIG, 2, &send_config_data[0]);
 }
 
-uint16_t veml6075_get_raw_dark(veml6075_handle_t sensor)
+esp_err_t veml7700_set_config(veml7700_handle_t sensor, veml7700_config_t *configuration)
 {
-    if (ESP_OK != veml6075_get_raw_data(sensor)) {
-        return 0;
-    }
-    veml6075_dev_t *sens = (veml6075_dev_t *)(sensor);
-    return sens->raw_data.raw_dark;
+	veml7700_dev_t *sens = (veml7700_dev_t *)(sensor);
+	sens->config = *configuration;
+	return veml7700_send_config(sensor);
 }
 
-uint16_t veml6075_get_raw_vis(veml6075_handle_t sensor)
+esp_err_t veml7700_read_als_lux(veml7700_handle_t sensor, float *lux)
 {
-    if (ESP_OK != veml6075_get_raw_data(sensor)) {
-        return 0;
-    }
-    veml6075_dev_t *sens = (veml6075_dev_t *)(sensor);
-    return sens->raw_data.raw_vis;
+	veml7700_dev_t *sens = (veml7700_dev_t *)(sensor);
+	esp_err_t i2c_result;
+	uint8_t reg_data[2];
+
+	i2c_result = i2c_bus_read_bytes(sens->i2c_dev, VEML7700_ALS_DATA, 2, &reg_data[0]);
+	if (i2c_result != 0)
+	{
+		ESP_LOGW(VEML7700_TAG, "veml7700_i2c_read() returned %d", i2c_result);
+		return i2c_result;
+	}
+
+	*lux = ((((uint16_t)reg_data[1]) << 8) | reg_data[0]) * sens->config.resolution;
+
+	return ESP_OK;
 }
 
-uint16_t veml6075_get_raw_ir(veml6075_handle_t sensor)
+esp_err_t veml7700_read_als_lux_auto(veml7700_handle_t sensor, float *lux)
 {
-    if (ESP_OK != veml6075_get_raw_data(sensor)) {
-        return 0;
-    }
-    veml6075_dev_t *sens = (veml6075_dev_t *)(sensor);
-    return sens->raw_data.raw_ir;
+
+	veml7700_read_als_lux(sensor, lux);
+	veml7700_dev_t *sens = (veml7700_dev_t *)(sensor);
+
+	// Calculate and automatically reconfigure the optimal sensor configuration
+	esp_err_t optimize = veml7700_optimize_configuration(sensor, lux);
+	ESP_LOGI(VEML7700_TAG, "Configured maximum luminocity: %ld", sens->config.maximum_lux);
+	ESP_LOGI(VEML7700_TAG, "Configured resolution: %0.4f", sens->config.resolution);
+	ESP_LOGI(VEML7700_TAG, "Configured gain: %d", sens->config.gain);
+	ESP_LOGI(VEML7700_TAG, "Configured itime: %d", sens->config.integration_time);
+	if (optimize == ESP_OK)
+	{
+		// Read again
+		return veml7700_read_als_lux(sensor, lux);
+	}
+
+	return ESP_OK;
 }
 
-#ifdef CONFIG_SENSOR_LIGHT_INCLUDED_VEML6075
-
-static veml6075_handle_t veml6075 = NULL;
-static bool is_init = false;
-
-esp_err_t light_sensor_veml6075_init(i2c_bus_handle_t i2c_bus)
+esp_err_t veml7700_read_white_lux(veml7700_handle_t sensor, float *lux)
 {
-    if (is_init || !i2c_bus) {
-        return ESP_FAIL;
-    }
-    veml6075 = veml6075_create(i2c_bus, VEML6075_I2C_ADDRESS);
-    if (!veml6075) {
-        return ESP_FAIL;
-    }
-    veml6075_config_t veml6075_info;
-    memset(&veml6075_info, 0, sizeof(veml6075_info));
-    veml6075_info.integration_time = VEML6075_INTEGRATION_TIME_200MS;
-    veml6075_info.mode = VEML6075_MODE_AUTO;
-    veml6075_info.trigger = VEML6075_TRIGGER_DIS;
-    veml6075_info.switch_en = VEML6075_SWITCH_EN;
-    esp_err_t ret = veml6075_set_mode(veml6075, &veml6075_info);
-    if (ret != ESP_OK) {
-        return ESP_FAIL;
-    }
-    is_init = true;
-    return ESP_OK;
+	veml7700_dev_t *sens = (veml7700_dev_t *)(sensor);
+	esp_err_t i2c_result;
+	uint8_t reg_data[2];
+
+	i2c_result = i2c_bus_read_bytes(sens->i2c_dev, VEML7700_WHITE_DATA, 2, &reg_data[0]);
+	if (i2c_result != 0)
+	{
+		ESP_LOGW(VEML7700_TAG, "veml7700_i2c_read() returned %d", i2c_result);
+		return ESP_FAIL;
+	}
+
+	*lux = ((((uint16_t)reg_data[1]) << 8) | reg_data[0]) * sens->config.resolution;
+
+	return ESP_OK;
 }
 
-esp_err_t light_sensor_veml6075_deinit(void)
+esp_err_t veml7700_read_white_lux_auto(veml7700_handle_t sensor, float *lux)
 {
-    if (!is_init) {
-        return ESP_FAIL;
-    }
-    esp_err_t ret = veml6075_delete(&veml6075);
-    if (ret != ESP_OK) {
-        return ESP_FAIL;
-    }
-    is_init = false;
-    return ESP_OK;
+
+	veml7700_read_white_lux(sensor, lux);
+	veml7700_dev_t *sens = (veml7700_dev_t *)(sensor);
+
+	// Calculate and automatically reconfigure the optimal sensor configuration
+	esp_err_t optimize = veml7700_optimize_configuration(sensor, lux);
+	ESP_LOGI(VEML7700_TAG, "Configured maximum luminocity: %ld", sens->config.maximum_lux);
+	ESP_LOGI(VEML7700_TAG, "Configured resolution: %0.4f", sens->config.resolution);
+	ESP_LOGI(VEML7700_TAG, "Configured gain: %d", sens->config.gain);
+	ESP_LOGI(VEML7700_TAG, "Configured itime: %d", sens->config.integration_time);
+	if (optimize == ESP_OK)
+	{
+		// Read again
+		return veml7700_read_white_lux(sensor, lux);
+	}
+
+	return ESP_OK;
 }
 
-esp_err_t light_sensor_veml6075_test(void)
+float veml7700_get_resolution(veml7700_handle_t sensor)
 {
-    if (!is_init) {
-        return ESP_FAIL;
-    }
-    return ESP_OK;
+	veml7700_dev_t *sens = (veml7700_dev_t *)(sensor);
+	int gain_index = veml7700_get_gain_index(sens->config.gain);
+	int it_index = veml7700_get_it_index(sens->config.integration_time);
+
+	return resolution_map[it_index][gain_index];
 }
 
-esp_err_t light_sensor_veml6075_acquire_uv(float *uv, float *uva, float *uvb)
+#ifdef CONFIG_SENSOR_LIGHT_INCLUDED_VEML7700
+
+veml7700_handle_t veml7700 = NULL;
+bool is_init = false;
+
+esp_err_t light_sensor_veml7700_init(i2c_bus_handle_t i2c_bus)
 {
-    if (!is_init) {
-        return ESP_FAIL;
-    }
-    *uva = veml6075_get_uva(veml6075);
-    *uvb = veml6075_get_uvb(veml6075);
-    *uv = veml6075_get_uv_index(veml6075);
-    return ESP_OK;
+	if (is_init || !i2c_bus)
+	{
+		return ESP_FAIL;
+	}
+	veml7700 = veml7700_create(i2c_bus, VEML7700_I2C_ADDRESS);
+	if (!veml7700)
+	{
+		return ESP_FAIL;
+	}
+	veml7700_config_t veml7700_info;
+	memset(&veml7700_info, 0, sizeof(veml7700_info));
+	veml7700_info.integration_time = VEML7700_IT_100MS;
+	veml7700_info.gain = VEML7700_GAIN_1_8;
+	veml7700_info.interrupt_enable = false;
+	veml7700_info.persistance = VEML7700_PERS_1;
+	veml7700_info.shutdown = VEML7700_POWERSAVE_MODE1;
+	esp_err_t ret = veml7700_set_config(veml7700, &veml7700_info);
+	if (ret != ESP_OK)
+	{
+		return ESP_FAIL;
+	}
+	is_init = true;
+	return ESP_OK;
+}
+
+esp_err_t light_sensor_veml7700_deinit(void)
+{
+	if (!is_init)
+	{
+		return ESP_FAIL;
+	}
+	esp_err_t ret = veml7700_delete(&veml7700);
+	if (ret != ESP_OK)
+	{
+		return ESP_FAIL;
+	}
+	is_init = false;
+	return ESP_OK;
+}
+
+esp_err_t light_sensor_veml7700_test(void)
+{
+	if (!is_init)
+	{
+		return ESP_FAIL;
+	}
+	return ESP_OK;
+}
+
+esp_err_t light_sensor_veml7700_acquire_light(float *light, float *white)
+{
+	esp_err_t ret1, ret2;
+	if (!is_init)
+	{
+		return ESP_FAIL;
+	}
+	ret1 = veml7700_read_als_lux_auto(veml7700, light);
+	ret2 = veml7700_read_white_lux_auto(veml7700, white);
+	if (ret1 || ret2 == 0)
+		return ESP_OK;
+	return ESP_FAIL;
 }
 
 #endif

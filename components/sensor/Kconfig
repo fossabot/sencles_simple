@@ -28,8 +28,8 @@ menu "Sensor Hub Options"
             config SENSOR_LIGHT_INCLUDED_VEML6040
                 bool "include VEML6040 driver"
                 default y
-            config SENSOR_LIGHT_INCLUDED_VEML6075
-                bool "include VEML6075 driver"
+            config SENSOR_LIGHT_INCLUDED_VEML7700
+                bool "include VEML7700 driver"
                 default y
         endmenu
         menu "I2C Bus Driver Options"

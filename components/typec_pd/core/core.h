@@ -30,7 +30,7 @@
  * @param i2c_address 8-bit value with bit zero (R/W bit) set to zero.
  * @return None
  */
-void core_initialize(Port_t *port, FSC_U8 i2c_address);
+void core_initialize(Port_t *port, uint8_t i2c_address);
 
 /**
  * @brief Enable the TypeC or PD state machines.
@@ -42,8 +42,8 @@ void core_initialize(Port_t *port, FSC_U8 i2c_address);
  * @param enable TRUE/FALSE
  * @return None
  */
-void core_enable_typec(Port_t *port, FSC_BOOL enable);
-void core_enable_pd(Port_t *port, FSC_BOOL enable);
+void core_enable_typec(Port_t *port, bool enable);
+void core_enable_pd(Port_t *port, bool enable);
 
 /**
  * @brief Core state machine entry point.
@@ -66,12 +66,12 @@ void core_state_machine(Port_t *port);
  * implement a (for example) timer interrupt to delay the next call of the
  * core state machines.
  * This function returns the time to the next event in the resolution set
- * by the Platform (milliseconds * TICK_SCALE_TO_MS).
+ * by the Platform (milliseconds ).
  *
  * @param port Pointer to the port structure
  * @return Interval to next timeout event (See brief and platform timer setup)
  */
-FSC_U32 core_get_next_timeout(Port_t *port);
+uint32_t core_get_next_timeout(Port_t *port);
 
 /**
  * @brief Core release version
@@ -82,9 +82,9 @@ FSC_U32 core_get_next_timeout(Port_t *port);
  * @param None
  * @return Version values
  */
-FSC_U8 core_get_rev_lower(void);
-FSC_U8 core_get_rev_middle(void);
-FSC_U8 core_get_rev_upper(void);
+uint8_t core_get_rev_lower(void);
+uint8_t core_get_rev_middle(void);
+uint8_t core_get_rev_upper(void);
 
 /**
  * @brief Send a PD Hard Reset
@@ -127,7 +127,7 @@ void core_reset_pd(Port_t *port);
  * @param port Pointer to the port structure
  * @return Current in mA - or 0 if this port is the source.
  */
-FSC_U16 core_get_advertised_current(Port_t *port);
+uint16_t core_get_advertised_current(Port_t *port);
 
 /**
  * @brief Set advertised source current for this device.
@@ -139,7 +139,7 @@ FSC_U16 core_get_advertised_current(Port_t *port);
  * @param value Source current enum requested
  * @return None
  */
-void core_set_advertised_current(Port_t *port, FSC_U8 value);
+void core_set_advertised_current(Port_t *port, uint8_t value);
 
 
 /**
@@ -152,7 +152,7 @@ void core_set_advertised_current(Port_t *port, FSC_U8 value);
  * @param port Pointer to the port structure
  * @return CC orientation
  */
-FSC_U8 core_get_cc_orientation(Port_t *port);
+uint8_t core_get_cc_orientation(Port_t *port);
 
 /**
  * @brief High level port configuration

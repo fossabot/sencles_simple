@@ -24,7 +24,7 @@
 #include "PD_Types.h"
 #include "Port.h"
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 
 #define SVID_DEFAULT SVID1_SOP
 #define MODE_DEFAULT 0x0001
@@ -37,62 +37,62 @@
 #define MIN_DISC_ID_RESP_SIZE 3
 
 /* Millisecond values ticked by 1ms timer. */
-#define tVDMSenderResponse 27 * TICK_SCALE_TO_MS
-#define tVDMWaitModeEntry  45 * TICK_SCALE_TO_MS
-#define tVDMWaitModeExit   45 * TICK_SCALE_TO_MS
+#define tVDMSenderResponse 27 
+#define tVDMWaitModeEntry  45 
+#define tVDMWaitModeExit   45 
 
 /*
  * Initialization functions.
  */
-FSC_S32 initializeVdm(Port_t *port);
+int32_t initializeVdm(Port_t *port);
 
 /*
  * Functions to go through PD VDM flow.
  */
 /* Initiations from DPM */
-FSC_S32 requestDiscoverIdentity(Port_t *port, SopType sop);
-FSC_S32 requestDiscoverSvids(Port_t *port, SopType sop);
-FSC_S32 requestDiscoverModes(Port_t *port, SopType sop, FSC_U16 svid);
-FSC_S32 requestSendAttention(Port_t *port, SopType sop, FSC_U16 svid,
-                             FSC_U8 mode);
-FSC_S32 requestEnterMode(Port_t *port, SopType sop, FSC_U16 svid,
-                         FSC_U32 mode_index);
-FSC_S32 requestExitMode(Port_t *port, SopType sop, FSC_U16 svid,
-                        FSC_U32 mode_index);
-FSC_S32 requestExitAllModes(void);
+int32_t requestDiscoverIdentity(Port_t *port, SopType sop);
+int32_t requestDiscoverSvids(Port_t *port, SopType sop);
+int32_t requestDiscoverModes(Port_t *port, SopType sop, uint16_t svid);
+int32_t requestSendAttention(Port_t *port, SopType sop, uint16_t svid,
+                             uint8_t mode);
+int32_t requestEnterMode(Port_t *port, SopType sop, uint16_t svid,
+                         uint32_t mode_index);
+int32_t requestExitMode(Port_t *port, SopType sop, uint16_t svid,
+                        uint32_t mode_index);
+int32_t requestExitAllModes(void);
 
 /* receiving end */
-FSC_S32 processVdmMessage(Port_t *port, SopType sop, FSC_U32* arr_in,
-                          FSC_U32 length_in);
-FSC_S32 processDiscoverIdentity(Port_t *port, SopType sop, FSC_U32* arr_in,
-                                FSC_U32 length_in);
-FSC_S32 processDiscoverSvids(Port_t *port, SopType sop, FSC_U32* arr_in,
-                             FSC_U32 length_in);
-FSC_S32 processDiscoverModes(Port_t *port, SopType sop, FSC_U32* arr_in,
-                             FSC_U32 length_in);
-FSC_S32 processEnterMode(Port_t *port, SopType sop, FSC_U32* arr_in,
-                         FSC_U32 length_in);
-FSC_S32 processExitMode(Port_t *port, SopType sop, FSC_U32* arr_in,
-                        FSC_U32 length_in);
-FSC_S32 processAttention(Port_t *port, SopType sop, FSC_U32* arr_in,
-                         FSC_U32 length_in);
-FSC_S32 processSvidSpecific(Port_t *port, SopType sop, FSC_U32* arr_in,
-                            FSC_U32 length_in);
+int32_t processVdmMessage(Port_t *port, SopType sop, uint32_t* arr_in,
+                          uint32_t length_in);
+int32_t processDiscoverIdentity(Port_t *port, SopType sop, uint32_t* arr_in,
+                                uint32_t length_in);
+int32_t processDiscoverSvids(Port_t *port, SopType sop, uint32_t* arr_in,
+                             uint32_t length_in);
+int32_t processDiscoverModes(Port_t *port, SopType sop, uint32_t* arr_in,
+                             uint32_t length_in);
+int32_t processEnterMode(Port_t *port, SopType sop, uint32_t* arr_in,
+                         uint32_t length_in);
+int32_t processExitMode(Port_t *port, SopType sop, uint32_t* arr_in,
+                        uint32_t length_in);
+int32_t processAttention(Port_t *port, SopType sop, uint32_t* arr_in,
+                         uint32_t length_in);
+int32_t processSvidSpecific(Port_t *port, SopType sop, uint32_t* arr_in,
+                            uint32_t length_in);
 
 /* Private function */
-FSC_BOOL evalResponseToSopVdm(Port_t *port, doDataObject_t vdm_hdr);
-FSC_BOOL evalResponseToCblVdm(Port_t *port, doDataObject_t vdm_hdr);
-void sendVdmMessageWithTimeout(Port_t *port, SopType sop, FSC_U32* arr,
-                               FSC_U32 length, FSC_S32 n_pe);
+bool evalResponseToSopVdm(Port_t *port, doDataObject_t vdm_hdr);
+bool evalResponseToCblVdm(Port_t *port, doDataObject_t vdm_hdr);
+void sendVdmMessageWithTimeout(Port_t *port, SopType sop, uint32_t* arr,
+                               uint32_t length, int32_t n_pe);
 void vdmMessageTimeout(Port_t *port);
-void startVdmTimer(Port_t *port, FSC_S32 n_pe);
+void startVdmTimer(Port_t *port, int32_t n_pe);
 void sendVdmMessageFailed(Port_t *port);
 void resetPolicyState(Port_t *port);
 
-void sendVdmMessage(Port_t *port, SopType sop, FSC_U32 * arr, FSC_U32 length,
+void sendVdmMessage(Port_t *port, SopType sop, uint32_t * arr, uint32_t length,
                     PolicyState_t next_ps);
 
-FSC_BOOL evaluateModeEntry (Port_t *port, FSC_U32 mode_in);
+bool evaluateModeEntry (Port_t *port, uint32_t mode_in);
 
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 #endif /* __VDM_MANAGER_H__ */

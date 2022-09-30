@@ -19,7 +19,7 @@
 
 void VIF_InitializeSrcCaps(doDataObject_t *src_caps)
 {
-    FSC_U8 i;
+    uint8_t i;
     doDataObject_t gSrc_caps[7] =
     {
         /* macro expects index starting at 1 and type */
@@ -36,7 +36,7 @@ void VIF_InitializeSrcCaps(doDataObject_t *src_caps)
 }
 void VIF_InitializeSnkCaps(doDataObject_t *snk_caps)
 {
-    FSC_U8 i;
+    uint8_t i;
     doDataObject_t gSnk_caps[7] =
     {
         /* macro expects index start at 1 and type */
@@ -53,8 +53,8 @@ void VIF_InitializeSnkCaps(doDataObject_t *snk_caps)
 
 }
 
-#ifdef FSC_HAVE_EXT_MSG
-FSC_U8 gCountry_codes[6] =
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
+uint8_t gCountry_codes[6] =
 {
         2, 0, /* 2-byte Number of country codes */
 

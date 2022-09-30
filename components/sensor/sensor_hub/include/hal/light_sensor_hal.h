@@ -29,7 +29,7 @@ typedef void *sensor_light_handle_t; /*!< light sensor handle*/
 typedef enum {
     BH1750_ID = 0x01, /*!< BH1750 light sensor id*/
     VEML6040_ID, /*!< VEML6040 light sensor id*/
-    VEML6075_ID, /*!< VEML6075 light sensor id*/
+    VEML7700_ID, /*!< VEML7700 light sensor id*/
     LIGHT_MAX_ID, /*!< max light sensor id*/
 } light_sensor_id_t;
 
@@ -78,7 +78,7 @@ esp_err_t light_sensor_test(sensor_light_handle_t sensor);
  *     - ESP_FAIL Fail
  *     - ESP_ERR_NOT_SUPPORTED Function not supported on this sensor
 */
-esp_err_t light_sensor_acquire_light(sensor_light_handle_t sensor, float *lux);
+esp_err_t light_sensor_acquire_light(sensor_light_handle_t sensor, float *lux, float *white);
 
 /**
  * @brief Acquire light sensor color result one time.

@@ -1,0 +1,25 @@
+menu "Type-C/PD Options"
+
+    config CONFIG_FSC_DEBUG
+        bool "include fsc debug"
+        default n
+    config FSC_HAVE_DRP
+        bool "include fsc have drp"
+        default n
+    config FSC_HAVE_SRC
+        bool "include fsc have src"
+        default n
+    config FSC_HAVE_SNK
+        bool "include fsc have snk"
+        default n
+    config FSC_HAVE_VDM
+        bool "include fsc have vdm"
+        default n
+    config FSC_HAVE_EXT_MSG
+        bool "include fsc have ext_msg"
+        default n
+    config FSC_HAVE_DP
+        bool "include fsc have dp"
+        default n
+         
+endmenu

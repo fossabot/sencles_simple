@@ -74,9 +74,10 @@ static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_
         break;
     case SENSOR_LIGHT_DATA_READY:
         ESP_LOGI(TAG, "Timestamp = %llu - SENSOR_LIGHT_DATA_READY - "
-                      "light=%.2f",
+                      "light=%.2f, white=%.2f",
                  sensor_data->timestamp,
-                 sensor_data->light);
+                 sensor_data->light.light,
+                 sensor_data->light.white);
         break;
     case SENSOR_RGBW_DATA_READY:
         ESP_LOGI(TAG, "Timestamp = %llu - SENSOR_RGBW_DATA_READY - "
@@ -108,9 +109,6 @@ void sensor_task(void *pvParameters)
 {
     all_signals_t *signal = (all_signals_t *)pvParameters;
     ESP_LOGI(TAG, "HELLO");
-
-
-
 
     /*create the i2c0 bus handle with a resource ID*/
     i2c_config_t i2c_conf = {
@@ -154,13 +152,13 @@ void sensor_task(void *pvParameters)
 
     while (1)
     {
-        vTaskDelay(2000 / portTICK_RATE_MS);
+        vTaskDelay(pdMS_TO_TICKS(2000));
     }
 
 error_loop:
     ESP_LOGE(TAG, "ERROR");
     while (1)
     {
-        vTaskDelay(1000 / portTICK_RATE_MS);
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

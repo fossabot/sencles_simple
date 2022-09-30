@@ -21,7 +21,7 @@
  * The intention is for the user to define functions that return data
  * that VDM messages require, ex whether or not to enter a mode.
  */
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 
 #include "vdm_types.h"
 #include "PD_Types.h"
@@ -32,23 +32,23 @@ typedef Identity (*RequestIdentityInfo)(Port_t *port);
 
 typedef SvidInfo (*RequestSvidInfo)(Port_t *port);
 
-typedef ModesInfo (*RequestModesInfo)(Port_t *port, FSC_U16);
+typedef ModesInfo (*RequestModesInfo)(Port_t *port, uint16_t);
 
-typedef FSC_BOOL (*ModeEntryRequest)(Port_t *port, FSC_U16 svid, FSC_U32 mode_index);
+typedef bool (*ModeEntryRequest)(Port_t *port, uint16_t svid, uint32_t mode_index);
 
-typedef FSC_BOOL (*ModeExitRequest)(Port_t *port, FSC_U16 svid, FSC_U32 mode_index);
+typedef bool (*ModeExitRequest)(Port_t *port, uint16_t svid, uint32_t mode_index);
 
-typedef FSC_BOOL (*EnterModeResult)(Port_t *port, FSC_BOOL success, FSC_U16 svid, FSC_U32 mode_index);
+typedef bool (*EnterModeResult)(Port_t *port, bool success, uint16_t svid, uint32_t mode_index);
 
-typedef void (*ExitModeResult)(Port_t *port, FSC_BOOL success, FSC_U16 svid, FSC_U32 mode_index);
+typedef void (*ExitModeResult)(Port_t *port, bool success, uint16_t svid, uint32_t mode_index);
 
-typedef void (*InformIdentity)(Port_t *port, FSC_BOOL success, SopType sop, Identity id);
+typedef void (*InformIdentity)(Port_t *port, bool success, SopType sop, Identity id);
 
-typedef void (*InformSvids)(Port_t *port, FSC_BOOL success, SopType sop, SvidInfo svid_info);
+typedef void (*InformSvids)(Port_t *port, bool success, SopType sop, SvidInfo svid_info);
 
-typedef void (*InformModes)(Port_t *port, FSC_BOOL success, SopType sop, ModesInfo modes_info);
+typedef void (*InformModes)(Port_t *port, bool success, SopType sop, ModesInfo modes_info);
 
-typedef void (*InformAttention)(Port_t *port, FSC_U16 svid, FSC_U8 mode_index);
+typedef void (*InformAttention)(Port_t *port, uint16_t svid, uint8_t mode_index);
 
 /*
  * VDM Manager object, so I can have multiple instances intercommunicating using the same functions!
@@ -69,7 +69,7 @@ typedef struct
     InformAttention inform_attention;
 } VdmManager;
 
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
 #endif /* __FSC_VDM_CALLBACKS_DEFS_H__ */
 

@@ -23,9 +23,9 @@
 #include "platform.h"
 #include "Port.h"
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
 #include "Log.h"
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 
 /* USB PD Protocol Layer Routines */
 void USBPDProtocol(Port_t *port);
@@ -33,7 +33,7 @@ void ProtocolSendCableReset(Port_t *port);
 void ProtocolIdle(Port_t *port);
 void ProtocolResetWait(Port_t *port);
 void ProtocolRxWait(void);
-void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived);
+void ProtocolGetRxPacket(Port_t *port, bool HeaderReceived);
 void ProtocolTransmitMessage(Port_t *port);
 void ProtocolSendingMessage(Port_t *port);
 void ProtocolWaitForPHYResponse(void);
@@ -44,23 +44,23 @@ void ProtocolLoadEOP(Port_t *port);
 void ProtocolSendHardReset(Port_t *port);
 void ProtocolFlushRxFIFO(Port_t *port);
 void ProtocolFlushTxFIFO(Port_t *port);
-void ResetProtocolLayer(Port_t *port, FSC_BOOL ResetPDLogic);
+void ResetProtocolLayer(Port_t *port, bool ResetPDLogic);
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
 /* Logging and debug functions */
-FSC_BOOL StoreUSBPDToken(Port_t *port, FSC_BOOL transmitter,
+bool StoreUSBPDToken(Port_t *port, bool transmitter,
                          USBPD_BufferTokens_t token);
-FSC_BOOL StoreUSBPDMessage(Port_t *port, sopMainHeader_t Header,
+bool StoreUSBPDMessage(Port_t *port, sopMainHeader_t Header,
                            doDataObject_t* DataObject,
-                           FSC_BOOL transmitter, FSC_U8 SOPType);
-FSC_U8 GetNextUSBPDMessageSize(Port_t *port);
-FSC_U8 GetUSBPDBufferNumBytes(Port_t *port);
-FSC_BOOL ClaimBufferSpace(Port_t *port, FSC_S32 intReqSize);
-FSC_U8 ReadUSBPDBuffer(Port_t *port, FSC_U8* pData, FSC_U8 bytesAvail);
+                           bool transmitter, uint8_t SOPType);
+uint8_t GetNextUSBPDMessageSize(Port_t *port);
+uint8_t GetUSBPDBufferNumBytes(Port_t *port);
+bool ClaimBufferSpace(Port_t *port, int32_t intReqSize);
+uint8_t ReadUSBPDBuffer(Port_t *port, uint8_t* pData, uint8_t bytesAvail);
 
 void SendUSBPDHardReset(Port_t *port);
 
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 
 #endif	/* _PDPROTOCOL_H_ */
 

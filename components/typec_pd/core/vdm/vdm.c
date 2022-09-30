@@ -22,25 +22,25 @@
 #include "bitfield_translators.h"
 #include "fsc_vdm_defs.h"
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
 #include "DisplayPort/dp.h"
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
 
 /*
  * Initialize the VDM Manager (no definition/configuration object necessary).
  * returns 0 on success.
  * */
-FSC_S32 initializeVdm(Port_t *port)
+int32_t initializeVdm(Port_t *port)
 {
-    port->vdm_timeout = FALSE;
-    port->vdm_expectingresponse = FALSE;
-    port->AutoModeEntryEnabled = FALSE;
+    port->vdm_timeout = false;
+    port->vdm_expectingresponse = false;
+    port->AutoModeEntryEnabled = false;
 
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
     DP_Initialize(port);
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
 
     return 0;
 }
@@ -50,13 +50,13 @@ FSC_S32 initializeVdm(Port_t *port)
  * returns 0 if successful
  * returns >0 if not SOP or SOP', or if Policy State is wrong
  */
-FSC_S32 requestDiscoverIdentity(Port_t *port, SopType sop)
+int32_t requestDiscoverIdentity(Port_t *port, SopType sop)
 {
     doDataObject_t __vdmh = { 0 };
-    FSC_U32 __length = 1;
-    FSC_U32 __arr[__length ];
+    uint32_t __length = 1;
+    uint32_t __arr[__length ];
     PolicyState_t __n_pe;
-    FSC_U32 i;
+    uint32_t i;
     for (i = 0; i < __length; i++)
     {
         __arr[i] = 0;
@@ -131,13 +131,13 @@ FSC_S32 requestDiscoverIdentity(Port_t *port, SopType sop)
 /* call this routine to issue Discover SVID commands
  * Discover SVIDs command valid with SOP*.
  */
-FSC_S32 requestDiscoverSvids(Port_t *port, SopType sop)
+int32_t requestDiscoverSvids(Port_t *port, SopType sop)
 {
     doDataObject_t __vdmh = { 0 };
-    FSC_U32 __length = 1;
-    FSC_U32 arr[__length ];
+    uint32_t __length = 1;
+    uint32_t arr[__length ];
     PolicyState_t __n_pe;
-    FSC_U32 i;
+    uint32_t i;
     for (i = 0; i < __length; i++)
     {
         arr[i] = 0;
@@ -176,13 +176,13 @@ FSC_S32 requestDiscoverSvids(Port_t *port, SopType sop)
 /* call this routine to issue Discover Modes
  * Discover Modes command valid with SOP*.
  */
-FSC_S32 requestDiscoverModes(Port_t *port, SopType sop, FSC_U16 svid)
+int32_t requestDiscoverModes(Port_t *port, SopType sop, uint16_t svid)
 {
     doDataObject_t __vdmh = { 0 };
-    FSC_U32 __length = 1;
-    FSC_U32 __arr[__length ];
+    uint32_t __length = 1;
+    uint32_t __arr[__length ];
     PolicyState_t __n_pe;
-    FSC_U32 i;
+    uint32_t i;
     for (i = 0; i < __length; i++)
     {
         __arr[i] = 0;
@@ -219,13 +219,13 @@ FSC_S32 requestDiscoverModes(Port_t *port, SopType sop, FSC_U16 svid)
 }
 
 /* DPM (UFP) calls this routine to request sending an attention command */
-FSC_S32 requestSendAttention(Port_t *port, SopType sop, FSC_U16 svid,
-                             FSC_U8 mode)
+int32_t requestSendAttention(Port_t *port, SopType sop, uint16_t svid,
+                             uint8_t mode)
 {
     doDataObject_t __vdmh = { 0 };
-    FSC_U32 __length = 1;
-    FSC_U32 __arr[__length ];
-    FSC_U32 i;
+    uint32_t __length = 1;
+    uint32_t __arr[__length ];
+    uint32_t i;
     for (i = 0; i < __length; i++)
     {
         __arr[i] = 0;
@@ -260,8 +260,8 @@ FSC_S32 requestSendAttention(Port_t *port, SopType sop, FSC_U16 svid,
     return 0;
 }
 
-FSC_S32 processDiscoverIdentity(Port_t *port, SopType sop, FSC_U32* arr_in,
-                                FSC_U32 length_in)
+int32_t processDiscoverIdentity(Port_t *port, SopType sop, uint32_t* arr_in,
+                                uint32_t length_in)
 {
     doDataObject_t vdmh_in = { 0 };
     doDataObject_t vdmh_out = { 0 };
@@ -271,9 +271,9 @@ FSC_S32 processDiscoverIdentity(Port_t *port, SopType sop, FSC_U32* arr_in,
     Identity id;
     ProductVdo pvdo;
 
-    FSC_U32 arr[7] = { 0 };
-    FSC_U32 length;
-    FSC_BOOL result;
+    uint32_t arr[7] = { 0 };
+    uint32_t length;
+    bool result;
 
     vdmh_in.object = arr_in[0];
 
@@ -284,14 +284,14 @@ FSC_S32 processDiscoverIdentity(Port_t *port, SopType sop, FSC_U32* arr_in,
     {
         port->originalPolicyState = port->PolicyState;
         if (sop == SOP_TYPE_SOP &&
-            evalResponseToSopVdm(port, vdmh_in) == TRUE)
+            evalResponseToSopVdm(port, vdmh_in) == true)
         {
                 SetPEState(port, peUfpVdmGetIdentity);
                 id = port->vdmm.req_id_info(port);
                 SetPEState(port, peUfpVdmSendIdentity);
         }
         else if (sop == SOP_TYPE_SOP1 &&
-                 evalResponseToCblVdm(port, vdmh_in) == TRUE)
+                 evalResponseToCblVdm(port, vdmh_in) == true)
         {
                 SetPEState(port, peCblGetIdentity);
                 id = port->vdmm.req_id_info(port);
@@ -305,7 +305,7 @@ FSC_S32 processDiscoverIdentity(Port_t *port, SopType sop, FSC_U32* arr_in,
         else
         {
             /* Message not applicable or not a valid request */
-            id.nack = TRUE;
+            id.nack = true;
         }
 
         /* always use PS_SID for Discover Identity, even on response */
@@ -327,7 +327,7 @@ FSC_S32 processDiscoverIdentity(Port_t *port, SopType sop, FSC_U32* arr_in,
         arr[0] = vdmh_out.object;
         length = 1;
 
-        if (id.nack == FALSE)
+        if (id.nack == false)
         {
             /* put capabilities into ID Header */
             idh = id.id_header;
@@ -417,7 +417,7 @@ FSC_S32 processDiscoverIdentity(Port_t *port, SopType sop, FSC_U32* arr_in,
 
         if (vdmh_in.SVDM.CommandType == RESPONDER_ACK)
         {
-            result = TRUE;
+            result = true;
             id.id_header = getIdHeader(arr_in[1]);
             id.cert_stat_vdo = getCertStatVdo(arr_in[2]);
 
@@ -425,7 +425,7 @@ FSC_S32 processDiscoverIdentity(Port_t *port, SopType sop, FSC_U32* arr_in,
                 (id.id_header.product_type_ufp == PERIPHERAL) ||
                 (id.id_header.product_type_ufp == AMA))
             {
-                id.has_product_vdo = TRUE;
+                id.has_product_vdo = true;
                 /* !!! assuming it is before AMA VDO */
                 id.product_vdo = getProductVdo(arr_in[3]);
             }
@@ -433,46 +433,46 @@ FSC_S32 processDiscoverIdentity(Port_t *port, SopType sop, FSC_U32* arr_in,
             if ((id.id_header.product_type_ufp == PASSIVE_CABLE) ||
                 (id.id_header.product_type_ufp == ACTIVE_CABLE))
             {
-                id.has_cable_vdo = TRUE;
+                id.has_cable_vdo = true;
                 id.cable_vdo = getCableVdo(arr_in[4]);
-                port->cblPresent = TRUE;
+                port->cblPresent = true;
             }
 
             if ((id.id_header.product_type_ufp == AMA))
             {
-                id.has_ama_vdo = TRUE;
+                id.has_ama_vdo = true;
                 /* !!! assuming it is after Product VDO */
                 id.ama_vdo = getAmaVdo(arr_in[4]);
             }
         }
         else
         {
-            result = FALSE;
+            result = false;
         }
 
         port->vdmm.inform_id(port, result, sop, id);
-        port->vdm_expectingresponse = FALSE;
+        port->vdm_expectingresponse = false;
         SetPEState(port, port->originalPolicyState);
         TimerDisable(&port->VdmTimer);
-        port->VdmTimerStarted = FALSE;
+        port->VdmTimerStarted = false;
         return 0;
     }
 }
 
-FSC_S32 processDiscoverSvids(Port_t *port, SopType sop, FSC_U32* arr_in,
-                             FSC_U32 length_in)
+int32_t processDiscoverSvids(Port_t *port, SopType sop, uint32_t* arr_in,
+                             uint32_t length_in)
 {
     doDataObject_t vdmh_in = { 0 };
     doDataObject_t vdmh_out = { 0 };
 
     SvidInfo svid_info;
 
-    FSC_U32 i;
-    FSC_U16 top16;
-    FSC_U16 bottom16;
+    uint32_t i;
+    uint16_t top16;
+    uint16_t bottom16;
 
-    FSC_U32 arr[7] = { 0 };
-    FSC_U32 length;
+    uint32_t arr[7] = { 0 };
+    uint32_t length;
 
     vdmh_in.object = arr_in[0];
 
@@ -483,7 +483,7 @@ FSC_S32 processDiscoverSvids(Port_t *port, SopType sop, FSC_U32* arr_in,
     {
         port->originalPolicyState = port->PolicyState;
         if (sop == SOP_TYPE_SOP &&
-            evalResponseToSopVdm(port, vdmh_in) == TRUE)
+            evalResponseToSopVdm(port, vdmh_in) == true)
         {
             /* assuming that the splitting of SVID info is done outside this block */
             svid_info = port->vdmm.req_svid_info(port);
@@ -491,7 +491,7 @@ FSC_S32 processDiscoverSvids(Port_t *port, SopType sop, FSC_U32* arr_in,
             SetPEState(port, peUfpVdmSendSvids);
         }
         else if (sop == SOP_TYPE_SOP1 &&
-                 evalResponseToCblVdm(port, vdmh_in) == TRUE)
+                 evalResponseToCblVdm(port, vdmh_in) == true)
         {
             SetPEState(port, peCblGetSvids);
             svid_info = port->vdmm.req_svid_info(port);
@@ -505,7 +505,7 @@ FSC_S32 processDiscoverSvids(Port_t *port, SopType sop, FSC_U32* arr_in,
         else
         {
             /* Message not applicable or not a valid request */
-            svid_info.nack = TRUE;
+            svid_info.nack = true;
         }
 
         /* always use PS_SID for Discover SVIDs, even on response */
@@ -529,9 +529,9 @@ FSC_S32 processDiscoverSvids(Port_t *port, SopType sop, FSC_U32* arr_in,
         arr[length] = vdmh_out.object;
         length++;
 
-        if (svid_info.nack == FALSE)
+        if (svid_info.nack == false)
         {
-            FSC_U32 i;
+            uint32_t i;
             /* prevent segfaults */
             if (svid_info.num_svids > MAX_NUM_SVIDS)
             {
@@ -610,9 +610,9 @@ FSC_S32 processDiscoverSvids(Port_t *port, SopType sop, FSC_U32* arr_in,
         port->vdmm.inform_svids(port, port->PolicyState == peDfpVdmSvidsAcked,
                                 sop, svid_info);
 
-        port->vdm_expectingresponse = FALSE;
+        port->vdm_expectingresponse = false;
         TimerDisable(&port->VdmTimer);
-        port->VdmTimerStarted = FALSE;
+        port->VdmTimerStarted = false;
         SetPEState(port, port->originalPolicyState);
         return 0;
     }
@@ -620,17 +620,17 @@ FSC_S32 processDiscoverSvids(Port_t *port, SopType sop, FSC_U32* arr_in,
     return 0;
 }
 
-FSC_S32 processDiscoverModes(Port_t *port, SopType sop, FSC_U32* arr_in,
-                             FSC_U32 length_in)
+int32_t processDiscoverModes(Port_t *port, SopType sop, uint32_t* arr_in,
+                             uint32_t length_in)
 {
     doDataObject_t vdmh_in = { 0 };
     doDataObject_t vdmh_out = { 0 };
 
     ModesInfo modes_info = { 0 };
 
-    FSC_U32 i;
-    FSC_U32 arr[7] = { 0 };
-    FSC_U32 length;
+    uint32_t i;
+    uint32_t arr[7] = { 0 };
+    uint32_t length;
 
     vdmh_in.object = arr_in[0];
     if (vdmh_in.SVDM.CommandType == INITIATOR)
@@ -638,14 +638,14 @@ FSC_S32 processDiscoverModes(Port_t *port, SopType sop, FSC_U32* arr_in,
 
         port->originalPolicyState = port->PolicyState;
         if (sop == SOP_TYPE_SOP &&
-            evalResponseToSopVdm(port, vdmh_in) == TRUE)
+            evalResponseToSopVdm(port, vdmh_in) == true)
         {
             modes_info = port->vdmm.req_modes_info(port, vdmh_in.SVDM.SVID);
             SetPEState(port, peUfpVdmGetModes);
             SetPEState(port, peUfpVdmSendModes);
         }
         else if (sop == SOP_TYPE_SOP1 &&
-                 evalResponseToCblVdm(port, vdmh_in) == TRUE)
+                 evalResponseToCblVdm(port, vdmh_in) == true)
         {
             port->originalPolicyState = port->PolicyState;
             SetPEState(port, peCblGetModes);
@@ -660,7 +660,7 @@ FSC_S32 processDiscoverModes(Port_t *port, SopType sop, FSC_U32* arr_in,
         else
         {
             /* Message not applicable or not a valid request */
-            modes_info.nack = TRUE;
+            modes_info.nack = true;
         }
 
         /* reply with SVID we're being asked about */
@@ -684,9 +684,9 @@ FSC_S32 processDiscoverModes(Port_t *port, SopType sop, FSC_U32* arr_in,
         arr[length] = vdmh_out.object;
         length++;
 
-        if (modes_info.nack == FALSE)
+        if (modes_info.nack == false)
         {
-            FSC_U32 j;
+            uint32_t j;
 
             for (j = 0; j < modes_info.num_modes; j++)
             {
@@ -725,9 +725,9 @@ FSC_S32 processDiscoverModes(Port_t *port, SopType sop, FSC_U32* arr_in,
             port->vdmm.inform_modes(port,
                                     port->PolicyState == peDfpVdmModesAcked,
                                     sop, modes_info);
-            port->vdm_expectingresponse = FALSE;
+            port->vdm_expectingresponse = false;
             TimerDisable(&port->VdmTimer);
-            port->VdmTimerStarted = FALSE;
+            port->VdmTimerStarted = false;
             SetPEState(port, port->originalPolicyState);
         }
 
@@ -735,22 +735,22 @@ FSC_S32 processDiscoverModes(Port_t *port, SopType sop, FSC_U32* arr_in,
     }
 }
 
-FSC_S32 processEnterMode(Port_t *port, SopType sop, FSC_U32* arr_in,
-                         FSC_U32 length_in)
+int32_t processEnterMode(Port_t *port, SopType sop, uint32_t* arr_in,
+                         uint32_t length_in)
 {
     doDataObject_t svdmh_in = { 0 };
     doDataObject_t svdmh_out = { 0 };
 
-    FSC_BOOL mode_entered = FALSE;
-    FSC_U32 arr_out[7] = { 0 };
-    FSC_U32 length_out;
+    bool mode_entered = false;
+    uint32_t arr_out[7] = { 0 };
+    uint32_t length_out;
 
     svdmh_in.object = arr_in[0];
     if (svdmh_in.SVDM.CommandType == INITIATOR)
     {
         port->originalPolicyState = port->PolicyState;
         if (sop == SOP_TYPE_SOP &&
-            evalResponseToSopVdm(port, svdmh_in) == TRUE)
+            evalResponseToSopVdm(port, svdmh_in) == true)
         {
             SetPEState(port, peUfpVdmEvaluateModeEntry);
             mode_entered = port->vdmm.req_mode_entry(port,
@@ -765,7 +765,7 @@ FSC_S32 processEnterMode(Port_t *port, SopType sop, FSC_U32* arr_in,
             }
         }
         else if (sop == SOP_TYPE_SOP1 &&
-                 evalResponseToCblVdm(port, svdmh_in) == TRUE)
+                 evalResponseToCblVdm(port, svdmh_in) == true)
         {
             SetPEState(port, peCblEvaluateModeEntry);
             mode_entered = port->vdmm.req_mode_entry(port,
@@ -781,7 +781,7 @@ FSC_S32 processEnterMode(Port_t *port, SopType sop, FSC_U32* arr_in,
         }
         else
         {
-            mode_entered = FALSE;
+            mode_entered = false;
         }
 
         /*
@@ -799,7 +799,7 @@ FSC_S32 processEnterMode(Port_t *port, SopType sop, FSC_U32* arr_in,
         /* Reply with same command, Enter Mode */
         svdmh_out.SVDM.Command = ENTER_MODE;
 
-        svdmh_out.SVDM.CommandType = (mode_entered == TRUE) ?
+        svdmh_out.SVDM.CommandType = (mode_entered == true) ?
                                        RESPONDER_ACK : RESPONDER_NAK;
 
         arr_out[0] = svdmh_out.object;
@@ -814,37 +814,37 @@ FSC_S32 processEnterMode(Port_t *port, SopType sop, FSC_U32* arr_in,
         if (svdmh_in.SVDM.CommandType != RESPONDER_ACK)
         {
             SetPEState(port, peDfpVdmModeEntryNaked);
-            port->vdmm.enter_mode_result(port, FALSE, svdmh_in.SVDM.SVID,
+            port->vdmm.enter_mode_result(port, false, svdmh_in.SVDM.SVID,
                                          svdmh_in.SVDM.ObjPos);
         }
         else
         {
             SetPEState(port, peDfpVdmModeEntryAcked);
-            port->vdmm.enter_mode_result(port, TRUE, svdmh_in.SVDM.SVID,
+            port->vdmm.enter_mode_result(port, true, svdmh_in.SVDM.SVID,
                                          svdmh_in.SVDM.ObjPos);
         }
         SetPEState(port, port->originalPolicyState);
-        port->vdm_expectingresponse = FALSE;
+        port->vdm_expectingresponse = false;
         return 0;
     }
 }
 
-FSC_S32 processExitMode(Port_t *port, SopType sop, FSC_U32* arr_in,
-                        FSC_U32 length_in)
+int32_t processExitMode(Port_t *port, SopType sop, uint32_t* arr_in,
+                        uint32_t length_in)
 {
     doDataObject_t vdmh_in = { 0 };
     doDataObject_t vdmh_out = { 0 };
 
-    FSC_BOOL mode_exited = FALSE;
-    FSC_U32 arr[7] = { 0 };
-    FSC_U32 length;
+    bool mode_exited = false;
+    uint32_t arr[7] = { 0 };
+    uint32_t length;
 
     vdmh_in.object = arr_in[0];
     if (vdmh_in.SVDM.CommandType == INITIATOR)
     {
         port->originalPolicyState = port->PolicyState;
         if (sop == SOP_TYPE_SOP &&
-            evalResponseToSopVdm(port, vdmh_in) == TRUE)
+            evalResponseToSopVdm(port, vdmh_in) == true)
         {
             SetPEState(port, peUfpVdmModeExit);
             mode_exited = port->vdmm.req_mode_exit(port, vdmh_in.SVDM.SVID,
@@ -875,7 +875,7 @@ FSC_S32 processExitMode(Port_t *port, SopType sop, FSC_U32* arr_in,
         }
         else
         {
-            mode_exited = FALSE;
+            mode_exited = false;
         }
         /*
          * most of the message response will be the same whether we
@@ -891,7 +891,7 @@ FSC_S32 processExitMode(Port_t *port, SopType sop, FSC_U32* arr_in,
         vdmh_out.SVDM.ObjPos = vdmh_in.SVDM.ObjPos;
         /* Reply with same command, Exit Mode */
         vdmh_out.SVDM.Command = EXIT_MODE;
-        vdmh_out.SVDM.CommandType = (mode_exited == TRUE) ?
+        vdmh_out.SVDM.CommandType = (mode_exited == true) ?
                                       RESPONDER_ACK : RESPONDER_NAK;
         arr[0] = vdmh_out.object;
         length = 1;
@@ -903,7 +903,7 @@ FSC_S32 processExitMode(Port_t *port, SopType sop, FSC_U32* arr_in,
     {
         if (vdmh_in.SVDM.CommandType == RESPONDER_BUSY)
         {
-            port->vdmm.exit_mode_result(port, FALSE, vdmh_in.SVDM.SVID,
+            port->vdmm.exit_mode_result(port, false, vdmh_in.SVDM.SVID,
                                         vdmh_in.SVDM.ObjPos);
             if (port->originalPolicyState == peSourceReady)
             {
@@ -920,30 +920,30 @@ FSC_S32 processExitMode(Port_t *port, SopType sop, FSC_U32* arr_in,
         }
         else if (vdmh_in.SVDM.CommandType == RESPONDER_NAK)
         {
-            port->vdmm.exit_mode_result(port, FALSE, vdmh_in.SVDM.SVID,
+            port->vdmm.exit_mode_result(port, false, vdmh_in.SVDM.SVID,
                                         vdmh_in.SVDM.ObjPos);
             SetPEState(port, port->originalPolicyState);
 
             TimerDisable(&port->VdmTimer);
-            port->VdmTimerStarted = FALSE;
+            port->VdmTimerStarted = false;
         }
         else
         {
             SetPEState(port, peDfpVdmExitModeAcked);
-            port->vdmm.exit_mode_result(port, TRUE, vdmh_in.SVDM.SVID,
+            port->vdmm.exit_mode_result(port, true, vdmh_in.SVDM.SVID,
                                         vdmh_in.SVDM.ObjPos);
             SetPEState(port, port->originalPolicyState);
 
             TimerDisable(&port->VdmTimer);
-            port->VdmTimerStarted = FALSE;
+            port->VdmTimerStarted = false;
         }
-        port->vdm_expectingresponse = FALSE;
+        port->vdm_expectingresponse = false;
         return 0;
     }
 }
 
-FSC_S32 processAttention(Port_t *port, SopType sop, FSC_U32* arr_in,
-                         FSC_U32 length_in)
+int32_t processAttention(Port_t *port, SopType sop, uint32_t* arr_in,
+                         uint32_t length_in)
 {
     doDataObject_t vdmh_in = { 0 };
     vdmh_in.object = arr_in[0];
@@ -952,12 +952,12 @@ FSC_S32 processAttention(Port_t *port, SopType sop, FSC_U32* arr_in,
     SetPEState(port, peDfpVdmAttentionRequest);
     SetPEState(port, port->originalPolicyState);
 
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
     if (vdmh_in.SVDM.SVID == DP_SID) {
         DP_ProcessCommand(port, arr_in);
     }
     else
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
     {
         port->vdmm.inform_attention(port, vdmh_in.SVDM.SVID,
                                     vdmh_in.SVDM.ObjPos);
@@ -965,17 +965,17 @@ FSC_S32 processAttention(Port_t *port, SopType sop, FSC_U32* arr_in,
     return 0;
 }
 
-FSC_S32 processSvidSpecific(Port_t *port, SopType sop, FSC_U32* arr_in,
-                            FSC_U32 length_in)
+int32_t processSvidSpecific(Port_t *port, SopType sop, uint32_t* arr_in,
+                            uint32_t length_in)
 {
     doDataObject_t vdmh_out = { 0 };
     doDataObject_t vdmh_in = { 0 };
-    FSC_U32 arr[7] = { 0 };
-    FSC_U32 length;
+    uint32_t arr[7] = { 0 };
+    uint32_t length;
 
     vdmh_in.object = arr_in[0];
 
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
     if (vdmh_in.SVDM.SVID == DP_SID)
     {
         if (!DP_ProcessCommand(port, arr_in))
@@ -983,7 +983,7 @@ FSC_S32 processSvidSpecific(Port_t *port, SopType sop, FSC_U32* arr_in,
             return 0; /* DP code will send response, so return */
         }
     }
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
 
     /* in this case the command is unrecognized. Reply with a NAK. */
     /* reply with SVID we received */
@@ -1009,25 +1009,25 @@ FSC_S32 processSvidSpecific(Port_t *port, SopType sop, FSC_U32* arr_in,
 /**
  * Determine message applicability or whether to a response is required
  */
-FSC_BOOL evalResponseToSopVdm(Port_t *port, doDataObject_t vdm_hdr)
+bool evalResponseToSopVdm(Port_t *port, doDataObject_t vdm_hdr)
 {
-    FSC_BOOL response = TRUE;
+    bool response = true;
 
-    if (port->PolicyIsDFP == TRUE && !Responds_To_Discov_SOP_DFP) {
-        response = FALSE;
+    if (port->PolicyIsDFP == true && !Responds_To_Discov_SOP_DFP) {
+        response = false;
     }
-    else if (port->PolicyIsDFP == FALSE && !Responds_To_Discov_SOP_UFP) {
-        response = FALSE;
+    else if (port->PolicyIsDFP == false && !Responds_To_Discov_SOP_UFP) {
+        response = false;
     }
     else if (DPM_SpecRev(port, SOP_TYPE_SOP) < USBPDSPECREV3p0 &&
-             port->PolicyIsDFP == TRUE) {
+             port->PolicyIsDFP == true) {
         /* See message applicability */
-        response = FALSE;
+        response = false;
     }
     else if (!(port->PolicyState == peSourceReady ||
                port->PolicyState == peSinkReady)) {
         /* Neither sink ready or source ready state */
-        response = FALSE;
+        response = false;
     }
     return response;
 }
@@ -1035,11 +1035,11 @@ FSC_BOOL evalResponseToSopVdm(Port_t *port, doDataObject_t vdm_hdr)
 /**
  * Determine message applicability or whether to a response is required
  */
-FSC_BOOL evalResponseToCblVdm(Port_t *port, doDataObject_t vdm_hdr)
+bool evalResponseToCblVdm(Port_t *port, doDataObject_t vdm_hdr)
 {
-    FSC_BOOL response = TRUE;
+    bool response = true;
     if (port->PolicyState != peCblReady) {
-        response = FALSE;
+        response = false;
     }
     return response;
 }
@@ -1050,10 +1050,10 @@ FSC_BOOL evalResponseToCblVdm(Port_t *port, doDataObject_t vdm_hdr)
 
 
 /* returns 0 on success, 1+ otherwise */
-FSC_S32 processVdmMessage(Port_t *port, SopType sop, FSC_U32* arr_in,
-                          FSC_U32 length_in)
+int32_t processVdmMessage(Port_t *port, SopType sop, uint32_t* arr_in,
+                          uint32_t length_in)
 {
-    FSC_S32 result = 0;
+    int32_t result = 0;
     doDataObject_t vdmh_in = { 0 };
 
     vdmh_in.object = arr_in[0];
@@ -1116,14 +1116,14 @@ FSC_S32 processVdmMessage(Port_t *port, SopType sop, FSC_U32* arr_in,
 }
 
 /* call this function to enter a mode */
-FSC_S32 requestEnterMode(Port_t *port, SopType sop, FSC_U16 svid,
-                         FSC_U32 mode_index)
+int32_t requestEnterMode(Port_t *port, SopType sop, uint16_t svid,
+                         uint32_t mode_index)
 {
     doDataObject_t vdmh = { 0 };
-    FSC_U32 length = 1;
-    FSC_U32 arr[length ];
+    uint32_t length = 1;
+    uint32_t arr[length ];
     PolicyState_t n_pe;
-    FSC_U32 i;
+    uint32_t i;
     for (i = 0; i < length; i++)
     {
         arr[i] = 0;
@@ -1159,14 +1159,14 @@ FSC_S32 requestEnterMode(Port_t *port, SopType sop, FSC_U16 svid,
 }
 
 /* call this function to exit a mode */
-FSC_S32 requestExitMode(Port_t *port, SopType sop, FSC_U16 svid,
-                        FSC_U32 mode_index)
+int32_t requestExitMode(Port_t *port, SopType sop, uint16_t svid,
+                        uint32_t mode_index)
 {
     doDataObject_t vdmh = { 0 };
-    FSC_U32 length = 1;
-    FSC_U32 arr[length ];
+    uint32_t length = 1;
+    uint32_t arr[length ];
     PolicyState_t n_pe;
-    FSC_U32 i;
+    uint32_t i;
     for (i = 0; i < length; i++)
     {
         arr[i] = 0;
@@ -1202,20 +1202,20 @@ FSC_S32 requestExitMode(Port_t *port, SopType sop, FSC_U16 svid,
 }
 
 /* call this function to send an attention command to specified SOP type */
-FSC_S32 sendAttention(SopType sop, FSC_U32 obj_pos)
+int32_t sendAttention(SopType sop, uint32_t obj_pos)
 {
     // TODO
     return 1;
 }
 
-void sendVdmMessageWithTimeout(Port_t *port, SopType sop, FSC_U32* arr,
-                               FSC_U32 length, FSC_S32 n_pe)
+void sendVdmMessageWithTimeout(Port_t *port, SopType sop, uint32_t* arr,
+                               uint32_t length, int32_t n_pe)
 {
     sendVdmMessage(port, sop, arr, length, n_pe);
-    port->vdm_expectingresponse = TRUE;
+    port->vdm_expectingresponse = true;
 }
 
-void startVdmTimer(Port_t *port, FSC_S32 n_pe)
+void startVdmTimer(Port_t *port, int32_t n_pe)
 {
     /* start the appropriate timer */
     switch (n_pe)
@@ -1226,25 +1226,25 @@ void startVdmTimer(Port_t *port, FSC_S32 n_pe)
     case peDfpVdmSvidsRequest:
     case peDfpVdmModesRequest:
         TimerStart(&port->VdmTimer, tVDMSenderResponse);
-        port->VdmTimerStarted = TRUE;
+        port->VdmTimerStarted = true;
         break;
     case peDfpVdmModeEntryRequest:
         TimerStart(&port->VdmTimer, tVDMWaitModeEntry);
-        port->VdmTimerStarted = TRUE;
+        port->VdmTimerStarted = true;
         break;
     case peDfpVdmModeExitRequest:
         TimerStart(&port->VdmTimer, tVDMWaitModeExit);
-        port->VdmTimerStarted = TRUE;
+        port->VdmTimerStarted = true;
         break;
     case peDpRequestStatus:
     case peDpRequestConfig:
         TimerStart(&port->VdmTimer, tVDMSenderResponse);
-        port->VdmTimerStarted = TRUE;
+        port->VdmTimerStarted = true;
         break;
     default:
         TimerDisable(&port->VdmTimer);
         /* timeout immediately */
-        port->VdmTimerStarted = TRUE;
+        port->VdmTimerStarted = true;
         break;
     }
 }
@@ -1267,8 +1267,8 @@ void resetPolicyState(Port_t *port)
     SvidInfo __svid_info = { 0 };
     ModesInfo __modes_info = { 0 };
 
-    port->vdm_expectingresponse = FALSE;
-    port->VdmTimerStarted = FALSE;
+    port->vdm_expectingresponse = false;
+    port->VdmTimerStarted = false;
     TimerDisable(&port->VdmTimer);
 
     if (port->PolicyState == peGiveVdm)
@@ -1287,32 +1287,32 @@ void resetPolicyState(Port_t *port)
     case peDfpUfpVdmIdentityRequest:
         SetPEState(port, peDfpUfpVdmIdentityNaked);
         /* informing of a NAK */
-        port->vdmm.inform_id(port, FALSE, SOP_TYPE_SOP, __id);
+        port->vdmm.inform_id(port, false, SOP_TYPE_SOP, __id);
         SetPEState(port, port->originalPolicyState);
         break;
     case peDfpCblVdmIdentityRequest:
         SetPEState(port, peDfpCblVdmIdentityNaked);
         /* informing of a NAK from cable */
-        port->vdmm.inform_id(port, FALSE, SOP_TYPE_SOP1, __id);
+        port->vdmm.inform_id(port, false, SOP_TYPE_SOP1, __id);
         SetPEState(port, port->originalPolicyState);
         break;
     case peDfpVdmSvidsRequest:
         SetPEState(port, peDfpVdmSvidsNaked);
-        port->vdmm.inform_svids(port, FALSE, SOP_TYPE_SOP, __svid_info);
+        port->vdmm.inform_svids(port, false, SOP_TYPE_SOP, __svid_info);
         SetPEState(port, port->originalPolicyState);
         break;
     case peDfpVdmModesRequest:
         SetPEState(port, peDfpVdmModesNaked);
-        port->vdmm.inform_modes(port, FALSE, SOP_TYPE_SOP, __modes_info);
+        port->vdmm.inform_modes(port, false, SOP_TYPE_SOP, __modes_info);
         SetPEState(port, port->originalPolicyState);
         break;
     case peDfpVdmModeEntryRequest:
         SetPEState(port, peDfpVdmModeEntryNaked);
-        port->vdmm.enter_mode_result(port, FALSE, 0, 0);
+        port->vdmm.enter_mode_result(port, false, 0, 0);
         SetPEState(port, port->originalPolicyState);
         break;
     case peDfpVdmModeExitRequest:
-        port->vdmm.exit_mode_result(port, FALSE, 0, 0);
+        port->vdmm.exit_mode_result(port, false, 0, 0);
 
         /* if Mode Exit request is NAKed, go to hard reset state! */
         if (port->originalPolicyState == peSinkReady)
@@ -1332,7 +1332,7 @@ void resetPolicyState(Port_t *port)
     case peSrcVdmIdentityRequest:
         SetPEState(port, peSrcVdmIdentityNaked);
         /* informing of a NAK from cable */
-        port->vdmm.inform_id(port, FALSE, SOP_TYPE_SOP1, __id);
+        port->vdmm.inform_id(port, false, SOP_TYPE_SOP1, __id);
         SetPEState(port, port->originalPolicyState);
         break;
     case peDpRequestStatus:
@@ -1349,9 +1349,9 @@ void resetPolicyState(Port_t *port)
     }
 }
 
-FSC_BOOL evaluateModeEntry(Port_t *port, FSC_U32 mode_in)
+bool evaluateModeEntry(Port_t *port, uint32_t mode_in)
 {
-    return (mode_in == MODE_AUTO_ENTRY && port->AutoModeEntryEnabled) ? TRUE : FALSE;
+    return (mode_in == MODE_AUTO_ENTRY && port->AutoModeEntryEnabled) ? true : false;
 }
 
-#endif // FSC_HAVE_VDM
+#endif // CONFIG_FSC_HAVE_VDM

@@ -23,33 +23,33 @@
 extern "C" {
 #endif
 
-#define HCMD_GET_DEVICE_INFO        ((FSC_U8)0x00)
-#define HCMD_GET_SET_SERIAL_NUM     ((FSC_U8)0x01)
-#define HCMD_QUERY_I2C_FCS_DEVS     ((FSC_U8)0x02)
-#define HCMD_SET_IO_CONFIG          ((FSC_U8)0x10)
-#define HCMD_GET_IO_CONFIG          ((FSC_U8)0x11)
-#define HCMD_SET_I2C_CONFIG         ((FSC_U8)0x12)
-#define HCMD_GET_I2C_CONFIG         ((FSC_U8)0x13)
-#define HCMD_WRITE_IO_PORT          ((FSC_U8)0x40)
-#define HCMD_READ_IO_PORT           ((FSC_U8)0x41)
-#define HCMD_READ_ADC_CHANNEL       ((FSC_U8)0x42)
-#define HCMD_WRITE_I2C_FCS_DEV      ((FSC_U8)0x60)
-#define HCMD_READ_I2C_FCS_DEV       ((FSC_U8)0x61)
-#define HCMD_DATA_COLLECT_START     ((FSC_U8)0x80)
-#define HCMD_DATA_COLLECT_STOP      ((FSC_U8)0x81)
-#define HCMD_DATA_COLLECT_READ      ((FSC_U8)0x82)
-#define HCMD_AUDIO_CLASS            ((FSC_U8)0x90)
-#define HCMD_USER_CLASS             ((FSC_U8)0x91)
-#define HCMD_TYPEC_CLASS            ((FSC_U8)0x92)
-#define HCMD_PD_CLASS               ((FSC_U8)0x93)
-#define HCMD_DP_CLASS               ((FSC_U8)0x94)
-#define HCMD_STATUS_SUCCESS         ((FSC_U8)0x00)
-#define HCMD_STATUS_NOT_IMPLEMENTED ((FSC_U8)0x01)
-#define HCMD_STATUS_WRONG_VERSION   ((FSC_U8)0x02)
-#define HCMD_STATUS_BUSY            ((FSC_U8)0x03)
-#define HCMD_STATUS_FAILED          ((FSC_U8)0xFF)
+#define HCMD_GET_DEVICE_INFO        ((uint8_t)0x00)
+#define HCMD_GET_SET_SERIAL_NUM     ((uint8_t)0x01)
+#define HCMD_QUERY_I2C_FCS_DEVS     ((uint8_t)0x02)
+#define HCMD_SET_IO_CONFIG          ((uint8_t)0x10)
+#define HCMD_GET_IO_CONFIG          ((uint8_t)0x11)
+#define HCMD_SET_I2C_CONFIG         ((uint8_t)0x12)
+#define HCMD_GET_I2C_CONFIG         ((uint8_t)0x13)
+#define HCMD_WRITE_IO_PORT          ((uint8_t)0x40)
+#define HCMD_READ_IO_PORT           ((uint8_t)0x41)
+#define HCMD_READ_ADC_CHANNEL       ((uint8_t)0x42)
+#define HCMD_WRITE_I2C_FCS_DEV      ((uint8_t)0x60)
+#define HCMD_READ_I2C_FCS_DEV       ((uint8_t)0x61)
+#define HCMD_DATA_COLLECT_START     ((uint8_t)0x80)
+#define HCMD_DATA_COLLECT_STOP      ((uint8_t)0x81)
+#define HCMD_DATA_COLLECT_READ      ((uint8_t)0x82)
+#define HCMD_AUDIO_CLASS            ((uint8_t)0x90)
+#define HCMD_USER_CLASS             ((uint8_t)0x91)
+#define HCMD_TYPEC_CLASS            ((uint8_t)0x92)
+#define HCMD_PD_CLASS               ((uint8_t)0x93)
+#define HCMD_DP_CLASS               ((uint8_t)0x94)
+#define HCMD_STATUS_SUCCESS         ((uint8_t)0x00)
+#define HCMD_STATUS_NOT_IMPLEMENTED ((uint8_t)0x01)
+#define HCMD_STATUS_WRONG_VERSION   ((uint8_t)0x02)
+#define HCMD_STATUS_BUSY            ((uint8_t)0x03)
+#define HCMD_STATUS_FAILED          ((uint8_t)0xFF)
 
-#define TCPD_EOP                    ((FSC_U8)0x00)
+#define TCPD_EOP                    ((uint8_t)0x00)
 
 typedef enum {
     TYPEC_EOP              = TCPD_EOP,
@@ -136,33 +136,33 @@ typedef enum {
  * Generic command structure
  */
 typedef struct cmd_host_cmd_req {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
         } rsp;
     } cmd;
-    FSC_U8 data[60];
+    uint8_t data[60];
 } GenericCmdRequest_t;
 
 /**
  * GetDeviceInfo command
  */
 typedef struct cmd_get_device_info {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
-            FSC_U8 mcu;
-            FSC_U8 device;
-            FSC_U8 hostcom[2];
-            FSC_U8 config[2];
-            FSC_U8 serial[16];
-            FSC_U8 fw[3];
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
+            uint8_t mcu;
+            uint8_t device;
+            uint8_t hostcom[2];
+            uint8_t config[2];
+            uint8_t serial[16];
+            uint8_t fw[3];
         } rsp;
     } cmd;
 } CmdGetDeviceInfo_t;
@@ -171,18 +171,18 @@ typedef struct cmd_get_device_info {
  * SetIOConfig command
  */
 typedef struct cmd_set_io_config {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 reserved[3];
-            FSC_U8 port;
-            FSC_U8 direction[4];
-            FSC_U8 analog[4];
+            uint8_t reserved[3];
+            uint8_t port;
+            uint8_t direction[4];
+            uint8_t analog[4];
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
         } rsp;
     } cmd;
 } CmdSetIOConfig_t;
@@ -191,19 +191,19 @@ typedef struct cmd_set_io_config {
  * GetIOConfig command
  */
 typedef struct cmd_get_io_config {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 reserved[3];
-            FSC_U8 port;
+            uint8_t reserved[3];
+            uint8_t port;
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
-            FSC_U8 port;
-            FSC_U8 direction[4];
-            FSC_U8 analog[4];
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
+            uint8_t port;
+            uint8_t direction[4];
+            uint8_t analog[4];
         } rsp;
     } cmd;
 } CmdGetIOConfig_t;
@@ -212,18 +212,18 @@ typedef struct cmd_get_io_config {
  * SetI2C config
  */
 typedef struct cmd_set_i2c_config {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 reserved[3];
-            FSC_U8 module;
-            FSC_U8 enable;
-            FSC_U8 setting[4];
+            uint8_t reserved[3];
+            uint8_t module;
+            uint8_t enable;
+            uint8_t setting[4];
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
         } rsp;
     } cmd;
 } CmdSetI2CConfig_t;
@@ -232,19 +232,19 @@ typedef struct cmd_set_i2c_config {
  * GetI2CConfig
  */
 typedef struct cmd_get_i2c_config {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 reserved[1];
-            FSC_U8 module;
+            uint8_t reserved[1];
+            uint8_t module;
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
-            FSC_U8 module;
-            FSC_U8 enable;
-            FSC_U8 settings[4];
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
+            uint8_t module;
+            uint8_t enable;
+            uint8_t settings[4];
         } rsp;
     } cmd;
 } CmdGetI2CConfig_t;
@@ -253,18 +253,18 @@ typedef struct cmd_get_i2c_config {
  * Write IO Port command
  */
 typedef struct cmd_wr_io_port {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 reserved[3];
-            FSC_U8 port;
-            FSC_U8 data[4];
-            FSC_U8 mask[4];
+            uint8_t reserved[3];
+            uint8_t port;
+            uint8_t data[4];
+            uint8_t mask[4];
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
         };
     } cmd;
 } CmdWrIOPort_t;
@@ -273,19 +273,19 @@ typedef struct cmd_wr_io_port {
  * Read IO Port command
  */
 typedef struct cmd_rd_io_port {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 reserved[3];
-            FSC_U8 port;
+            uint8_t reserved[3];
+            uint8_t port;
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
-            FSC_U8 port;
-            FSC_U8 state[4];
-            FSC_U8 mask;
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
+            uint8_t port;
+            uint8_t state[4];
+            uint8_t mask;
         } rsp;
     } cmd;
 } CmdRdIOPort_t;
@@ -294,19 +294,19 @@ typedef struct cmd_rd_io_port {
  * Read ADC Command
  */
 typedef struct cmd_rd_adc {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 reserved[3];
-            FSC_U8 channel;
+            uint8_t reserved[3];
+            uint8_t channel;
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
-            FSC_U8 channel;
-            FSC_U8 value[4];
-            FSC_U8 ref[4];
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
+            uint8_t channel;
+            uint8_t value[4];
+            uint8_t ref[4];
         } rsp;
     };
 } CmdRdADC_t;
@@ -315,23 +315,23 @@ typedef struct cmd_rd_adc {
  * Write I2C device register command
  */
 typedef struct cmd_wr_i2c_dev {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 reserved[3];
-            FSC_U8 module;
-            FSC_U8 addr;
-            FSC_U8 alen;       /* Address length */
-            FSC_U8 dlen;       /* Data length */
-            FSC_U8 pktlen;     /* Number of bytes to write */
-            FSC_U8 inc;        /* Increment address everyo inc byte written */
-            FSC_U8 reg[4];     /* starting register address */
-            FSC_U8 data[50];   /* Data to be written. Size: (dlen/inc) bytes */
+            uint8_t reserved[3];
+            uint8_t module;
+            uint8_t addr;
+            uint8_t alen;       /* Address length */
+            uint8_t dlen;       /* Data length */
+            uint8_t pktlen;     /* Number of bytes to write */
+            uint8_t inc;        /* Increment address everyo inc byte written */
+            uint8_t reg[4];     /* starting register address */
+            uint8_t data[50];   /* Data to be written. Size: (dlen/inc) bytes */
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
         } rsp;
     } cmd;
 } CmdWrI2CDev_t;
@@ -340,23 +340,23 @@ typedef struct cmd_wr_i2c_dev {
  * Read I2C device register command
  */
 typedef struct cmd_rd_i2c_dev {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 reserved[3];
-            FSC_U8 module;
-            FSC_U8 addr;
-            FSC_U8 alen;
-            FSC_U8 dlen;
-            FSC_U8 pktlen;
-            FSC_U8 inc;
-            FSC_U8 reg[4];
+            uint8_t reserved[3];
+            uint8_t module;
+            uint8_t addr;
+            uint8_t alen;
+            uint8_t dlen;
+            uint8_t pktlen;
+            uint8_t inc;
+            uint8_t reg[4];
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
-            FSC_U8 data[50];
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
+            uint8_t data[50];
         } rsp;
     } cmd;
 } CmdRdI2CDev_t;
@@ -365,21 +365,21 @@ typedef struct cmd_rd_i2c_dev {
  * Data collection start command
  */
 typedef struct cmd_data_collect_start {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 reserved[3];
-            FSC_U8 module;
-            FSC_U8 addr;
-            FSC_U8 config;
-            FSC_U8 intp[2];
-            FSC_U8 num;
-            FSC_U8 reg[54];
+            uint8_t reserved[3];
+            uint8_t module;
+            uint8_t addr;
+            uint8_t config;
+            uint8_t intp[2];
+            uint8_t num;
+            uint8_t reg[54];
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
         } rsp;
     } cmd;
 } CmdDataCollectStart_t;
@@ -388,12 +388,12 @@ typedef struct cmd_data_collect_start {
  * Data collection stop command
  */
 typedef struct cmd_data_collect_stop {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
         } rsp;
     } cmd;
 } CmdDataCollectStop_t;
@@ -402,17 +402,17 @@ typedef struct cmd_data_collect_stop {
  * Query I2C devices command
  */
 typedef struct cmd_query_i2c_dev {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved1;
-            FSC_U8 error;
-            FSC_U8 reserved2;
-            FSC_U8 num;
+            uint8_t status;
+            uint8_t reserved1;
+            uint8_t error;
+            uint8_t reserved2;
+            uint8_t num;
             struct {
-                FSC_U8 addr;
-                FSC_U8 part;
+                uint8_t addr;
+                uint8_t part;
             } dev[29];
         } rsp;
     } cmd;
@@ -422,18 +422,18 @@ typedef struct cmd_query_i2c_dev {
  * Audio class generic command
  */
 typedef struct cmd_audio_class {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 cmd;
-            FSC_U8 reserved[2];
-            FSC_U8 payload[60];
+            uint8_t cmd;
+            uint8_t reserved[2];
+            uint8_t payload[60];
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 cmd;
-            FSC_U8 error;
-            FSC_U8 payload[60];
+            uint8_t status;
+            uint8_t cmd;
+            uint8_t error;
+            uint8_t payload[60];
         } rsp;
     } cmd;
 } CmdAudioClass_t;
@@ -442,73 +442,73 @@ typedef struct cmd_audio_class {
  * User class generic command
  */
 typedef struct cmd_user_class {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 id;
-            FSC_U8 port;
-            FSC_U8 reserved;
-            FSC_U8 payload[60];
+            uint8_t id;
+            uint8_t port;
+            uint8_t reserved;
+            uint8_t payload[60];
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 id;
-            FSC_U8 error;
-            FSC_U8 payload[60];
+            uint8_t status;
+            uint8_t id;
+            uint8_t error;
+            uint8_t payload[60];
         } rsp;
     } cmd;
 } CmdUserClass_t;
 
 typedef struct cmd_typec {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 rw;
-            FSC_U8 port;
-            FSC_U8 reserved;
-            FSC_U8 payload[60];
+            uint8_t rw;
+            uint8_t port;
+            uint8_t reserved;
+            uint8_t payload[60];
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
-            FSC_U8 payload[60];
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
+            uint8_t payload[60];
         } rsp;
     } cmd;
 } CmdTypeC_t;
 
 typedef struct cmd_pd {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 rw;
-            FSC_U8 port;
-            FSC_U8 reserved;
-            FSC_U8 payload[60];
+            uint8_t rw;
+            uint8_t port;
+            uint8_t reserved;
+            uint8_t payload[60];
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
-            FSC_U8 payload[60];
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
+            uint8_t payload[60];
         } rsp;
     } cmd;
 } CmdPd_t;
 
 typedef struct cmd_dp {
-    FSC_U8 opcode;
+    uint8_t opcode;
     union {
         struct {
-            FSC_U8 rw;
-            FSC_U8 port;
-            FSC_U8 reserved;
-            FSC_U8 payload[60];
+            uint8_t rw;
+            uint8_t port;
+            uint8_t reserved;
+            uint8_t payload[60];
         } req;
         struct {
-            FSC_U8 status;
-            FSC_U8 reserved;
-            FSC_U8 error;
-            FSC_U8 payload[60];
+            uint8_t status;
+            uint8_t reserved;
+            uint8_t error;
+            uint8_t payload[60];
         } rsp;
     } cmd;
 } CmdDp_t;
@@ -517,7 +517,7 @@ typedef struct cmd_dp {
  * Host command structure
  */
 typedef union {
-    FSC_U8 byte[64]; /* HID descriptor size */
+    uint8_t byte[64]; /* HID descriptor size */
     GenericCmdRequest_t request;
     CmdGetDeviceInfo_t deviceInfo;
     CmdSetIOConfig_t setIOConfig;

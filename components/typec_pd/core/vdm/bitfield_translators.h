@@ -19,37 +19,37 @@
 
 #include "platform.h"
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 /*
  * Functions that convert bits into internal header representations...
  */
-UnstructuredVdmHeader getUnstructuredVdmHeader(FSC_U32 in);
-StructuredVdmHeader getStructuredVdmHeader(FSC_U32 in);
-IdHeader getIdHeader(FSC_U32 in);
-VdmType getVdmTypeOf(FSC_U32 in);
+UnstructuredVdmHeader getUnstructuredVdmHeader(uint32_t in);
+StructuredVdmHeader getStructuredVdmHeader(uint32_t in);
+IdHeader getIdHeader(uint32_t in);
+VdmType getVdmTypeOf(uint32_t in);
 /*
  * Functions that convert internal header representations into bits...
  */
-FSC_U32 getBitsForUnstructuredVdmHeader(UnstructuredVdmHeader in);
-FSC_U32 getBitsForStructuredVdmHeader(StructuredVdmHeader in);
-FSC_U32 getBitsForIdHeader(IdHeader in);
+uint32_t getBitsForUnstructuredVdmHeader(UnstructuredVdmHeader in);
+uint32_t getBitsForStructuredVdmHeader(StructuredVdmHeader in);
+uint32_t getBitsForIdHeader(IdHeader in);
 
 /*
  * Functions that convert bits into internal VDO representations...
  */
-CertStatVdo getCertStatVdo(FSC_U32 in);
-ProductVdo getProductVdo(FSC_U32 in);
-CableVdo getCableVdo(FSC_U32 in);
-AmaVdo getAmaVdo(FSC_U32 in);
+CertStatVdo getCertStatVdo(uint32_t in);
+ProductVdo getProductVdo(uint32_t in);
+CableVdo getCableVdo(uint32_t in);
+AmaVdo getAmaVdo(uint32_t in);
 
 /*
  * Functions that convert internal VDO representations into bits...
  */
-FSC_U32 getBitsForProductVdo(ProductVdo in);
-FSC_U32 getBitsForCertStatVdo(CertStatVdo in);
-FSC_U32 getBitsForCableVdo(CableVdo in);
-FSC_U32 getBitsForAmaVdo(AmaVdo in);
+uint32_t getBitsForProductVdo(ProductVdo in);
+uint32_t getBitsForCertStatVdo(CertStatVdo in);
+uint32_t getBitsForCableVdo(CableVdo in);
+uint32_t getBitsForAmaVdo(AmaVdo in);
 
 #endif /* __VDM_BITFIELD_TRANSLATORS_H__ */ // header guard
 
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */

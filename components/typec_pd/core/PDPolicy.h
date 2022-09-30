@@ -20,18 +20,18 @@
 #include "platform.h"
 #include "Port.h"
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
 #include "Log.h"
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 
-void USBPDEnable(Port_t *port, FSC_BOOL DeviceUpdate, SourceOrSink TypeCDFP);
-void USBPDDisable(Port_t *port, FSC_BOOL DeviceUpdate);
+void USBPDEnable(Port_t *port, bool DeviceUpdate, SourceOrSink TypeCDFP);
+void USBPDDisable(Port_t *port, bool DeviceUpdate);
 
 void USBPDPolicyEngine(Port_t *port);
 void PolicyErrorRecovery(Port_t *port);
 
-#if (defined(FSC_HAVE_SRC) || \
-     (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)))
+#if (defined(CONFIG_FSC_HAVE_SRC) || \
+     (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)))
 void PolicySourceSendHardReset(Port_t *port);
 void PolicySourceSoftReset(Port_t *port, SopType sop);
 void PolicySourceSendSoftReset(Port_t *port);
@@ -58,9 +58,9 @@ void PolicySourceSendPRSwap(Port_t *port);
 void PolicySourceEvaluatePRSwap(Port_t *port);
 void PolicySourceWaitNewCapabilities(Port_t *port);
 void PolicySourceAlertReceived(Port_t *port);
-#endif /* FSC_HAVE_SRC || (FSC_HAVE_SNK && FSC_HAVE_ACCMODE) */
+#endif /* CONFIG_FSC_HAVE_SRC || (CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE) */
 
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
 void PolicySinkSendHardReset(Port_t *port);
 void PolicySinkSoftReset(Port_t *port);
 void PolicySinkSendSoftReset(Port_t *port);
@@ -83,7 +83,7 @@ void PolicySinkEvaluateVCONNSwap(Port_t *port);
 void PolicySinkSendPRSwap(Port_t *port);
 void PolicySinkEvaluatePRSwap(Port_t *port);
 void PolicySinkAlertReceived(Port_t *port);
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 
 void PolicyNotSupported(Port_t *port);
 void PolicyInvalidState(Port_t *port);
@@ -92,31 +92,31 @@ void policyBISTFrameReceived(Port_t *port);
 void policyBISTCarrierMode2(Port_t *port);
 void policyBISTTestData(Port_t *port);
 
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
 void PolicyGetCountryCodes(Port_t *port);
 void PolicyGiveCountryCodes(Port_t *port);
 void PolicyGiveCountryInfo(Port_t *port);
 void PolicyGetPPSStatus(Port_t *port);
 void PolicyGivePPSStatus(Port_t *port);
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
 
 void PolicySendGenericCommand(Port_t *port);
 void PolicySendGenericData(Port_t *port);
 
 void PolicySendHardReset(Port_t *port);
 
-FSC_U8 PolicySendCommand(Port_t *port, FSC_U8 Command, PolicyState_t nextState,
-                         FSC_U8 subIndex, SopType sop);
+uint8_t PolicySendCommand(Port_t *port, uint8_t Command, PolicyState_t nextState,
+                         uint8_t subIndex, SopType sop);
 
-FSC_U8 PolicySendData(Port_t *port, FSC_U8 MessageType, void* data,
-                      FSC_U32 len, PolicyState_t nextState,
-                      FSC_U8 subIndex, SopType sop, FSC_BOOL extMsg);
+uint8_t PolicySendData(Port_t *port, uint8_t MessageType, void* data,
+                      uint32_t len, PolicyState_t nextState,
+                      uint8_t subIndex, SopType sop, bool extMsg);
 
-void UpdateCapabilitiesRx(Port_t *port, FSC_BOOL IsSourceCaps);
+void UpdateCapabilitiesRx(Port_t *port, bool IsSourceCaps);
 
 void processDMTBIST(Port_t *port);
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 /* Shim functions for VDM code */
 void InitializeVdmManager(Port_t *port);
 void convertAndProcessVdmMessage(Port_t *port, SopType sop);
@@ -128,8 +128,8 @@ void PolicyVdm(Port_t *port);
 void autoVdmDiscovery(Port_t *port);
 void PolicySendCableReset(Port_t *port);
 void processCableResetState(Port_t *port);
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
-SopType TokenToSopType(FSC_U8 data);
+SopType TokenToSopType(uint8_t data);
 
 #endif /* _PDPOLICY_H_ */

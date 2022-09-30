@@ -42,7 +42,6 @@ typedef struct Button {
     uint8_t         (*hal_button_Level)(void *hardware_data);
     void            *hardware_data;
     void            *usr_data;
-    button_type_t   type;
     button_cb_t     cb[BUTTON_EVENT_MAX];
     struct Button   *next;
 } button_dev_t;
@@ -218,7 +217,8 @@ static esp_err_t button_delete_com(button_dev_t *btn)
     }
     ESP_LOGD(TAG, "remain btn number=%d", number);
 
-    if (0 == number && g_is_timer_running) { /**<  if all button is deleted, stop the timer */
+    if (0 == number && g_is_timer_running)
+    { /**<  if all button is deleted, stop the timer */
         esp_timer_stop(g_button_timer_handle);
         esp_timer_delete(g_button_timer_handle);
         g_is_timer_running = false;
@@ -226,30 +226,14 @@ static esp_err_t button_delete_com(button_dev_t *btn)
     return ESP_OK;
 }
 
-button_handle_t iot_button_create(const button_config_t *config)
+button_handle_t iot_button_create(const button_gpio_config_t *config)
 {
     esp_err_t ret = ESP_OK;
     button_dev_t *btn = NULL;
-    switch (config->type) {
-    case BUTTON_TYPE_GPIO: {
-        const button_gpio_config_t *cfg = &(config->gpio_button_config);
-        ret = button_gpio_init(cfg);
-        BTN_CHECK(ESP_OK == ret, "gpio button init failed", NULL);
-        btn = button_create_com(cfg->active_level, button_gpio_get_key_level, (void *)cfg->gpio_num);
-    } break;
-    case BUTTON_TYPE_ADC: {
-        const button_adc_config_t *cfg = &(config->adc_button_config);
-        ret = button_adc_init(cfg);
-        BTN_CHECK(ESP_OK == ret, "adc button init failed", NULL);
-        btn = button_create_com(1, button_adc_get_key_level, (void *)ADC_BUTTON_COMBINE(cfg->adc_channel, cfg->button_index));
-    } break;
-
-    default:
-        ESP_LOGE(TAG, "Unsupported button type");
-        break;
-    }
+    ret = button_gpio_init(config);
+    BTN_CHECK(ESP_OK == ret, "gpio button init failed", NULL);
+    btn = button_create_com(config->active_level, button_gpio_get_key_level, (void *)config->gpio_num);
     BTN_CHECK(NULL != btn, "button create failed", NULL);
-    btn->type = config->type;
     return (button_handle_t)btn;
 }
 
@@ -258,16 +242,7 @@ esp_err_t iot_button_delete(button_handle_t btn_handle)
     esp_err_t ret = ESP_OK;
     BTN_CHECK(NULL != btn_handle, "Pointer of handle is invalid", ESP_ERR_INVALID_ARG);
     button_dev_t *btn = (button_dev_t *)btn_handle;
-    switch (btn->type) {
-    case BUTTON_TYPE_GPIO:
-        ret = button_gpio_deinit((int)(btn->hardware_data));
-        break;
-    case BUTTON_TYPE_ADC:
-        ret = button_adc_deinit(ADC_BUTTON_SPLIT_CHANNEL(btn->hardware_data), ADC_BUTTON_SPLIT_INDEX(btn->hardware_data));
-        break;
-    default:
-        break;
-    }
+    ret = button_gpio_deinit((int)(btn->hardware_data));
     BTN_CHECK(ESP_OK == ret, "button deinit failed", ESP_FAIL);
     button_delete_com(btn);
     return ESP_OK;

@@ -25,9 +25,9 @@
 
 /* Struct object to contain the timer related members */
 struct TimerObj {
-  FSC_U32 starttime_;           /* Time-stamp when timer started */
-  FSC_U32 period_;              /* Timer period */
-  FSC_U8  disablecount_;        /* Auto-disable timers if they keep getting
+  uint32_t starttime_;           /* Time-stamp when timer started */
+  uint32_t period_;              /* Timer period */
+  uint8_t  disablecount_;        /* Auto-disable timers if they keep getting
                                  * checked and aren't explicitly disabled.
                                  */
 };
@@ -41,7 +41,7 @@ struct TimerObj {
  * @param time non-zero, in units of (milliseconds / (platform scale value)).
  * @return None
  */
-void TimerStart(struct TimerObj *obj, FSC_U32 time);
+void TimerStart(struct TimerObj *obj, uint32_t time);
 
 /**
  * @brief Restart the timer using the last used delay value.
@@ -58,7 +58,7 @@ void TimerRestart(struct TimerObj *obj);
  * @return TRUE if the timer is currently disabled
  */
 void TimerDisable(struct TimerObj *obj);
-FSC_BOOL TimerDisabled(struct TimerObj *obj);
+bool TimerDisabled(struct TimerObj *obj);
 
 /**
  * @brief Determine if timer has expired
@@ -68,14 +68,14 @@ FSC_BOOL TimerDisabled(struct TimerObj *obj);
  * @param Timer object
  * @return TRUE if time period has finished.
  */
-FSC_BOOL TimerExpired(struct TimerObj *obj);
+bool TimerExpired(struct TimerObj *obj);
 
 /**
  * @brief Returns the time remaining in microseconds, or zero if disabled/done.
  *
  * @param Timer object
  */
-FSC_U32 TimerRemaining(struct TimerObj *obj);
+uint32_t TimerRemaining(struct TimerObj *obj);
 
 #endif /* _FSC_TIMER_H_ */
 

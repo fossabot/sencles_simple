@@ -37,24 +37,24 @@ typedef struct Port Port_t;
 typedef struct
 {
     USBTypeCPort    PortType;                  /* Snk/Src/DRP */
-    FSC_BOOL        SrcPreferred;              /* Source preferred (DRP) */
-    FSC_BOOL        SnkPreferred;              /* Sink preferred (DRP) */
-    FSC_BOOL        SinkGotoMinCompatible;     /* Sink GotoMin supported. */
-    FSC_BOOL        SinkUSBSuspendOperation;   /* USB suspend capable */
-    FSC_BOOL        SinkUSBCommCapable;        /* USB communications capable */
-    FSC_U32         SinkRequestMaxVoltage;     /* Sink Maximum voltage */
-    FSC_U32         SinkRequestMaxPower;       /* Sink Maximum power */
-    FSC_U32         SinkRequestOpPower;        /* Sink Operating power */
-    FSC_BOOL        audioAccSupport;           /* Audio Acc support */
-    FSC_BOOL        poweredAccSupport;         /* Powered Acc support */
-    FSC_BOOL        reqDRSwapToDfpAsSink;      /* Request DR swap as sink */
-    FSC_BOOL        reqDRSwapToUfpAsSrc;       /* Request DR swap as source */
-    FSC_BOOL        reqVconnSwapToOnAsSink;    /* Request Vconn swap */
-    FSC_BOOL        reqVconnSwapToOffAsSrc;    /* Request Vconn swap */
-    FSC_BOOL        reqPRSwapAsSrc;            /* Request PR swap as source */
-    FSC_BOOL        reqPRSwapAsSnk;            /* Request PR swap as sink*/
+    bool        SrcPreferred;              /* Source preferred (DRP) */
+    bool        SnkPreferred;              /* Sink preferred (DRP) */
+    bool        SinkGotoMinCompatible;     /* Sink GotoMin supported. */
+    bool        SinkUSBSuspendOperation;   /* USB suspend capable */
+    bool        SinkUSBCommCapable;        /* USB communications capable */
+    uint32_t         SinkRequestMaxVoltage;     /* Sink Maximum voltage */
+    uint32_t         SinkRequestMaxPower;       /* Sink Maximum power */
+    uint32_t         SinkRequestOpPower;        /* Sink Operating power */
+    bool        audioAccSupport;           /* Audio Acc support */
+    bool        poweredAccSupport;         /* Powered Acc support */
+    bool        reqDRSwapToDfpAsSink;      /* Request DR swap as sink */
+    bool        reqDRSwapToUfpAsSrc;       /* Request DR swap as source */
+    bool        reqVconnSwapToOnAsSink;    /* Request Vconn swap */
+    bool        reqVconnSwapToOffAsSrc;    /* Request Vconn swap */
+    bool        reqPRSwapAsSrc;            /* Request PR swap as source */
+    bool        reqPRSwapAsSnk;            /* Request PR swap as sink*/
     USBTypeCCurrent RpVal;                     /* Pull up value to use */
-    FSC_U8          PdRevPreferred;           /* PD Rev to use */
+    uint8_t          PdRevPreferred;           /* PD Rev to use */
 } PortConfig_t;
 
 /**
@@ -105,8 +105,8 @@ doDataObject_t* DPM_GetSinkCap(DevicePolicyPtr_t dpm, Port_t *port);
  * @param[in] port advertising the source capability
  * @param[in] index of the source capability object
  */
-FSC_BOOL DPM_TransitionSource(DevicePolicyPtr_t dpm,
-                              Port_t *port, FSC_U8 index);
+bool DPM_TransitionSource(DevicePolicyPtr_t dpm,
+                              Port_t *port, uint8_t index);
 
 /**
  * @brief Called by usb PD/TypeC core to ask device policy if the source
@@ -116,8 +116,8 @@ FSC_BOOL DPM_TransitionSource(DevicePolicyPtr_t dpm,
  * @param[in] port advertising the source capability
  * @param[in] index of the source capability object
  */
-FSC_BOOL DPM_IsSourceCapEnabled(DevicePolicyPtr_t dpm,
-                                Port_t *port, FSC_U8 index);
+bool DPM_IsSourceCapEnabled(DevicePolicyPtr_t dpm,
+                                Port_t *port, uint8_t index);
 
 /**
  * @brief Returns appropriate spec revision value per SOP*.
@@ -134,20 +134,20 @@ SpecRev DPM_SpecRev(Port_t *port, SopType sop);
  */
 void DPM_SetSpecRev(Port_t *port, SopType sop, SpecRev rev);
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 /**
  * @brief Returns appropriate SVDM revision value per SOP*.
  * @param[in] current port object
  * @param[in] SOP in question
  */
 SvdmVersion DPM_SVdmVer(Port_t *port, SopType sop);
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
 /**
  * @brief Returns appropriate number of retries (based on spec rev) per SOP*.
  * @param[in] current port object
  * @param[in] SOP in question
  */
-FSC_U8 DPM_Retries(Port_t *port, SopType sop);
+uint8_t DPM_Retries(Port_t *port, SopType sop);
 
 #endif /* MODULES_DPM_H_ */

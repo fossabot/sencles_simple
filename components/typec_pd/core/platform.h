@@ -17,13 +17,10 @@
 #ifndef _FSC_PLATFORM_H_
 #define _FSC_PLATFORM_H_
 
+#include "stdio.h"
+#include "stdbool.h"
+#include "sdkconfig.h"
 
-#include "FSCTypes.h"
-
-
-#ifndef TICK_SCALE_TO_MS
-#define TICK_SCALE_TO_MS    1   /* Fallback for time multiplier */
-#endif /* TICK_SCALE_TO_MS */
 
 #ifndef NUM_PORTS
 #define NUM_PORTS           1   /* Number of ports in this system */
@@ -83,15 +80,15 @@ typedef enum
  * @param disableOthers Disable other sources in make-before-break fashion
  * @return None or state of vbus.
  */
-void platform_set_vbus_lvl_enable(FSC_U8 port, VBUS_LVL level, FSC_BOOL enable,
-                                  FSC_BOOL disableOthers);
+void platform_set_vbus_lvl_enable(uint8_t port, VBUS_LVL level, bool enable,
+                                  bool disableOthers);
 
 /**
  * @brief Check if the VBUS voltage is enabled
  * @param level VBUS level to check
  * @return TRUE if enabled
  */
-FSC_BOOL platform_get_vbus_lvl_enable(FSC_U8 port, VBUS_LVL level);
+bool platform_get_vbus_lvl_enable(uint8_t port, VBUS_LVL level);
 
 /**
  * @brief Set or return programmable supply (PPS) voltage and current limit.
@@ -100,7 +97,7 @@ FSC_BOOL platform_get_vbus_lvl_enable(FSC_U8 port, VBUS_LVL level);
  * @param mv Voltage in millivolts
  * @return None or Value in mv/ma.
  */
-void platform_set_pps_voltage(FSC_U8 port, FSC_U32 mv);
+void platform_set_pps_voltage(uint8_t port, uint32_t mv);
 
 /**
  * @brief The function gets the current VBUS level supplied by PPS supply
@@ -110,7 +107,7 @@ void platform_set_pps_voltage(FSC_U8 port, FSC_U32 mv);
  * @param port ID for multiple port controls
  * @return VBUS level supplied by PPS in milivolt resolution
  */
-FSC_U16 platform_get_pps_voltage(FSC_U8 port);
+uint16_t platform_get_pps_voltage(uint8_t port);
 
 /**
  * @brief Set the maximum current that can be supplied by PPS source
@@ -118,7 +115,7 @@ FSC_U16 platform_get_pps_voltage(FSC_U8 port);
  * @param ma Current in milliamps
  * @return None
  */
-void platform_set_pps_current(FSC_U8 port, FSC_U32 ma);
+void platform_set_pps_current(uint8_t port, uint32_t ma);
 
 /**
  * @brief Get the maximum current that the PPS supply is configured to provide
@@ -129,7 +126,7 @@ void platform_set_pps_current(FSC_U8 port, FSC_U32 ma);
  * @param port ID for multiple port controls
  * @return Current in milliamps
  */
-FSC_U16 platform_get_pps_current(FSC_U8 port);
+uint16_t platform_get_pps_current(uint8_t port);
 
 /**
  * @brief Enable/Disable VBus discharge path
@@ -138,7 +135,7 @@ FSC_U16 platform_get_pps_current(FSC_U8 port);
  * @param enable TRUE = discharge path ON.
  * @return None
  */
-void platform_set_vbus_discharge(FSC_U8 port, FSC_BOOL enable);
+void platform_set_vbus_discharge(uint8_t port, bool enable);
 
 /**
  * @brief Enable/Disable VConn path
@@ -149,7 +146,7 @@ void platform_set_vbus_discharge(FSC_U8 port, FSC_BOOL enable);
  * @param enable TRUE = VConn path ON.
  * @return None
  */
-void platform_set_vconn(FSC_U8 port, FSC_BOOL enable);
+void platform_set_vconn(uint8_t port, bool enable);
 
 /**
  * @brief The current state of the device interrupt pin
@@ -157,7 +154,7 @@ void platform_set_vconn(FSC_U8 port, FSC_BOOL enable);
  * @param port ID for multiple port controls
  * @return TRUE if interrupt condition present.  Note: pin is active low.
  */
-FSC_BOOL platform_get_device_irq_state(FSC_U8 port);
+bool platform_get_device_irq_state(uint8_t port);
 
 /**
  * @brief Write a char buffer to the I2C peripheral.
@@ -174,13 +171,13 @@ FSC_BOOL platform_get_device_irq_state(FSC_U8 port);
  * @param Data - Buffer of char data to transmit
  * @return TRUE - success, FALSE otherwise
  */
-FSC_BOOL platform_i2c_write(FSC_U8 SlaveAddress,
-                            FSC_U8 RegAddrLength,
-                            FSC_U8 DataLength,
-                            FSC_U8 PacketSize,
-                            FSC_U8 IncSize,
-                            FSC_U32 RegisterAddress,
-                            FSC_U8* Data);
+bool platform_i2c_write(uint8_t SlaveAddress,
+                            uint8_t RegAddrLength,
+                            uint8_t DataLength,
+                            uint8_t PacketSize,
+                            uint8_t IncSize,
+                            uint32_t RegisterAddress,
+                            uint8_t* Data);
 
 /**
  * @brief Read char data from the I2C peripheral.
@@ -197,13 +194,13 @@ FSC_BOOL platform_i2c_write(FSC_U8 SlaveAddress,
  * @param Data - Buffer for received char data
  * @return TRUE - success, FALSE otherwise
  */
-FSC_BOOL platform_i2c_read( FSC_U8 SlaveAddress,
-                            FSC_U8 RegAddrLength,
-                            FSC_U8 DataLength,
-                            FSC_U8 PacketSize,
-                            FSC_U8 IncSize,
-                            FSC_U32 RegisterAddress,
-                            FSC_U8* Data);
+bool platform_i2c_read( uint8_t SlaveAddress,
+                            uint8_t RegAddrLength,
+                            uint8_t DataLength,
+                            uint8_t PacketSize,
+                            uint8_t IncSize,
+                            uint32_t RegisterAddress,
+                            uint8_t* Data);
 
 /**
  * @brief Perform a blocking delay.
@@ -211,7 +208,7 @@ FSC_BOOL platform_i2c_read( FSC_U8 SlaveAddress,
  * @param delayCount - Number of 10us delays to wait
  * @return None
  */
-void platform_delay_10us(FSC_U32 delayCount);
+void platform_delay_10us(uint32_t delayCount);
 
 /**
  * @brief Perform a blocking delay.
@@ -219,14 +216,14 @@ void platform_delay_10us(FSC_U32 delayCount);
  * @param delayCount - Number of us delays to wait
  * @return None
  */
-void platform_delay(FSC_U32 uSec);
+void platform_delay(uint32_t uSec);
 /**
  * @brief Return a system timestamp for use with core timers.
  *
  * @param None
- * @return System time value in units of (milliseconds / TICK_SCALE_TO_MS)
+ * @return System time value in units of (milliseconds / )
  */
-FSC_U32 platform_get_system_time(void);
+uint32_t platform_get_system_time(void);
 
 /**
  * @brief Return a system timestamp for use with logging functions
@@ -234,10 +231,10 @@ FSC_U32 platform_get_system_time(void);
  * @param None
  * @return Packed timestamp - format: Upper 16: seconds, Lower 16: 0.1ms.
  */
-FSC_U32 platform_get_log_time(void);
+uint32_t platform_get_log_time(void);
 
 
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
 /******************************************************************************
  * Function:        platform_dp_enable_pins
  * Input:           enable - If false put dp pins to safe state and config is
@@ -250,7 +247,7 @@ FSC_U32 platform_get_log_time(void);
  *                  the configuration bits[1:0] and the pin assignment
  *                  bits[15:8] to decide the appropriate configuration.
  ******************************************************************************/
-FSC_BOOL platform_dp_enable_pins(FSC_BOOL enable, FSC_U32 config);
+bool platform_dp_enable_pins(bool enable, uint32_t config);
 
 /******************************************************************************
  * Function:        platform_dp_status_update
@@ -259,7 +256,7 @@ FSC_BOOL platform_dp_enable_pins(FSC_BOOL enable, FSC_U32 config);
  * Return:          None
  * Description:     Called when new status is available from port partner
  ******************************************************************************/
-void platform_dp_status_update(FSC_U32 status);
+void platform_dp_status_update(uint32_t status);
 #endif
 
 #endif /* _FSC_PLATFORM_H_ */

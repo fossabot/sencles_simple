@@ -24,17 +24,17 @@
 /*
  * Call this function to initialize the core.
  */
-void core_initialize(Port_t *port, FSC_U8 i2cAddr)
+void core_initialize(Port_t *port, uint8_t i2cAddr)
 {
     PortInit(port, i2cAddr);
-    core_enable_typec(port, TRUE);
+    core_enable_typec(port, true);
     core_set_state_unattached(port);
 }
 
 /*
  * Call this function to enable or disable the core Type-C state machine.
  */
-void core_enable_typec(Port_t *port, FSC_BOOL enable)
+void core_enable_typec(Port_t *port, bool enable)
 {
     port->SMEnabled = enable;
 }
@@ -42,7 +42,7 @@ void core_enable_typec(Port_t *port, FSC_BOOL enable)
 /*
  * Call this function to enable or disable the core PD state machines.
  */
-void core_enable_pd(Port_t *port, FSC_BOOL enable)
+void core_enable_pd(Port_t *port, bool enable)
 {
     port->USBPDEnabled = enable;
 }
@@ -52,10 +52,10 @@ void core_enable_pd(Port_t *port, FSC_BOOL enable)
  */
 void core_state_machine(Port_t *port)
 {
-    FSC_U8 data;
+    uint8_t data;
     
     /* Check on HardReset timeout (shortcut for SenderResponse timeout) */
-    if ((port->WaitingOnHR == TRUE) &&
+    if ((port->WaitingOnHR == true) &&
         TimerExpired(&port->PolicyStateTimer))
     {
         data = port->Registers.Control.byte[3] | 0x40;  /* Hard Reset bit */
@@ -70,11 +70,11 @@ void core_state_machine(Port_t *port)
 /*
  * Check for the next required timeout to support timer interrupt functionality
  */
-FSC_U32 core_get_next_timeout(Port_t *port)
+uint32_t core_get_next_timeout(Port_t *port)
 {
-  FSC_U32 time = 0;
-  FSC_U32 nexttime = 0xFFFFFFFF;
-  FSC_U8 i;
+  uint32_t time = 0;
+  uint32_t nexttime = 0xFFFFFFFF;
+  uint8_t i;
 
   for (i = 0; i < FSC_NUM_TIMERS; ++i)
   {
@@ -87,29 +87,29 @@ FSC_U32 core_get_next_timeout(Port_t *port)
   return nexttime;
 }
 
-FSC_U8 core_get_rev_lower(void)
+uint8_t core_get_rev_lower(void)
 {
     return FSC_TYPEC_CORE_FW_REV_LOWER;
 }
 
-FSC_U8 core_get_rev_middle(void)
+uint8_t core_get_rev_middle(void)
 {
     return FSC_TYPEC_CORE_FW_REV_MIDDLE;
 }
 
-FSC_U8 core_get_rev_upper(void)
+uint8_t core_get_rev_upper(void)
 {
     return FSC_TYPEC_CORE_FW_REV_UPPER;
 }
 
-FSC_U8 core_get_cc_orientation(Port_t *port)
+uint8_t core_get_cc_orientation(Port_t *port)
 {
     return port->CCPin;
 }
 
 void core_send_hard_reset(Port_t *port)
 {
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
     SendUSBPDHardReset(port);
 #endif
 }
@@ -121,13 +121,13 @@ void core_set_state_unattached(Port_t *port)
 
 void core_reset_pd(Port_t *port)
 {
-    port->USBPDEnabled = TRUE;
-    USBPDEnable(port, TRUE, port->sourceOrSink);
+    port->USBPDEnabled = true;
+    USBPDEnable(port, true, port->sourceOrSink);
 }
 
-FSC_U16 core_get_advertised_current(Port_t *port)
+uint16_t core_get_advertised_current(Port_t *port)
 {
-    FSC_U16 current = 0;
+    uint16_t current = 0;
 
     if (port->sourceOrSink == SINK)
     {
@@ -166,54 +166,54 @@ FSC_U16 core_get_advertised_current(Port_t *port)
     return current;
 }
 
-void core_set_advertised_current(Port_t *port, FSC_U8 value)
+void core_set_advertised_current(Port_t *port, uint8_t value)
 {
     UpdateCurrentAdvert(port, value);
 }
 
 void core_set_drp(Port_t *port)
 {
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
     port->PortConfig.PortType = USBTypeC_DRP;
-    port->PortConfig.SnkPreferred = FALSE;
-    port->PortConfig.SrcPreferred = FALSE;
+    port->PortConfig.SnkPreferred = false;
+    port->PortConfig.SrcPreferred = false;
     SetStateUnattached(port);
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 }
 
 void core_set_try_snk(Port_t *port)
 {
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
     port->PortConfig.PortType = USBTypeC_DRP;
-    port->PortConfig.SnkPreferred = TRUE;
-    port->PortConfig.SrcPreferred = FALSE;
+    port->PortConfig.SnkPreferred = true;
+    port->PortConfig.SrcPreferred = false;
     SetStateUnattached(port);
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 }
 
 void core_set_try_src(Port_t *port)
 {
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
     port->PortConfig.PortType = USBTypeC_DRP;
-    port->PortConfig.SnkPreferred = FALSE;
-    port->PortConfig.SrcPreferred = TRUE;
+    port->PortConfig.SnkPreferred = false;
+    port->PortConfig.SrcPreferred = true;
     SetStateUnattached(port);
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 }
 
 void core_set_source(Port_t *port)
 {
-#ifdef FSC_HAVE_SRC
+#ifdef CONFIG_FSC_HAVE_SRC
     port->PortConfig.PortType = USBTypeC_Source;
     SetStateUnattached(port);
-#endif /* FSC_HAVE_SRC */
+#endif /* CONFIG_FSC_HAVE_SRC */
 }
 
 void core_set_sink(Port_t *port)
 {
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
     port->PortConfig.PortType = USBTypeC_Sink;
     SetStateUnattached(port);
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 }
 

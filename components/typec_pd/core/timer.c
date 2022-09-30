@@ -17,7 +17,7 @@
 #include "timer.h"
 #include "platform.h"
 
-void TimerStart(struct TimerObj *obj, FSC_U32 time) {
+void TimerStart(struct TimerObj *obj, uint32_t time) {
   /* Grab the current time stamp and store the wait period. */
   /* Time must be > 0 */
   obj->starttime_ = platform_get_system_time();
@@ -38,23 +38,23 @@ void TimerDisable(struct TimerObj *obj) {
   obj->starttime_ = obj->period_ = 0;
 }
 
-FSC_BOOL TimerDisabled(struct TimerObj *obj) {
+bool TimerDisabled(struct TimerObj *obj) {
   /* Zero means disabled */
-  return (obj->period_ == 0) ? TRUE : FALSE;
+  return (obj->period_ == 0) ? true : false;
 }
 
-FSC_BOOL TimerExpired(struct TimerObj *obj) {
-  FSC_BOOL result = FALSE;
+bool TimerExpired(struct TimerObj *obj) {
+  bool result = false;
 
   if (TimerDisabled(obj)) {
       /* Disabled */
       /* TODO - possible cases where this return value might case issue? */
-      result = FALSE;
+      result = false;
   }
   else {
       /* Elapsed time >= period? */
-      result = ((FSC_U32)(platform_get_system_time() - obj->starttime_) >=
-               obj->period_) ? TRUE : FALSE;
+      result = ((uint32_t)(platform_get_system_time() - obj->starttime_) >=
+               obj->period_) ? true : false;
   }
 
   /* Check for auto-disable if expired and not explicitly disabled */
@@ -67,9 +67,9 @@ FSC_BOOL TimerExpired(struct TimerObj *obj) {
   return result;
 }
 
-FSC_U32 TimerRemaining(struct TimerObj *obj)
+uint32_t TimerRemaining(struct TimerObj *obj)
 {
-  FSC_U32 currenttime = platform_get_system_time();
+  uint32_t currenttime = platform_get_system_time();
 
   if (TimerDisabled(obj)) {
     return 0;
@@ -81,6 +81,6 @@ FSC_U32 TimerRemaining(struct TimerObj *obj)
   }
 
   /* Timer hasn't expired, so this should return a valid time left. */
-  return (FSC_U32)(obj->starttime_ + obj->period_ - currenttime);
+  return (uint32_t)(obj->starttime_ + obj->period_ - currenttime);
 }
 

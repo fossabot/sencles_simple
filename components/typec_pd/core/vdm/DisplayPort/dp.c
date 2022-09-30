@@ -19,7 +19,7 @@
 #include "bitfield_translators.h"
 #include "PD_Types.h"
 
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
 
 void DP_Initialize(Port_t *port)
 {
@@ -34,9 +34,9 @@ void DP_Initialize(Port_t *port)
     cap->DFP_DPinAssignments = DisplayPort_DFP_Pin_Mask;
     cap->UFP_DPinAssignments = DisplayPort_UFP_Pin_Mask;
     /* Initialize other variables */
-    port->DisplayPortData.DpConfigured = FALSE;
+    port->DisplayPortData.DpConfigured = false;
     port->DisplayPortData.DpStatus.word = 0;
-    port->DisplayPortData.DpCapMatched = FALSE;
+    port->DisplayPortData.DpCapMatched = false;
     port->DisplayPortData.DpPpConfig.word = 0;
     port->DisplayPortData.DpPpStatus.word = 0;
     port->DisplayPortData.DpModeEntered = 0;
@@ -54,8 +54,8 @@ void DP_Initialize(Port_t *port)
 void DP_RequestPartnerStatus(struct Port *port)
 {
     doDataObject_t svdmh = { 0 };
-    FSC_U32 length = 0;
-    FSC_U32 arr[2] = { 0 };
+    uint32_t length = 0;
+    uint32_t arr[2] = { 0 };
     svdmh.SVDM.SVID = DP_SID;
     svdmh.SVDM.VDMType = STRUCTURED_VDM;
     svdmh.SVDM.Version = DPM_SVdmVer(port, SOP_TYPE_SOP);
@@ -75,8 +75,8 @@ void DP_RequestPartnerStatus(struct Port *port)
 void DP_RequestPartnerConfig(struct Port *port, DisplayPortConfig_t in)
 {
     doDataObject_t svdmh = { 0 };
-    FSC_U32 length = 0;
-    FSC_U32 arr[2] = { 0 };
+    uint32_t length = 0;
+    uint32_t arr[2] = { 0 };
     svdmh.SVDM.SVID = DP_SID;
     svdmh.SVDM.VDMType = STRUCTURED_VDM;
     svdmh.SVDM.Version = DPM_SVdmVer(port, SOP_TYPE_SOP);
@@ -130,11 +130,11 @@ void DP_SetPortMode(struct Port *port, DisplayPortMode_t conn)
     }
 }
 
-static FSC_BOOL DP_SelectPinAssignment(struct Port *port)
+static bool DP_SelectPinAssignment(struct Port *port)
 {
     DisplayPortConfig_t *config;        /* sent to port partner Type-C UFP_U */
     DisplayPortCaps_t   *dpPartnerCap;    /* type-C UFP capability */
-    FSC_U32 dp_pin_match;
+    uint32_t dp_pin_match;
 
     dpPartnerCap = &port->DisplayPortData.DpPpCap;
     config = &port->DisplayPortData.DpPpConfig;
@@ -184,12 +184,12 @@ static FSC_BOOL DP_SelectPinAssignment(struct Port *port)
 
      if (config->PinAssign == DP_PIN_ASSIGN_NS)
      {
-       return FALSE;
+       return false;
      }
-     return TRUE;
+     return true;
 }
 
-static FSC_BOOL DP_SelectRole(struct Port *port)
+static bool DP_SelectRole(struct Port *port)
 {
     DisplayPortConfig_t *config;        /* sent to port partner Type-C UFP_U */
     DisplayPortCaps_t *dpPartnerCap;    /* type-C UFP capability */
@@ -212,16 +212,16 @@ static FSC_BOOL DP_SelectRole(struct Port *port)
       {
         config->Mode = DP_CONF_UFP_D;
       }
-      return TRUE;
+      return true;
     }
     else if (dpPartnerCap->DfpDCapable &&
              port->DisplayPortData.DpCap.UfpDCapable)
     {
       config->Mode = DP_CONF_DFP_D;
-      return TRUE;
+      return true;
     }
 
-    return FALSE;
+    return false;
 }
 
 /**
@@ -229,16 +229,16 @@ static FSC_BOOL DP_SelectRole(struct Port *port)
  * configuration that will be used. The configuration is set in configuration
  * VDM.
  */
-FSC_BOOL DP_EvaluateSinkCapability(struct Port *port, FSC_U32 mode_in)
+bool DP_EvaluateSinkCapability(struct Port *port, uint32_t mode_in)
 {
     DisplayPortConfig_t *config;        /* sent to port partner Type-C UFP_U */
     DisplayPortCaps_t *dpPartnerCap;    /* type-C UFP capability */
 
-    port->DisplayPortData.DpCapMatched = FALSE;
+    port->DisplayPortData.DpCapMatched = false;
 
     /* If display port features are disabled return */
-    if (port->DisplayPortData.DpEnabled == FALSE) return FALSE;
-    if (port->DisplayPortData.DpAutoModeEntryEnabled == FALSE) return FALSE;
+    if (port->DisplayPortData.DpEnabled == false) return false;
+    if (port->DisplayPortData.DpAutoModeEntryEnabled == false) return false;
 
     dpPartnerCap = &port->DisplayPortData.DpPpCap;
     config = &port->DisplayPortData.DpPpConfig;
@@ -247,37 +247,37 @@ FSC_BOOL DP_EvaluateSinkCapability(struct Port *port, FSC_U32 mode_in)
     dpPartnerCap->word = mode_in;
     config->word = 0;
 
-    if (FALSE == DP_SelectRole(port))
+    if (false == DP_SelectRole(port))
     {
-      return FALSE;
+      return false;
     }
 
     /* Match USB 2.0 signaling */
     if (dpPartnerCap->USB2p0NotUsed == 0 && DisplayPort_USBr2p0Signal_Req)
     {
-      return FALSE;
+      return false;
     }
     config->SignalConfig = DisplayPort_Signaling;
 
-    if (DP_SelectPinAssignment(port) != TRUE)
+    if (DP_SelectPinAssignment(port) != true)
     {
-      return FALSE;
+      return false;
     }
 
-    port->DisplayPortData.DpCapMatched = TRUE;
-    return TRUE;
+    port->DisplayPortData.DpCapMatched = true;
+    return true;
 }
 
-FSC_BOOL DP_ProcessCommand(struct Port *port, FSC_U32* arr_in)
+bool DP_ProcessCommand(struct Port *port, uint32_t* arr_in)
 {
     doDataObject_t svdmh_in = {0};
     DisplayPortStatus_t stat;
     DisplayPortConfig_t config;
-    FSC_BOOL is_ack = FALSE;
+    bool is_ack = false;
 
-    if (port->DisplayPortData.DpEnabled == FALSE) return TRUE;
+    if (port->DisplayPortData.DpEnabled == false) return true;
     svdmh_in.object = arr_in[0];
-    is_ack = (svdmh_in.SVDM.CommandType == RESPONDER_ACK) ? TRUE : FALSE;
+    is_ack = (svdmh_in.SVDM.CommandType == RESPONDER_ACK) ? true : false;
 
     switch (svdmh_in.SVDM.Command)
     {
@@ -289,7 +289,7 @@ FSC_BOOL DP_ProcessCommand(struct Port *port, FSC_U32* arr_in)
         if (port->AutoVdmState > AUTO_VDM_ENTER_MODE_PP &&
             port->AutoVdmState < AUTO_VDM_DONE)
         {
-          DP_UpdatePartnerStatus(port, stat, TRUE);
+          DP_UpdatePartnerStatus(port, stat, true);
           /* let vdm state machine continue if already active */
           break;
         }
@@ -302,7 +302,7 @@ FSC_BOOL DP_ProcessCommand(struct Port *port, FSC_U32* arr_in)
           SetPEState(port, port->originalPolicyState);
         }
         DP_ProcessPartnerAttention(port, stat);
-        DP_UpdatePartnerStatus(port, stat, TRUE);
+        DP_UpdatePartnerStatus(port, stat, true);
       }
       else
       {
@@ -315,7 +315,7 @@ FSC_BOOL DP_ProcessCommand(struct Port *port, FSC_U32* arr_in)
       {
         stat.word = arr_in[1];
         /* Copy the partner status */
-        DP_UpdatePartnerStatus(port, stat, TRUE);
+        DP_UpdatePartnerStatus(port, stat, true);
         /* Send the port status */
         DP_SendPortStatus(port, svdmh_in);
       }
@@ -325,7 +325,7 @@ FSC_BOOL DP_ProcessCommand(struct Port *port, FSC_U32* arr_in)
         /* Copy port partner status update from response */
         DP_UpdatePartnerStatus(port, stat, is_ack);
         /* Logging only: state ack/nak */
-        SetPEState(port, (is_ack == TRUE) ? peDpRequestStatusAck :
+        SetPEState(port, (is_ack == true) ? peDpRequestStatusAck :
                                             peDpRequestStatusNak);
         /* Restore policy state after getting response */
         SetPEState(port, port->originalPolicyState);
@@ -335,11 +335,11 @@ FSC_BOOL DP_ProcessCommand(struct Port *port, FSC_U32* arr_in)
       if (svdmh_in.SVDM.CommandType == INITIATOR)
       {
         config.word = arr_in[1];
-        if (DP_ProcessConfigRequest(port, config) == TRUE)
+        if (DP_ProcessConfigRequest(port, config) == true)
         {
           /* if pin reconfig is successful */
-          DP_SendPortConfig(port, svdmh_in, TRUE);
-          port->DisplayPortData.DpConfigured = TRUE;
+          DP_SendPortConfig(port, svdmh_in, true);
+          port->DisplayPortData.DpConfigured = true;
         }
       }
       else
@@ -347,7 +347,7 @@ FSC_BOOL DP_ProcessCommand(struct Port *port, FSC_U32* arr_in)
         /* Inform system of success/failure response */
         DP_ProcessConfigResponse(port, is_ack);
         /* Logging only: state ack/nak */
-        SetPEState(port, (is_ack == TRUE) ? peDpRequestConfigAck :
+        SetPEState(port, (is_ack == true) ? peDpRequestConfigAck :
                                             peDpRequestConfigNak);
         /* Restore policy state after getting response */
         SetPEState(port, port->originalPolicyState);
@@ -355,16 +355,16 @@ FSC_BOOL DP_ProcessCommand(struct Port *port, FSC_U32* arr_in)
       break;
     default:
       /* command not recognized */
-      return TRUE;
+      return true;
     }
-    return FALSE;
+    return false;
 }
 
 void DP_SendPortStatus(struct Port *port, doDataObject_t svdmh_in)
 {
     doDataObject_t svdmh_out = {0};
-    FSC_U32 length_out = 0;
-    FSC_U32 arr_out[2] = {0};
+    uint32_t length_out = 0;
+    uint32_t arr_out[2] = {0};
 
     /*  Reflect most fields */
     svdmh_out.object = svdmh_in.object;
@@ -380,19 +380,19 @@ void DP_SendPortStatus(struct Port *port, doDataObject_t svdmh_in)
 }
 
 void DP_SendPortConfig(struct Port *port, doDataObject_t svdmh_in,
-                                FSC_BOOL success)
+                                bool success)
 {
     doDataObject_t svdmh_out = {0};
-    FSC_U32 length_out = 0;
-    FSC_U32 arr_out[2] = {0};
+    uint32_t length_out = 0;
+    uint32_t arr_out[2] = {0};
 
     /* a callback to platform to put all dp pins to safe state */
-    platform_dp_enable_pins(FALSE, 0);
+    platform_dp_enable_pins(false, 0);
 
     /*  Reflect most fields */
     svdmh_out.object = svdmh_in.object;
     svdmh_out.SVDM.Version = DPM_SVdmVer(port, SOP_TYPE_SOP);
-    svdmh_out.SVDM.CommandType = success == TRUE ? RESPONDER_ACK : RESPONDER_NAK;
+    svdmh_out.SVDM.CommandType = success == true ? RESPONDER_ACK : RESPONDER_NAK;
     arr_out[0] = svdmh_out.object;
     length_out++;
     sendVdmMessage(port, SOP_TYPE_SOP, arr_out, length_out,
@@ -402,8 +402,8 @@ void DP_SendPortConfig(struct Port *port, doDataObject_t svdmh_in,
 void DP_SendAttention(struct Port *port)
 {
     doDataObject_t svdmh = {0};
-    FSC_U32 length = 0;
-    FSC_U32 arr[2] = {0};
+    uint32_t length = 0;
+    uint32_t arr[2] = {0};
     svdmh.SVDM.SVID = DP_SID;
     svdmh.SVDM.VDMType = STRUCTURED_VDM;
     svdmh.SVDM.Version = DPM_SVdmVer(port, SOP_TYPE_SOP);
@@ -435,19 +435,19 @@ void DP_ProcessPartnerAttention(struct Port *port, DisplayPortStatus_t stat)
       {
       case DP_MODE_DISABLED:
         /* Connection lost by partner device*/
-        if (port->DisplayPortData.DpConfigured == TRUE)
+        if (port->DisplayPortData.DpConfigured == true)
         {
           /* disable display port data if active */
         }
         break;
       case DP_MODE_DFP_D:
         /* TODO: handle DP source device present */
-        if (port->DisplayPortData.DpCapMatched == TRUE &&
+        if (port->DisplayPortData.DpCapMatched == true &&
             port->DisplayPortData.DpCap.UfpDCapable)
         {
           port->DisplayPortData.DpPpConfig.Mode = DP_CONF_DFP_D;
           /* Select pin assignment again to make sure that capability match */
-          if (DP_SelectPinAssignment(port) == TRUE)
+          if (DP_SelectPinAssignment(port) == true)
           {
             DP_RequestPartnerConfig(port, port->DisplayPortData.DpPpConfig);
           }
@@ -455,11 +455,11 @@ void DP_ProcessPartnerAttention(struct Port *port, DisplayPortStatus_t stat)
         break;
       case DP_MODE_UFP_D:
         /* DP sink device present */
-        if (port->DisplayPortData.DpCapMatched == TRUE &&
+        if (port->DisplayPortData.DpCapMatched == true &&
             port->DisplayPortData.DpCap.DfpDCapable)
         {
           port->DisplayPortData.DpPpConfig.Mode = DP_CONF_UFP_D;
-          if (DP_SelectPinAssignment(port) == TRUE)
+          if (DP_SelectPinAssignment(port) == true)
           {
             DP_RequestPartnerConfig(port, port->DisplayPortData.DpPpConfig);
           }
@@ -484,13 +484,13 @@ void DP_ProcessPartnerAttention(struct Port *port, DisplayPortStatus_t stat)
 }
 
 void DP_UpdatePartnerStatus(struct Port *port, DisplayPortStatus_t status,
-                           FSC_BOOL success)
+                           bool success)
 {
     /* If a device is both sink and source capable and our preferred connection
      * is not currently connected. It can be changed immediately after receiving
      * status and before sending config. For now we can wait for preferred
      * connection to be active.  */
-    if (success == TRUE)
+    if (success == true)
     {
       port->DisplayPortData.DpPpStatus = status;
       platform_dp_status_update(port->DisplayPortData.DpPpStatus.word);
@@ -500,9 +500,9 @@ void DP_UpdatePartnerStatus(struct Port *port, DisplayPortStatus_t status,
 /**
  * The response is sent by partner device for config request
  */
-void DP_ProcessConfigResponse(struct Port *port, FSC_BOOL success)
+void DP_ProcessConfigResponse(struct Port *port, bool success)
 {
-    if (success == TRUE)
+    if (success == true)
     {
       if (port->DisplayPortData.DpPpStatus.Connection > 0)
       {
@@ -512,8 +512,8 @@ void DP_ProcessConfigResponse(struct Port *port, FSC_BOOL success)
          * Otherwise wait for ATTENTION and connection status.
          * do a callback to start providing data */
         /* Just set active status here */
-        port->DisplayPortData.DpConfigured = TRUE;
-        platform_dp_enable_pins(TRUE, port->DisplayPortData.DpPpConfig.word);
+        port->DisplayPortData.DpConfigured = true;
+        platform_dp_enable_pins(true, port->DisplayPortData.DpPpConfig.word);
       }
     }
 }
@@ -521,8 +521,8 @@ void DP_ProcessConfigResponse(struct Port *port, FSC_BOOL success)
 /**
  * The request is sent by partner device for config request
  */
-FSC_BOOL DP_ProcessConfigRequest(struct Port *port, DisplayPortConfig_t config)
+bool DP_ProcessConfigRequest(struct Port *port, DisplayPortConfig_t config)
 {
-    return platform_dp_enable_pins(TRUE, config.word);
+    return platform_dp_enable_pins(true, config.word);
 }
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */

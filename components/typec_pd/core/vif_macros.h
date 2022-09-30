@@ -114,7 +114,7 @@ extern "C" {
 /******************************************************************************
  * GLOBAL VARIABLES
  ******************************************************************************/
-extern FSC_U8 gCountry_codes[];
+extern uint8_t gCountry_codes[];
 
 void VIF_InitializeSrcCaps(doDataObject_t *src_caps);
 void VIF_InitializeSnkCaps(doDataObject_t *snk_caps);

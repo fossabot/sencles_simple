@@ -19,21 +19,21 @@
 
 #include "platform.h"
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
 
 #define LOG_SIZE 64
 
 typedef struct{
-    FSC_U16 state;
-    FSC_U16 time_ms;
-    FSC_U16 time_s;
+    uint16_t state;
+    uint16_t time_ms;
+    uint16_t time_s;
 } StateLogEntry;
 
 typedef struct{
     StateLogEntry logQueue[ LOG_SIZE ];
-    FSC_U8 Start;
-    FSC_U8 End;
-    FSC_U8 Count;
+    uint8_t Start;
+    uint8_t End;
+    uint8_t Count;
 } StateLog;
 
 /**
@@ -52,7 +52,7 @@ void InitializeStateLog(StateLog *log);
  * @param time Packed value - upper 16: seconds, lower 16: 0.1ms
  * @return TRUE if successful (i.e. the log isn't full)
  */
-FSC_BOOL WriteStateLog(StateLog *log, FSC_U16 state, FSC_U32 time);
+bool WriteStateLog(StateLog *log, uint16_t state, uint32_t time);
 
 /**
  * @brief Read a single entry from the log and advance the log pointer
@@ -63,8 +63,8 @@ FSC_BOOL WriteStateLog(StateLog *log, FSC_U16 state, FSC_U32 time);
  * @param time_s Timestamp (seconds value)
  * @return TRUE if successful (i.e. the log isn't empty)
  */
-FSC_BOOL ReadStateLog(StateLog *log, FSC_U16 *state,
-                      FSC_U16 *time_tenthms, FSC_U16 *time_s);
+bool ReadStateLog(StateLog *log, uint16_t *state,
+                      uint16_t *time_tenthms, uint16_t *time_s);
 
 /**
  * @brief Fill a byte buffer with log data
@@ -74,7 +74,7 @@ FSC_BOOL ReadStateLog(StateLog *log, FSC_U16 *state,
  * @param bufLen Available space in data buffer
  * @return Number of bytes written into buffer
  */
-FSC_U32 GetStateLog(StateLog *log, FSC_U8 *data, FSC_U8 bufLen);
+uint32_t GetStateLog(StateLog *log, uint8_t *data, uint8_t bufLen);
 
 /**
  * @brief Check state of log, whether Full or Empty.
@@ -82,10 +82,10 @@ FSC_U32 GetStateLog(StateLog *log, FSC_U8 *data, FSC_U8 bufLen);
  * @param log Pointer to the log structure
  * @return TRUE or FALSE, whether Full or Empty
  */
-FSC_BOOL IsStateLogFull(StateLog *log);
-FSC_BOOL IsStateLogEmpty(StateLog *log);
+bool IsStateLogFull(StateLog *log);
+bool IsStateLogEmpty(StateLog *log);
 
-#endif // FSC_DEBUG
+#endif // CONFIG_CONFIG_FSC_DEBUG
 
 #endif	/* FSC_LOG_H */
 

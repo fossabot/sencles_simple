@@ -66,7 +66,7 @@ typedef enum _sensor_id
 #ifdef CONFIG_SENSOR_INCLUDED_LIGHT
     SENSOR_BH1750_ID = (LIGHT_SENSOR_ID << SENSOR_ID_OFFSET) | BH1750_ID,     /*!< bh1750 sensor id*/
     SENSOR_VEML6040_ID = (LIGHT_SENSOR_ID << SENSOR_ID_OFFSET) | VEML6040_ID, /*!< veml6040 sensor id*/
-    SENSOR_VEML6075_ID = (LIGHT_SENSOR_ID << SENSOR_ID_OFFSET) | VEML6075_ID, /*!< veml6075 sensor id*/
+    SENSOR_VEML7700_ID = (LIGHT_SENSOR_ID << SENSOR_ID_OFFSET) | VEML7700_ID, /*!< veml7700 sensor id*/
 #endif
 } sensor_id_t;
 

@@ -19,17 +19,17 @@
 #include "vdm_callbacks.h"
 #include "vdm_types.h"
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
 #include "DisplayPort/dp.h"
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
 
 Identity vdmRequestIdentityInfo(Port_t *port)
 {
     Identity id = { 0 };
 
-    id.nack = FALSE;
+    id.nack = false;
 
     id.id_header.usb_host_data_capable = Data_Capable_as_USB_Host_SOP;
     id.id_header.usb_device_data_capable = Data_Capable_as_USB_Device_SOP;
@@ -67,13 +67,13 @@ SvidInfo vdmRequestSvidInfo(Port_t *port)
     if (port->svid_enable &&
         Modal_Operation_Supported_SOP)
     {
-        svid_info.nack = FALSE;
+        svid_info.nack = false;
         svid_info.num_svids = Num_SVIDs_min_SOP;
         svid_info.svids[0] = port->my_svid;
     }
     else
     {
-        svid_info.nack = TRUE;
+        svid_info.nack = true;
         svid_info.num_svids = 0;
         svid_info.svids[0] = 0x0000;
     }
@@ -81,7 +81,7 @@ SvidInfo vdmRequestSvidInfo(Port_t *port)
     return svid_info;
 }
 
-ModesInfo vdmRequestModesInfo(Port_t *port, FSC_U16 svid)
+ModesInfo vdmRequestModesInfo(Port_t *port, uint16_t svid)
 {
     ModesInfo modes_info = { 0 };
 
@@ -89,23 +89,23 @@ ModesInfo vdmRequestModesInfo(Port_t *port, FSC_U16 svid)
         port->mode_enable &&
         (svid == port->my_svid))
     {
-        modes_info.nack = FALSE;
+        modes_info.nack = false;
         modes_info.svid = svid;
         modes_info.num_modes = 1;
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
         if (svid == DP_SID)
         {
             modes_info.modes[0] = port->DisplayPortData.DpCap.word;
         }
         else
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
         {
             modes_info.modes[0] = port->my_mode;
         }
     }
     else
     {
-        modes_info.nack = TRUE;
+        modes_info.nack = true;
         modes_info.svid = svid;
         modes_info.num_modes = 0;
         modes_info.modes[0] = 0;
@@ -113,7 +113,7 @@ ModesInfo vdmRequestModesInfo(Port_t *port, FSC_U16 svid)
     return modes_info;
 }
 
-FSC_BOOL vdmModeEntryRequest(Port_t *port, FSC_U16 svid, FSC_U32 mode_index)
+bool vdmModeEntryRequest(Port_t *port, uint16_t svid, uint32_t mode_index)
 {
     if (SVID1_mode1_enter_SOP &&
         port->svid_enable &&
@@ -121,44 +121,44 @@ FSC_BOOL vdmModeEntryRequest(Port_t *port, FSC_U16 svid, FSC_U32 mode_index)
         (svid == port->my_svid) &&
         (mode_index == 1))
     {
-        port->mode_entered = TRUE;
+        port->mode_entered = true;
 
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
         if (port->my_svid == DP_SID)
         {
             port->DisplayPortData.DpModeEntered = mode_index;
         }
-#endif /* FSC_HAVE_DP */
-        return TRUE;
+#endif /* CONFIG_FSC_HAVE_DP */
+        return true;
     }
 
-    return FALSE;
+    return false;
 }
 
-FSC_BOOL vdmModeExitRequest(Port_t *port, FSC_U16 svid, FSC_U32 mode_index)
+bool vdmModeExitRequest(Port_t *port, uint16_t svid, uint32_t mode_index)
 {
     if (port->mode_entered &&
        (svid == port->my_svid) &&
        (mode_index == 1))
     {
-        port->mode_entered = FALSE;
+        port->mode_entered = false;
 
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
         if (port->DisplayPortData.DpModeEntered &&
             (port->DisplayPortData.DpModeEntered == mode_index) &&
             (svid == DP_SID))
         {
             port->DisplayPortData.DpModeEntered = 0;
-            platform_dp_enable_pins(FALSE, 0);
+            platform_dp_enable_pins(false, 0);
         }
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
 
-        return TRUE;
+        return true;
     }
-    return FALSE;
+    return false;
 }
 
-FSC_BOOL vdmEnterModeResult(Port_t *port, FSC_BOOL success, FSC_U16 svid, FSC_U32 mode_index)
+bool vdmEnterModeResult(Port_t *port, bool success, uint16_t svid, uint32_t mode_index)
 {
 
     if (port->AutoModeEntryObjPos > 0)
@@ -168,31 +168,31 @@ FSC_BOOL vdmEnterModeResult(Port_t *port, FSC_BOOL success, FSC_U16 svid, FSC_U3
 
     if (success)
     {
-        port->mode_entered = TRUE;
-#ifdef FSC_HAVE_DP
+        port->mode_entered = true;
+#ifdef CONFIG_FSC_HAVE_DP
         if (svid == DP_SID)
         {
         	port->DisplayPortData.DpModeEntered = mode_index;
         }
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
     }
-    return TRUE;
+    return true;
 }
 
-void vdmExitModeResult(Port_t *port, FSC_BOOL success, FSC_U16 svid,
-                       FSC_U32 mode_index)
+void vdmExitModeResult(Port_t *port, bool success, uint16_t svid,
+                       uint32_t mode_index)
 {
-    port->mode_entered = FALSE;
+    port->mode_entered = false;
 
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
     if (svid == DP_SID && port->DisplayPortData.DpModeEntered == mode_index)
     {
     	port->DisplayPortData.DpModeEntered = 0;
     }
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
 }
 
-void vdmInformIdentity(Port_t *port, FSC_BOOL success, SopType sop, Identity id)
+void vdmInformIdentity(Port_t *port, bool success, SopType sop, Identity id)
 {
     /* example of checking cable current handling capability: */
     if (success && (sop == SOP_TYPE_SOP1)
@@ -213,16 +213,16 @@ void vdmInformIdentity(Port_t *port, FSC_BOOL success, SopType sop, Identity id)
     }
 }
 
-void vdmInformSvids(Port_t *port, FSC_BOOL success, SopType sop,
+void vdmInformSvids(Port_t *port, bool success, SopType sop,
                     SvidInfo svid_info)
 {
-    FSC_U32 i;
+    uint32_t i;
 	/* Reset the known index */
 	port->svid_discvry_idx = -1;
 	/* Assume we are goint to be done */
-	port->svid_discvry_done = TRUE;
+	port->svid_discvry_done = true;
 
-    if (success == TRUE)
+    if (success == true)
     {
         port->core_svid_info.num_svids = svid_info.num_svids;
         for (i = 0; (i < svid_info.num_svids) && (i < MAX_NUM_SVIDS); i++)
@@ -240,25 +240,25 @@ void vdmInformSvids(Port_t *port, FSC_BOOL success, SopType sop,
             port->core_svid_info.num_svids >= MAX_NUM_SVIDS)
         {
         	/* Continue discovery as no known svid are found and there are more */
-        	port->svid_discvry_done = FALSE;
+        	port->svid_discvry_done = false;
         }
     }
 }
 
-void vdmInformModes(Port_t *port, FSC_BOOL success, SopType sop,
+void vdmInformModes(Port_t *port, bool success, SopType sop,
                     ModesInfo modes_info)
 {
 
-    FSC_U32 i;
+    uint32_t i;
     port->AutoModeEntryObjPos = -1;
 
     if (!success) { return; }
 
-    if (modes_info.nack == FALSE)
+    if (modes_info.nack == false)
     {
         for (i = 0; i < modes_info.num_modes; i++)
         {
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
             /* Evaluate DP mode first if defined. */
             if (modes_info.svid == DP_SID)
             {
@@ -269,7 +269,7 @@ void vdmInformModes(Port_t *port, FSC_BOOL success, SopType sop,
                 }
             }
             else
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
             {
                 if (modes_info.svid != SVID_AUTO_ENTRY) { break; }
                 if (evaluateModeEntry(port, modes_info.modes[i]))
@@ -282,20 +282,20 @@ void vdmInformModes(Port_t *port, FSC_BOOL success, SopType sop,
     }
 }
 
-void vdmInformAttention(Port_t *port, FSC_U16 svid, FSC_U8 mode_index)
+void vdmInformAttention(Port_t *port, uint16_t svid, uint8_t mode_index)
 {
 
 }
 
 void vdmInitDpm(Port_t *port) {
 
-    port->svid_enable = TRUE;
-    port->mode_enable = TRUE;
+    port->svid_enable = true;
+    port->mode_enable = true;
 
     port->my_svid = SVID_DEFAULT;
     port->my_mode = MODE_DEFAULT;
 
-    port->mode_entered = FALSE;
+    port->mode_entered = false;
 }
 
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */

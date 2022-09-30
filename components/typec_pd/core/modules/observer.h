@@ -24,7 +24,7 @@
 #define MAX_OBSERVERS       10
 #endif ///< MAX_OBSERVERS
 
-typedef void (*EventHandler)(FSC_U32 event, FSC_U8 portId,
+typedef void (*EventHandler)(uint32_t event, uint8_t portId,
                              void *usr_ctx, void *app_ctx);
 
 /**
@@ -33,7 +33,7 @@ typedef void (*EventHandler)(FSC_U32 event, FSC_U8 portId,
  * @param[in] handler to be called
  * @param[in] context data sent to the handler
  */
-FSC_BOOL register_observer(FSC_U32 event, EventHandler handler, void *context);
+bool register_observer(uint32_t event, EventHandler handler, void *context);
 
 /**
  * @brief removes the observer. Observer stops getting notified
@@ -45,7 +45,7 @@ void remove_observer(EventHandler handler);
  * @brief notifies all observer that are listening to the event.
  * @param[in] event that occured
  */
-void notify_observers(FSC_U32 event, FSC_U8 portId, void *app_ctx);
+void notify_observers(uint32_t event, uint8_t portId, void *app_ctx);
 
 
 #endif /* MODULES_OBSERVER_H_ */

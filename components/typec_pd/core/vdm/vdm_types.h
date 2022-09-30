@@ -24,7 +24,7 @@
 
 #include "platform.h"
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 
 #define STRUCTURED_VDM_VERSION Structured_VDM_Version_SOP
 #define MAX_NUM_SVIDS 12
@@ -88,7 +88,7 @@ typedef enum {
 typedef struct {
     Svid    svid     :16;
     VdmType vdm_type :1;
-    FSC_U16 info     :15;
+    uint16_t info     :15;
 } UnstructuredVdmHeader;
 
 // internal form factor of a Structured VDM Header
@@ -113,23 +113,23 @@ typedef enum {
 
 /* internal form factor of an ID Header */
 typedef struct {
-    FSC_BOOL        usb_host_data_capable   : 1;
-    FSC_BOOL        usb_device_data_capable : 1;
+    bool        usb_host_data_capable   : 1;
+    bool        usb_device_data_capable : 1;
     ProductType     product_type_ufp        : 3;
     ProductType     product_type_dfp        : 3;
-    FSC_BOOL        modal_op_supported      : 1;
-    FSC_U16         usb_vid                 : 16;
+    bool        modal_op_supported      : 1;
+    uint16_t         usb_vid                 : 16;
 } IdHeader;
 
 /* internal form factor for Cert Stat VDO */
 typedef struct {
-    FSC_U32 test_id : 32;
+    uint32_t test_id : 32;
 } CertStatVdo;
 
 /* internal form factor for Product VDO */
 typedef struct {
-    FSC_U16 usb_product_id  : 16;
-    FSC_U16     bcd_device      : 16;
+    uint16_t usb_product_id  : 16;
+    uint16_t     bcd_device      : 16;
 } ProductVdo;
 
 /*
@@ -213,8 +213,8 @@ typedef enum {
 
 /* internal form factor for Cable VDO */
 typedef struct {
-    FSC_U8                          cable_hw_version            : 4;
-    FSC_U8                          cable_fw_version            : 4;
+    uint8_t                          cable_hw_version            : 4;
+    uint8_t                          cable_fw_version            : 4;
     CableToType                     cable_to_type               : 2;
     CableToPr                       cable_to_pr                 : 1;
     CableLatency                    cable_latency               : 4;
@@ -270,16 +270,16 @@ typedef struct {
     VBusRequirement                 vbus_requirement    : 1;
     VConnRequirement                vconn_requirement   : 1;
     VConnFullPower                  vconn_full_power    : 3;
-    FSC_U16                         reserved            : 13;
-    FSC_U8                          vdo_version         : 3;
-    FSC_U8                          cable_fw_version    : 4;
-    FSC_U8                          cable_hw_version    : 4;
+    uint16_t                         reserved            : 13;
+    uint8_t                          vdo_version         : 3;
+    uint8_t                          cable_fw_version    : 4;
+    uint8_t                          cable_hw_version    : 4;
 } AmaVdo;
 
 /* internal form factor for an SVID VDO */
 typedef struct {
-    FSC_U16 SVID0   : 16;
-    FSC_U16 SVID1   : 16;
+    uint16_t SVID0   : 16;
+    uint16_t SVID1   : 16;
 } SvidVdo;
 
 /*
@@ -288,15 +288,15 @@ typedef struct {
  */
 typedef struct {
     /* set to true to nack a Discover Identity */
-    FSC_BOOL    nack;
+    bool    nack;
     /* TODO: also put BUSY answer in here */
     IdHeader    id_header;
     CertStatVdo cert_stat_vdo;
-    FSC_BOOL    has_product_vdo;
+    bool    has_product_vdo;
     ProductVdo  product_vdo;
-    FSC_BOOL    has_cable_vdo;
+    bool    has_cable_vdo;
     CableVdo    cable_vdo;
-    FSC_BOOL    has_ama_vdo;
+    bool    has_ama_vdo;
     AmaVdo      ama_vdo;
 } Identity;
 
@@ -306,10 +306,10 @@ typedef struct {
  */
 typedef struct {
     /* set to true to NACK the Discover SVIDs */
-    FSC_BOOL    nack;
+    bool    nack;
     /* TODO: incorporate BUSY */
-    FSC_U32     num_svids;
-    FSC_U16     svids[MAX_NUM_SVIDS];
+    uint32_t     num_svids;
+    uint16_t     svids[MAX_NUM_SVIDS];
 } SvidInfo;
 
 /*
@@ -318,13 +318,13 @@ typedef struct {
  */
 typedef struct {
     /* set to true to NACK the Discover SVIDs */
-    FSC_BOOL    nack;
+    bool    nack;
     /* TODO: incorporate BUSY */
-    FSC_U16     svid;
-    FSC_U32     num_modes;
-    FSC_U32     modes[MAX_MODES_PER_SVID];
+    uint16_t     svid;
+    uint32_t     num_modes;
+    uint32_t     modes[MAX_MODES_PER_SVID];
 } ModesInfo;
 
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
 #endif /* __VDM_TYPES_H__ */

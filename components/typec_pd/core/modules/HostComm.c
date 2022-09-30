@@ -22,11 +22,11 @@
 #include "PDProtocol.h"
 #include "vendor_info.h"
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
 /*******************************************************************************
  * Macros for HostCom
  ******************************************************************************/
-#define PTR_DIFF(ptr1, ptr2)                (((FSC_U8*)ptr1) - ((FSC_U8*)ptr2))
+#define PTR_DIFF(ptr1, ptr2)                (((uint8_t*)ptr1) - ((uint8_t*)ptr2))
 #define SET_DEFAULT_VAL(expr, val, def)     (expr == val) ? (def) : (expr)
 
 /* Sets the value to 1 if expr is zero */
@@ -41,34 +41,34 @@
         (start)[1] = (val & 0xFF00) >> 8;\
         (start)[2] = (val & 0xFF0000) >> 16;\
         (start)[3] = (val & 0xFF000000) >> 24;\
-        sizeof(FSC_U32);\
+        sizeof(uint32_t);\
     })
 
 #define WRITE_SHORT(start, val)\
     ({\
         (start)[0] = val & 0xFF;\
         (start)[1] = (val & 0xFF00) >> 8;\
-        sizeof(FSC_U16);\
+        sizeof(uint16_t);\
     })
 
 #define READ_WORD(start)\
     ({\
-        FSC_U32 x;\
+        uint32_t x;\
         x = start[0] | start[1] << 8 | start[2] << 16 | start[3] << 24;\
         x;\
      })
 
 #define READ_SHORT(start)\
     ({\
-        FSC_U16 x;\
+        uint16_t x;\
         x = start[0] | start[1] << 8;\
         x;\
      })
 
 #define HCOM_MEM_FILL(ptr, val, len)\
     ({\
-       FSC_U16 i = 0; \
-       FSC_U8 *p = (FSC_U8 *)ptr;\
+       uint16_t i = 0; \
+       uint8_t *p = (uint8_t *)ptr;\
        while (i++ < len) { *p++ = 0; }\
     })
 
@@ -78,9 +78,9 @@
 typedef struct host_com
 {
     Port_t *port_list;
-    FSC_U8 numPorts;
-    FSC_U8 *inputBuf;
-    FSC_U8 *outputBuf;
+    uint8_t numPorts;
+    uint8_t *inputBuf;
+    uint8_t *outputBuf;
 } HostCom_t;
 
 /******************************************************************************
@@ -88,24 +88,24 @@ typedef struct host_com
  ******************************************************************************/
 struct pd_buf
 {
-    FSC_U8 id;
-    FSC_U8 val;
+    uint8_t id;
+    uint8_t val;
 };
 
 /******************************************************************************
  * HostCom variables
  ******************************************************************************/
-static FSC_U8 USBInputBuf[HCMD_SIZE];
-static FSC_U8 USBOutputBuf[HCMD_SIZE];
+static uint8_t USBInputBuf[HCMD_SIZE];
+static uint8_t USBOutputBuf[HCMD_SIZE];
 static HostCom_t hostCom;
 
-#ifdef FSC_HAVE_SNK
-static FSC_U32 ReadSinkCapabilities(FSC_U8 *data, FSC_S32 bufLen,
+#ifdef CONFIG_FSC_HAVE_SNK
+static uint32_t ReadSinkCapabilities(uint8_t *data, int32_t bufLen,
                                     struct Port *port)
 {
-    FSC_U32 i = 0, j = 0;
-    FSC_U32 index = 0;
-    FSC_S32 len = 0;
+    uint32_t i = 0, j = 0;
+    uint32_t index = 0;
+    int32_t len = 0;
     sopMainHeader_t *cap_header;
     doDataObject_t *caps;
 
@@ -128,15 +128,15 @@ static FSC_U32 ReadSinkCapabilities(FSC_U8 *data, FSC_S32 bufLen,
 
     return index;
 }
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 
-#ifdef FSC_HAVE_SRC
-static FSC_U8 ReadSourceCapabilities(FSC_U8 *data, FSC_S32 bufLen,
+#ifdef CONFIG_FSC_HAVE_SRC
+static uint8_t ReadSourceCapabilities(uint8_t *data, int32_t bufLen,
                                      struct Port *port)
 {
-    FSC_U32 i = 0, j = 0;
-    FSC_U32 index = 0;
-    FSC_S32 len = 0;
+    uint32_t i = 0, j = 0;
+    uint32_t index = 0;
+    int32_t len = 0;
     sopMainHeader_t *header;
     doDataObject_t *caps;
 
@@ -159,14 +159,14 @@ static FSC_U8 ReadSourceCapabilities(FSC_U8 *data, FSC_S32 bufLen,
 
     return index;
 }
-#endif /* FSC_HAVE_SRC */
+#endif /* CONFIG_FSC_HAVE_SRC */
 
-static FSC_U8 ReadReceivedSrcCaps(FSC_U8 *data, FSC_U32 bufLen,
+static uint8_t ReadReceivedSrcCaps(uint8_t *data, uint32_t bufLen,
                                   struct Port *port)
 {
-    FSC_U32 i = 0, j = 0;
-    FSC_U32 index = 0;
-    FSC_U32 len = port->SrcCapsHeaderReceived.NumDataObjects * 4;
+    uint32_t i = 0, j = 0;
+    uint32_t index = 0;
+    uint32_t len = port->SrcCapsHeaderReceived.NumDataObjects * 4;
 
     if (bufLen < len)
     {
@@ -187,12 +187,12 @@ static FSC_U8 ReadReceivedSrcCaps(FSC_U8 *data, FSC_U32 bufLen,
     return index;
 }
 
-static FSC_U8 ReadReceivedSnkCaps(FSC_U8 *data, FSC_U32 bufLen,
+static uint8_t ReadReceivedSnkCaps(uint8_t *data, uint32_t bufLen,
                                   struct Port *port)
 {
-    FSC_U32 i = 0, j = 0;
-    FSC_U32 index = 0;
-    FSC_U32 len = port->SnkCapsHeaderReceived.NumDataObjects * 4;
+    uint32_t i = 0, j = 0;
+    uint32_t index = 0;
+    uint32_t len = port->SnkCapsHeaderReceived.NumDataObjects * 4;
 
     if (bufLen < len)
     {
@@ -213,12 +213,12 @@ static FSC_U8 ReadReceivedSnkCaps(FSC_U8 *data, FSC_U32 bufLen,
     return index;
 }
 
-#if (defined(FSC_HAVE_SRC) || \
-     (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)))
-static void WriteSourceCapabilities(FSC_U8 *data, struct Port *port,
-                                    FSC_U32 len)
+#if (defined(CONFIG_FSC_HAVE_SRC) || \
+     (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)))
+static void WriteSourceCapabilities(uint8_t *data, struct Port *port,
+                                    uint32_t len)
 {
-    FSC_U32 i = 0, j = 0;
+    uint32_t i = 0, j = 0;
     sopMainHeader_t header = { 0 };
     sopMainHeader_t *cap_header = DPM_GetSourceCapHeader(port->dpm, port);
     doDataObject_t *caps = DPM_GetSourceCap(port->dpm, port);
@@ -226,7 +226,7 @@ static void WriteSourceCapabilities(FSC_U8 *data, struct Port *port,
     header.byte[0] = *data++;
     header.byte[1] = *data++;
 
-    if (len < header.NumDataObjects*sizeof(FSC_U32)) { return; }
+    if (len < header.NumDataObjects*sizeof(uint32_t)) { return; }
     /* Only do anything if we decoded a source capabilities message */
     if ((header.NumDataObjects > 0)
             && (header.MessageType == DMTSourceCapabilities))
@@ -244,17 +244,17 @@ static void WriteSourceCapabilities(FSC_U8 *data, struct Port *port,
         if (port->PolicyIsSource)
         {
             port->PDTransmitHeader.word = cap_header->word;
-            port->USBPDTxFlag = TRUE;
-            port->SourceCapsUpdated = TRUE;
+            port->USBPDTxFlag = true;
+            port->SourceCapsUpdated = true;
         }
     }
 }
-#endif /* FSC_HAVE_SRC || (FSC_HAVE_SNK && FSC_HAVE_ACCMODE) */
+#endif /* CONFIG_FSC_HAVE_SRC || (CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE) */
 
-#ifdef FSC_HAVE_SNK
-static void WriteSinkCapabilities(FSC_U8 *data, struct Port *port, FSC_U32 len)
+#ifdef CONFIG_FSC_HAVE_SNK
+static void WriteSinkCapabilities(uint8_t *data, struct Port *port, uint32_t len)
 {
-    FSC_U32 i = 0, j = 0;
+    uint32_t i = 0, j = 0;
     sopMainHeader_t header = { 0 };
     sopMainHeader_t *caps_header = DPM_GetSinkCapHeader(port->dpm, port);
     doDataObject_t *caps = DPM_GetSinkCap(port->dpm, port);
@@ -262,7 +262,7 @@ static void WriteSinkCapabilities(FSC_U8 *data, struct Port *port, FSC_U32 len)
     header.byte[0] = *data++;
     header.byte[1] = *data++;
 
-    if (len < header.NumDataObjects*sizeof(FSC_U32)) { return; }
+    if (len < header.NumDataObjects*sizeof(uint32_t)) { return; }
     /* Only do anything if we decoded a sink capabilities message */
     if ((header.NumDataObjects > 0)
             && (header.MessageType == DMTSinkCapabilities))
@@ -283,23 +283,23 @@ static void WriteSinkCapabilities(FSC_U8 *data, struct Port *port, FSC_U32 len)
 }
 #endif
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 /* Svid 1 buffer layout */
 struct svid1_buf
 {
-    FSC_U8 svid[2];
-    FSC_U8 num_modes;
-    FSC_U8 modes[4 * SVID1_num_modes_max_SOP];
+    uint8_t svid[2];
+    uint8_t num_modes;
+    uint8_t modes[4 * SVID1_num_modes_max_SOP];
 };
 
 struct vdm_mode_buf
 {
-    FSC_U8 num_svid;
+    uint8_t num_svid;
     struct svid1_buf svid1;
 /* Add more if needed */
 };
 
-FSC_U8 ReadVdmModes(struct Port *port, FSC_U8 *buf, FSC_U32 len)
+uint8_t ReadVdmModes(struct Port *port, uint8_t *buf, uint32_t len)
 {
     struct vdm_mode_buf *vdm_obj = (struct vdm_mode_buf*) buf;
     /* Check if buffer has enough size */
@@ -321,7 +321,7 @@ FSC_U8 ReadVdmModes(struct Port *port, FSC_U8 *buf, FSC_U32 len)
     return sizeof(struct vdm_mode_buf);
 }
 
-void WriteVdmModes(struct Port *port, FSC_U8 *buf)
+void WriteVdmModes(struct Port *port, uint8_t *buf)
 {
     struct vdm_mode_buf *vdm_obj = (struct vdm_mode_buf*) buf;
     if (vdm_obj->num_svid > 0)
@@ -330,11 +330,11 @@ void WriteVdmModes(struct Port *port, FSC_U8 *buf)
         port->my_mode = READ_WORD(vdm_obj->svid1.modes);
     }
 }
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
-static void SendUSBPDMessage(FSC_U8 *data, struct Port *port, FSC_U32 len)
+static void SendUSBPDMessage(uint8_t *data, struct Port *port, uint32_t len)
 {
-    FSC_U32 i = 0, j = 0;
+    uint32_t i = 0, j = 0;
 
     /* First byte is sop */
     port->PolicyMsgTxSop = *data++;
@@ -343,7 +343,7 @@ static void SendUSBPDMessage(FSC_U8 *data, struct Port *port, FSC_U32 len)
     port->PDTransmitHeader.byte[0] = *data++;
     port->PDTransmitHeader.byte[1] = *data++;
 
-    if (len < port->PDTransmitHeader.NumDataObjects * sizeof(FSC_U32))
+    if (len < port->PDTransmitHeader.NumDataObjects * sizeof(uint32_t))
     {
         return;
     }
@@ -356,7 +356,7 @@ static void SendUSBPDMessage(FSC_U8 *data, struct Port *port, FSC_U32 len)
             port->PDTransmitObjects[i].byte[j] = *data++;
         }
     }
-    port->USBPDTxFlag = TRUE;
+    port->USBPDTxFlag = true;
 }
 
 static void ProcessTCSetState(ConnectionState state, struct Port *port)
@@ -372,30 +372,30 @@ static void ProcessTCSetState(ConnectionState state, struct Port *port)
     case (Unattached):
         SetStateUnattached(port);
         break;
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
     case (AttachWaitSink):
         SetStateAttachWaitSink(port);
         break;
     case (AttachedSink):
         SetStateAttachedSink(port);
         break;
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
     case (TryWaitSink):
         SetStateTryWaitSink(port);
         break;
     case (TrySink):
         SetStateTrySink(port);
         break;
-#endif /* FSC_HAVE_DRP */
-#endif /* FSC_HAVE_SNK */
-#ifdef FSC_HAVE_SRC
+#endif /* CONFIG_FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_SNK */
+#ifdef CONFIG_FSC_HAVE_SRC
     case (AttachWaitSource):
         SetStateAttachWaitSource(port);
         break;
     case (AttachedSource):
         SetStateAttachedSource(port);
         break;
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
     case (TrySource):
         SetStateTrySource(port);
         break;
@@ -405,19 +405,19 @@ static void ProcessTCSetState(ConnectionState state, struct Port *port)
     case (UnattachedSource):
         SetStateUnattachedSource(port);
         break;
-#endif /* FSC_HAVE_DRP */
-#endif /* FSC_HAVE_SRC */
-#ifdef FSC_HAVE_ACCMODE
+#endif /* CONFIG_FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_SRC */
+#ifdef CONFIG_FSC_HAVE_ACCMODE
     case (AudioAccessory):
         SetStateAudioAccessory(port);
         break;
-#endif /* FSC_HAVE_ACCMODE */
-#ifdef FSC_HAVE_SRC
+#endif /* CONFIG_FSC_HAVE_ACCMODE */
+#ifdef CONFIG_FSC_HAVE_SRC
     case (DebugAccessorySource):
         SetStateDebugAccessorySource(port);
         break;
-#endif /* FSC_HAVE_SRC */
-#if (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE))
+#endif /* CONFIG_FSC_HAVE_SRC */
+#if (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE))
     case (AttachWaitAccessory):
         SetStateAttachWaitAccessory(port);
         break;
@@ -427,18 +427,18 @@ static void ProcessTCSetState(ConnectionState state, struct Port *port)
     case (UnsupportedAccessory):
         SetStateUnsupportedAccessory(port);
         break;
-#endif /* (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)) */
+#endif /* (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)) */
     default:
         SetStateUnattached(port);
         break;
     }
 }
 
-static FSC_BOOL ProcessTCWrite(FSC_U8 *subCmds, struct Port *port)
+static bool ProcessTCWrite(uint8_t *subCmds, struct Port *port)
 {
-    FSC_BOOL setUnattached = FALSE;
-    FSC_U32 i;
-    FSC_U32 len;
+    bool setUnattached = false;
+    uint32_t i;
+    uint32_t len;
     struct pd_buf *pCmd = (struct pd_buf*) subCmds;
 
     for (i = 0; i < HCMD_PAYLOAD_SIZE / 2; i++)
@@ -453,38 +453,38 @@ static FSC_BOOL ProcessTCWrite(FSC_U8 *subCmds, struct Port *port)
         {
         case TYPEC_ENABLE:
             if (pCmd->val != port->SMEnabled)
-                port->SMEnabled = (pCmd->val) ? TRUE : FALSE;
+                port->SMEnabled = (pCmd->val) ? true : false;
             break;
         case TYPEC_PORT_TYPE:
             if (pCmd->val < USBTypeC_UNDEFINED
                     && pCmd->val != port->PortConfig.PortType)
             {
                 port->PortConfig.PortType = pCmd->val;
-                setUnattached = TRUE;
+                setUnattached = true;
             }
             break;
         case TYPEC_ACC_SUPPORT:
             if (pCmd->val != port->PortConfig.poweredAccSupport ||
                 pCmd->val != port->PortConfig.audioAccSupport)
             {
-                port->PortConfig.poweredAccSupport = (pCmd->val) ? TRUE : FALSE;
+                port->PortConfig.poweredAccSupport = (pCmd->val) ? true : false;
                 port->PortConfig.audioAccSupport =
                         port->PortConfig.poweredAccSupport;
-                setUnattached = TRUE;
+                setUnattached = true;
             }
             break;
         case TYPEC_SRC_PREF:
             if (pCmd->val != port->PortConfig.SrcPreferred)
             {
-                port->PortConfig.SrcPreferred = (pCmd->val) ? TRUE : FALSE;
-                setUnattached = TRUE;
+                port->PortConfig.SrcPreferred = (pCmd->val) ? true : false;
+                setUnattached = true;
             }
             break;
         case TYPEC_SNK_PREF:
             if (pCmd->val != port->PortConfig.SnkPreferred)
             {
-                port->PortConfig.SnkPreferred = (pCmd->val) ? TRUE : FALSE;
-                setUnattached = TRUE;
+                port->PortConfig.SnkPreferred = (pCmd->val) ? true : false;
+                setUnattached = true;
             }
             break;
         case TYPEC_STATE:
@@ -515,17 +515,17 @@ end_of_cmd:
     if (setUnattached)
     {
         SetStateUnattached(port);
-        setUnattached = FALSE;
+        setUnattached = false;
     }
 
-  return TRUE;
+  return true;
 }
 
-static FSC_BOOL ProcessTCRead(FSC_U8 *subCmds, FSC_U8 *outBuf,
+static bool ProcessTCRead(uint8_t *subCmds, uint8_t *outBuf,
                               struct Port *port)
 {
-    FSC_U32 len;
-    FSC_U32 i;
+    uint32_t len;
+    uint32_t i;
     struct pd_buf *pRsp = (struct pd_buf*) outBuf;
 
     /* limit it to 30 commands because the output requires
@@ -554,7 +554,7 @@ static FSC_BOOL ProcessTCRead(FSC_U8 *subCmds, FSC_U8 *outBuf,
             break;
         case TYPEC_ACC_SUPPORT:
             pRsp->val = (port->PortConfig.poweredAccSupport &&
-                         port->PortConfig.audioAccSupport) ? TRUE : FALSE;
+                         port->PortConfig.audioAccSupport) ? true : false;
             break;
         case TYPEC_SRC_PREF:
             pRsp->val = port->PortConfig.SrcPreferred;
@@ -590,9 +590,9 @@ static FSC_BOOL ProcessTCRead(FSC_U8 *subCmds, FSC_U8 *outBuf,
             break;
         case TYPEC_STATE_LOG:
         {
-            #ifdef FSC_DEBUG
+            #ifdef CONFIG_CONFIG_FSC_DEBUG
             pRsp->val = GetStateLog(&port->TypeCStateLog, &pRsp->val + 1, len);
-            pRsp = (struct pd_buf*)((FSC_U8*)pRsp + pRsp->val);
+            pRsp = (struct pd_buf*)((uint8_t*)pRsp + pRsp->val);
             #endif
             break;
         }
@@ -606,18 +606,18 @@ static FSC_BOOL ProcessTCRead(FSC_U8 *subCmds, FSC_U8 *outBuf,
     }
 
 end_of_cmd:
-    return TRUE;
+    return true;
 out_buf_full:
-    return FALSE;
+    return false;
 }
 
 static void ProcessTCStatus(HostCmd_t *inCmd, HostCmd_t *outMsg,
                             struct Port *port)
 {
-    FSC_BOOL read = (inCmd->pd.cmd.req.rw == 0) ? TRUE : FALSE;
-    FSC_BOOL status;
+    bool read = (inCmd->pd.cmd.req.rw == 0) ? true : false;
+    bool status;
 
-    if (read == TRUE)
+    if (read == true)
     {
         status = ProcessTCRead(inCmd->typeC.cmd.req.payload,
                                outMsg->typeC.cmd.rsp.payload, port);
@@ -627,7 +627,7 @@ static void ProcessTCStatus(HostCmd_t *inCmd, HostCmd_t *outMsg,
         status = ProcessTCWrite(inCmd->typeC.cmd.req.payload, port);
     }
 
-    if (status == TRUE)
+    if (status == true)
     {
         outMsg->typeC.cmd.rsp.error = HCMD_STATUS_SUCCESS;
     }
@@ -637,11 +637,11 @@ static void ProcessTCStatus(HostCmd_t *inCmd, HostCmd_t *outMsg,
     }
 }
 
-static FSC_BOOL ProcessPDRead(FSC_U8 *subCmds, FSC_U8 *outBuf,
+static bool ProcessPDRead(uint8_t *subCmds, uint8_t *outBuf,
                               struct Port *port)
 {
-    FSC_U32 len;
-    FSC_U32 i;
+    uint32_t len;
+    uint32_t i;
 
     struct pd_buf *pRsp = (struct pd_buf*) outBuf;
 
@@ -708,7 +708,7 @@ static FSC_BOOL ProcessPDRead(FSC_U8 *subCmds, FSC_U8 *outBuf,
             break;
         case PD_CAPS_CHANGED:
             pRsp->val = port->SourceCapsUpdated;
-            port->SourceCapsUpdated = FALSE;
+            port->SourceCapsUpdated = false;
             break;
         case PD_GOTOMIN_COMPAT:
             pRsp->val =port->PortConfig.SinkGotoMinCompatible;
@@ -719,61 +719,61 @@ static FSC_BOOL ProcessPDRead(FSC_U8 *subCmds, FSC_U8 *outBuf,
         case PD_COM_CAPABLE:
             pRsp->val = port->PortConfig.SinkUSBCommCapable;
             break;
-#ifdef FSC_HAVE_SRC
+#ifdef CONFIG_FSC_HAVE_SRC
         case PD_SRC_CAP:
             pRsp->val = ReadSourceCapabilities(&pRsp->val + 1, len, port);
-            pRsp = (struct pd_buf*) ((FSC_U8*) pRsp + pRsp->val);
+            pRsp = (struct pd_buf*) ((uint8_t*) pRsp + pRsp->val);
             break;
         case PD_PPR_SINK_CAP:
             pRsp->val = ReadReceivedSnkCaps(&pRsp->val + 1, len, port);
-            pRsp = (struct pd_buf*)((FSC_U8*)pRsp + pRsp->val);
+            pRsp = (struct pd_buf*)((uint8_t*)pRsp + pRsp->val);
             break;
-#endif /* FSC_HAVE_SRC */
-#ifdef FSC_HAVE_SNK
+#endif /* CONFIG_FSC_HAVE_SRC */
+#ifdef CONFIG_FSC_HAVE_SNK
         case PD_SNK_CAP:
             pRsp->val = ReadSinkCapabilities(&pRsp->val + 1, len, port);
-            pRsp = (struct pd_buf*) ((FSC_U8*) pRsp + pRsp->val);
+            pRsp = (struct pd_buf*) ((uint8_t*) pRsp + pRsp->val);
             break;
         case PD_PPR_SRC_CAP:
             pRsp->val = ReadReceivedSrcCaps(&pRsp->val + 1, len, port);
-            pRsp = (struct pd_buf*) ((FSC_U8*) pRsp + pRsp->val);
+            pRsp = (struct pd_buf*) ((uint8_t*) pRsp + pRsp->val);
             break;
-#endif /* FSC_HAVE_SNK */
-#ifdef FSC_DEBUG
+#endif /* CONFIG_FSC_HAVE_SNK */
+#ifdef CONFIG_CONFIG_FSC_DEBUG
         case PD_PD_LOG:
             pRsp->val = ReadUSBPDBuffer(port, &pRsp->val + 1, len);
-            pRsp = (struct pd_buf*)((FSC_U8*)pRsp + pRsp->val);
+            pRsp = (struct pd_buf*)((uint8_t*)pRsp + pRsp->val);
             break;
         case PD_PE_LOG:
             pRsp->val = GetStateLog(&port->PDStateLog, &pRsp->val + 1, len);
-            pRsp = (struct pd_buf*)((FSC_U8*)pRsp + pRsp->val);
+            pRsp = (struct pd_buf*)((uint8_t*)pRsp + pRsp->val);
             break;
 #endif  /* FSC_LOGGING */
         case PD_MAX_VOLTAGE:
             if (len < sizeof(int)) break;
             pRsp->val = WRITE_INT((&pRsp->val + 1),
                     port->PortConfig.SinkRequestMaxVoltage);
-            pRsp = (struct pd_buf*) ((FSC_U8*) pRsp + pRsp->val);
+            pRsp = (struct pd_buf*) ((uint8_t*) pRsp + pRsp->val);
             break;
         case PD_OP_POWER:
             if (len < sizeof(int)) break;
             /* GUI uses 10mW units */
             pRsp->val = WRITE_INT((&pRsp->val + 1),
                     port->PortConfig.SinkRequestOpPower / 10);
-            pRsp = (struct pd_buf*)((FSC_U8*)pRsp + pRsp->val);
+            pRsp = (struct pd_buf*)((uint8_t*)pRsp + pRsp->val);
             break;
         case PD_MAX_POWER:
             if (len < sizeof(int)) break;
             /* GUI uses 10mW units */
             pRsp->val = WRITE_INT((&pRsp->val + 1),
                     port->PortConfig.SinkRequestMaxPower / 10);
-            pRsp = (struct pd_buf*)((FSC_U8*)pRsp + pRsp->val);
+            pRsp = (struct pd_buf*)((uint8_t*)pRsp + pRsp->val);
             break;
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
         case PD_VDM_MODES:
         {
             pRsp->val = ReadVdmModes(port, &pRsp->val + 1, len);
-            pRsp = (struct pd_buf*)((FSC_U8*)pRsp + pRsp->val);
+            pRsp = (struct pd_buf*)((uint8_t*)pRsp + pRsp->val);
             break;
         }
         case PD_SVID_ENABLE:
@@ -785,7 +785,7 @@ static FSC_BOOL ProcessPDRead(FSC_U8 *subCmds, FSC_U8 *outBuf,
         case PD_SVID_AUTO_ENTRY:
             pRsp->val = port->AutoModeEntryEnabled;
             break;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
         case USBPD_EOP:
         default:
             pRsp->id = USBPD_EOP;
@@ -796,18 +796,18 @@ static FSC_BOOL ProcessPDRead(FSC_U8 *subCmds, FSC_U8 *outBuf,
     }
 
 out_buf_full:
-    return FALSE;
+    return false;
 end_of_cmd:
-    return TRUE;
+    return true;
 }
 
-static FSC_BOOL ProcessPDWrite(FSC_U8 *subCmds, struct Port *port)
+static bool ProcessPDWrite(uint8_t *subCmds, struct Port *port)
 {
 
-    FSC_BOOL setUnattached = FALSE;
+    bool setUnattached = false;
     struct pd_buf *pCmd = (struct pd_buf*) subCmds;
-    FSC_U32 i;
-    FSC_U32 len;
+    uint32_t i;
+    uint32_t len;
 
     for (i = 0; i < HCMD_PAYLOAD_SIZE / 2; i++)
     {
@@ -820,86 +820,86 @@ static FSC_BOOL ProcessPDWrite(FSC_U8 *subCmds, struct Port *port)
         switch (pCmd->id)
         {
         case PD_ENABLE:
-            port->USBPDEnabled = (pCmd->val == 0) ? FALSE : TRUE;
+            port->USBPDEnabled = (pCmd->val == 0) ? false : true;
             break;
         case PD_SPEC_REV:
             if (port->PortConfig.PdRevPreferred != pCmd->val) {
                 port->PortConfig.PdRevPreferred = pCmd->val;
-                setUnattached = TRUE;
+                setUnattached = true;
             }
             break;
         case PD_GOTOMIN_COMPAT:
             port->PortConfig.SinkGotoMinCompatible =
-                (pCmd->val == 0) ? FALSE : TRUE;
+                (pCmd->val == 0) ? false : true;
             break;
         case PD_USB_SUSPEND:
             port->PortConfig.SinkUSBSuspendOperation =
-                (pCmd->val == 0) ? FALSE : TRUE;
+                (pCmd->val == 0) ? false : true;
             break;
         case PD_COM_CAPABLE:
             port->PortConfig.SinkUSBCommCapable =
-                (pCmd->val == 0) ? FALSE : TRUE;
+                (pCmd->val == 0) ? false : true;
             break;
         case PD_MAX_VOLTAGE:
-            if (len < sizeof(FSC_U32)) { goto end_of_cmd; }
+            if (len < sizeof(uint32_t)) { goto end_of_cmd; }
             port->PortConfig.SinkRequestMaxVoltage =
                 READ_WORD((&pCmd->val + 1));
-            pCmd = (struct pd_buf*)((FSC_U8*)pCmd + pCmd->val);
+            pCmd = (struct pd_buf*)((uint8_t*)pCmd + pCmd->val);
             break;
         case PD_OP_POWER:
-            if (len < sizeof(FSC_U32)) { goto end_of_cmd; }
+            if (len < sizeof(uint32_t)) { goto end_of_cmd; }
             port->PortConfig.SinkRequestOpPower =
                     READ_WORD((&pCmd->val + 1)) * 10; /* GUI sends 10mW units */
-            pCmd = (struct pd_buf*)((FSC_U8*)pCmd + pCmd->val);
+            pCmd = (struct pd_buf*)((uint8_t*)pCmd + pCmd->val);
             break;
         case PD_MAX_POWER:
-            if (len < sizeof(FSC_U32)) { goto end_of_cmd; }
+            if (len < sizeof(uint32_t)) { goto end_of_cmd; }
             port->PortConfig.SinkRequestMaxPower =
                     READ_WORD((&pCmd->val + 1)) * 10; /* GUI sends 10mW units */
-            pCmd = (struct pd_buf*)((FSC_U8*)pCmd + pCmd->val);
+            pCmd = (struct pd_buf*)((uint8_t*)pCmd + pCmd->val);
             break;
         case PD_HARD_RESET:
             SendUSBPDHardReset(port);
             break;
-#if (defined(FSC_HAVE_SRC) || \
-     (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)))
+#if (defined(CONFIG_FSC_HAVE_SRC) || \
+     (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)))
         case PD_SRC_CAP:
             if (len < sizeof(sopMainHeader_t)) { goto end_of_cmd; }
             WriteSourceCapabilities(&pCmd->val+1, port, len);
-            pCmd = (struct pd_buf*)((FSC_U8*)pCmd + pCmd->val);
+            pCmd = (struct pd_buf*)((uint8_t*)pCmd + pCmd->val);
             break;
-#endif /* FSC_HAVE_SRC || (FSC_HAVE_SNK && FSC_HAVE_ACCMODE) */
-#ifdef FSC_HAVE_SNK
+#endif /* CONFIG_FSC_HAVE_SRC || (CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE) */
+#ifdef CONFIG_FSC_HAVE_SNK
         case PD_SNK_CAP:
             if (len < sizeof(sopMainHeader_t)) { goto end_of_cmd; }
             WriteSinkCapabilities(&pCmd->val+1, port, len);
-            pCmd = (struct pd_buf*)((FSC_U8*)pCmd + pCmd->val);
+            pCmd = (struct pd_buf*)((uint8_t*)pCmd + pCmd->val);
             break;
-#endif /* FSC_HAVE SNK */
+#endif /* CONFIG_FSC_HAVE SNK */
         case PD_MSG_WRITE:
             if (len < sizeof(sopMainHeader_t)) { goto end_of_cmd; }
             SendUSBPDMessage(&pCmd->val+1, port, len);
-            pCmd = (struct pd_buf*)((FSC_U8*)pCmd + pCmd->val);
+            pCmd = (struct pd_buf*)((uint8_t*)pCmd + pCmd->val);
             break;
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
         case PD_SVID_ENABLE:
-            port->svid_enable = (pCmd->val == 0) ? FALSE : TRUE;
+            port->svid_enable = (pCmd->val == 0) ? false : true;
             break;
         case PD_MODE_ENABLE:
-            port->mode_enable = (pCmd->val == 0) ? FALSE : TRUE;
+            port->mode_enable = (pCmd->val == 0) ? false : true;
             break;
         case PD_SVID_AUTO_ENTRY:
-            port->AutoModeEntryEnabled = (pCmd->val == 0) ? FALSE : TRUE;
+            port->AutoModeEntryEnabled = (pCmd->val == 0) ? false : true;
             break;
         case PD_VDM_MODES:
             if (len < sizeof(struct vdm_mode_buf)) { goto end_of_cmd; }
             WriteVdmModes(port, &pCmd->val + 1);
-            pCmd = (struct pd_buf*) ((FSC_U8*) pCmd + pCmd->val);
+            pCmd = (struct pd_buf*) ((uint8_t*) pCmd + pCmd->val);
             break;
         case PD_CABLE_RESET:
             port->cblRstState = CBL_RST_START;
             break;
-#endif  /* FSC_HAVE_VDM */
+#endif  /* CONFIG_FSC_HAVE_VDM */
         case USBPD_EOP:
         default:
             goto end_of_cmd;
@@ -913,18 +913,18 @@ end_of_cmd:
     if (setUnattached)
     {
         SetStateUnattached(port);
-        setUnattached = FALSE;
+        setUnattached = false;
     }
-    return TRUE;
+    return true;
 }
 
 static void ProcessPDStatus(HostCmd_t *inCmd, HostCmd_t *outMsg,
                             struct Port *port)
 {
-    FSC_BOOL read = (inCmd->pd.cmd.req.rw == 0) ? TRUE : FALSE;
-    FSC_BOOL status = FALSE;
+    bool read = (inCmd->pd.cmd.req.rw == 0) ? true : false;
+    bool status = false;
 
-    if (read == TRUE)
+    if (read == true)
     {
         status = ProcessPDRead(inCmd->pd.cmd.req.payload,
                                outMsg->pd.cmd.rsp.payload, port);
@@ -934,7 +934,7 @@ static void ProcessPDStatus(HostCmd_t *inCmd, HostCmd_t *outMsg,
         status = ProcessPDWrite(inCmd->pd.cmd.req.payload, port);
     }
 
-    if (status == TRUE)
+    if (status == true)
     {
         outMsg->typeC.cmd.rsp.error = HCMD_STATUS_SUCCESS;
     }
@@ -966,12 +966,12 @@ static void ProcessUserClassCmd(HostCmd_t *inCmd, HostCmd_t *outMsg,
     }
 }
 
-#ifdef FSC_HAVE_DP
-static FSC_BOOL ProcessDPWrite(FSC_U8 *subCmds, struct Port *port)
+#ifdef CONFIG_FSC_HAVE_DP
+static bool ProcessDPWrite(uint8_t *subCmds, struct Port *port)
 {
 
-    FSC_U32 i;
-    FSC_U32 len;
+    uint32_t i;
+    uint32_t len;
     struct pd_buf *pCmd = (struct pd_buf*) subCmds;
 
     for (i = 0; i < HCMD_PAYLOAD_SIZE / 2; i++)
@@ -985,32 +985,32 @@ static FSC_BOOL ProcessDPWrite(FSC_U8 *subCmds, struct Port *port)
         switch (pCmd->id)
         {
         case DP_ENABLE:
-            port->DisplayPortData.DpEnabled = (pCmd->val == 0) ? FALSE : TRUE;
+            port->DisplayPortData.DpEnabled = (pCmd->val == 0) ? false : true;
             break;
         case DP_AUTO_MODE_ENTRY:
             port->DisplayPortData.DpAutoModeEntryEnabled =
-                    (pCmd->val == 0) ? FALSE : TRUE;
+                    (pCmd->val == 0) ? false : true;
             break;
         case DP_SEND_STATUS:
-            if (port->PolicyIsDFP == TRUE &&
+            if (port->PolicyIsDFP == true &&
                 port->PolicyState == peSourceReady)
             {
                 DP_RequestPartnerStatus(port);
-            } else if (port->PolicyIsDFP == FALSE &&
+            } else if (port->PolicyIsDFP == false &&
                        port->PolicyState == peSinkReady)
             {
                 DP_SendAttention(port);
             }
             break;
         case DP_CAP:
-            if (len < sizeof(FSC_U32)) { goto end_of_cmd; }
+            if (len < sizeof(uint32_t)) { goto end_of_cmd; }
             port->DisplayPortData.DpCap.word = READ_WORD((&pCmd->val + 1));
-            pCmd = (struct pd_buf*) ((FSC_U8*) pCmd + pCmd->val);
+            pCmd = (struct pd_buf*) ((uint8_t*) pCmd + pCmd->val);
             break;
         case DP_STATUS:
-            if (len < sizeof(FSC_U32)) { goto end_of_cmd; }
+            if (len < sizeof(uint32_t)) { goto end_of_cmd; }
             port->DisplayPortData.DpStatus.word = READ_WORD((&pCmd->val + 1));
-            pCmd = (struct pd_buf*) ((FSC_U8*) pCmd + pCmd->val);
+            pCmd = (struct pd_buf*) ((uint8_t*) pCmd + pCmd->val);
             break;
         case DP_EOP:
         default:
@@ -1021,14 +1021,14 @@ static FSC_BOOL ProcessDPWrite(FSC_U8 *subCmds, struct Port *port)
     }
 
 end_of_cmd:
-    return TRUE;
+    return true;
 }
 
-static FSC_BOOL ProcessDPRead(FSC_U8 *subCmds, FSC_U8 *outBuf,
+static bool ProcessDPRead(uint8_t *subCmds, uint8_t *outBuf,
                               struct Port *port)
 {
-    FSC_U32 i;
-    FSC_U32 len;
+    uint32_t i;
+    uint32_t len;
     struct pd_buf *pRsp = (struct pd_buf*) outBuf;
 
     for (i = 0; i < HCMD_PAYLOAD_SIZE / 2; i++)
@@ -1051,16 +1051,16 @@ static FSC_BOOL ProcessDPRead(FSC_U8 *subCmds, FSC_U8 *outBuf,
             pRsp->val = port->DisplayPortData.DpAutoModeEntryEnabled;
             break;
         case DP_CAP:
-            if (len < sizeof(FSC_U32)) break;
+            if (len < sizeof(uint32_t)) break;
             pRsp->val = WRITE_INT((&pRsp->val + 1),
                                    port->DisplayPortData.DpCap.word);
-            pRsp = (struct pd_buf*)((FSC_U8*)pRsp + pRsp->val);
+            pRsp = (struct pd_buf*)((uint8_t*)pRsp + pRsp->val);
             break;
         case DP_STATUS:
-            if (len < sizeof(FSC_U32)) break;
+            if (len < sizeof(uint32_t)) break;
             pRsp->val = WRITE_INT((&pRsp->val + 1),
                                    port->DisplayPortData.DpStatus.word);
-            pRsp = (struct pd_buf*)((FSC_U8*)pRsp + pRsp->val);
+            pRsp = (struct pd_buf*)((uint8_t*)pRsp + pRsp->val);
             break;
         case DP_EOP:
         default:
@@ -1072,17 +1072,17 @@ static FSC_BOOL ProcessDPRead(FSC_U8 *subCmds, FSC_U8 *outBuf,
     }
 
 out_buf_full:
-    return FALSE;
+    return false;
 end_of_cmd:
-    return TRUE;
+    return true;
 }
 
 static void ProcessDpCommands(HostCmd_t *inCmd, HostCmd_t *outMsg,
                             struct Port *port)
 {
-    FSC_BOOL read = (inCmd->dp.cmd.req.rw == 0) ? TRUE : FALSE;
-    FSC_BOOL status = FALSE;
-    if (read == TRUE)
+    bool read = (inCmd->dp.cmd.req.rw == 0) ? true : false;
+    bool status = false;
+    if (read == true)
     {
         status = ProcessDPRead(inCmd->dp.cmd.req.payload,
                                outMsg->dp.cmd.rsp.payload, port);
@@ -1092,7 +1092,7 @@ static void ProcessDpCommands(HostCmd_t *inCmd, HostCmd_t *outMsg,
         status = ProcessDPWrite(inCmd->dp.cmd.req.payload, port);
     }
 
-    if (status == TRUE)
+    if (status == true)
     {
         outMsg->dp.cmd.rsp.error = HCMD_STATUS_SUCCESS;
     }
@@ -1101,7 +1101,7 @@ static void ProcessDpCommands(HostCmd_t *inCmd, HostCmd_t *outMsg,
         outMsg->dp.cmd.rsp.error = HCMD_STATUS_FAILED;
     }
 }
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
 
 static void ProcessDeviceInfo(HostCmd_t *outMsg)
 {
@@ -1120,21 +1120,21 @@ static void ProcessDeviceInfo(HostCmd_t *outMsg)
 static void ProcessWriteI2CFCSDevice(HostCmd_t* inCmd, HostCmd_t *outMsg,
                                      struct Port *port)
 {
-    FSC_BOOL result;
-    FSC_U8 reg_addr = inCmd->wrI2CDev.cmd.req.reg[0];
-    FSC_U8 slave_addr = inCmd->wrI2CDev.cmd.req.addr;
-    FSC_U8 *value = inCmd->wrI2CDev.cmd.req.data;
+    bool result;
+    uint8_t reg_addr = inCmd->wrI2CDev.cmd.req.reg[0];
+    uint8_t slave_addr = inCmd->wrI2CDev.cmd.req.addr;
+    uint8_t *value = inCmd->wrI2CDev.cmd.req.data;
 
     /* If values are zero default to platform specific values. */
-    FSC_U8 regAlen = ONE_IF_ZERO(inCmd->wrI2CDev.cmd.req.alen);
-    FSC_U8 regDlen = ONE_IF_ZERO(inCmd->wrI2CDev.cmd.req.dlen);
-    FSC_U8 addrInc = ONE_IF_ZERO(inCmd->wrI2CDev.cmd.req.inc);
-    FSC_U8 pktLen = ONE_IF_ZERO(inCmd->wrI2CDev.cmd.req.pktlen);
+    uint8_t regAlen = ONE_IF_ZERO(inCmd->wrI2CDev.cmd.req.alen);
+    uint8_t regDlen = ONE_IF_ZERO(inCmd->wrI2CDev.cmd.req.dlen);
+    uint8_t addrInc = ONE_IF_ZERO(inCmd->wrI2CDev.cmd.req.inc);
+    uint8_t pktLen = ONE_IF_ZERO(inCmd->wrI2CDev.cmd.req.pktlen);
 
     result = platform_i2c_write(slave_addr,regAlen, regDlen, pktLen, addrInc,
                                 reg_addr, value);
 
-    if (result == TRUE)
+    if (result == true)
     {
         outMsg->rdI2CDev.cmd.rsp.error = HCMD_STATUS_SUCCESS;
     }
@@ -1147,20 +1147,20 @@ static void ProcessWriteI2CFCSDevice(HostCmd_t* inCmd, HostCmd_t *outMsg,
 static void ProcessReadI2CFCSDevice(HostCmd_t* inCmd, HostCmd_t* outMsg,
                                     struct Port *port)
 {
-    FSC_BOOL result;
-    FSC_U8 slave_addr = inCmd->rdI2CDev.cmd.req.addr;
-    FSC_U8 reg_addr = inCmd->rdI2CDev.cmd.req.reg[0];
+    bool result;
+    uint8_t slave_addr = inCmd->rdI2CDev.cmd.req.addr;
+    uint8_t reg_addr = inCmd->rdI2CDev.cmd.req.reg[0];
     /* If values are zero default to platform specific values. */
-    FSC_U8 regAlen = ONE_IF_ZERO(inCmd->rdI2CDev.cmd.req.alen);
-    FSC_U8 regDlen = ONE_IF_ZERO(inCmd->rdI2CDev.cmd.req.dlen);
-    FSC_U8 addrInc = ONE_IF_ZERO(inCmd->rdI2CDev.cmd.req.inc);
-    FSC_U8 pktLen = ONE_IF_ZERO(inCmd->rdI2CDev.cmd.req.pktlen);
+    uint8_t regAlen = ONE_IF_ZERO(inCmd->rdI2CDev.cmd.req.alen);
+    uint8_t regDlen = ONE_IF_ZERO(inCmd->rdI2CDev.cmd.req.dlen);
+    uint8_t addrInc = ONE_IF_ZERO(inCmd->rdI2CDev.cmd.req.inc);
+    uint8_t pktLen = ONE_IF_ZERO(inCmd->rdI2CDev.cmd.req.pktlen);
 
-    FSC_U8 *buf = outMsg->rdI2CDev.cmd.rsp.data;
+    uint8_t *buf = outMsg->rdI2CDev.cmd.rsp.data;
 
     result = platform_i2c_read(slave_addr, regAlen, regDlen, pktLen, addrInc,
                                reg_addr, buf);
-    if (result == TRUE)
+    if (result == true)
     {
         outMsg->rdI2CDev.cmd.rsp.error = HCMD_STATUS_SUCCESS;
     }
@@ -1170,11 +1170,11 @@ static void ProcessReadI2CFCSDevice(HostCmd_t* inCmd, HostCmd_t* outMsg,
     }
 }
 
-static void ProcessMsg(FSC_U8 *inMsgBuffer, FSC_U8 *outMsgBuffer)
+static void ProcessMsg(uint8_t *inMsgBuffer, uint8_t *outMsgBuffer)
 {
     HostCmd_t *inCmd = (HostCmd_t*) inMsgBuffer;
     HostCmd_t *outMsg = (HostCmd_t*) outMsgBuffer;
-    FSC_U8 portIdx = 0;
+    uint8_t portIdx = 0;
 
     HCOM_MEM_FILL(outMsg, 0, sizeof(HostCmd_t));
 
@@ -1206,12 +1206,12 @@ static void ProcessMsg(FSC_U8 *inMsgBuffer, FSC_U8 *outMsgBuffer)
         portIdx = SAFE_INDEX(inCmd->pd.cmd.req.port, hostCom.numPorts);
         ProcessPDStatus(inCmd, outMsg, &hostCom.port_list[portIdx]);
         break;
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
     case HCMD_DP_CLASS:
         portIdx = SAFE_INDEX(inCmd->dp.cmd.req.port, hostCom.numPorts);
         ProcessDpCommands(inCmd, outMsg, &hostCom.port_list[portIdx]);
         break;
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
     default:
         /* Return that the request is not implemented */
         outMsg->request.cmd.rsp.status = HCMD_STATUS_FAILED;
@@ -1224,7 +1224,7 @@ void HCom_Process(void)
     ProcessMsg(hostCom.inputBuf, hostCom.outputBuf);
 }
 
-void HCom_Init(Port_t *port, FSC_U8 num)
+void HCom_Init(Port_t *port, uint8_t num)
 {
     hostCom.port_list = port;
     hostCom.numPorts = num;
@@ -1232,15 +1232,15 @@ void HCom_Init(Port_t *port, FSC_U8 num)
     hostCom.outputBuf = USBOutputBuf;
 }
 
-FSC_U8* HCom_InBuf(void)
+uint8_t* HCom_InBuf(void)
 {
     return hostCom.inputBuf;
 }
 
-FSC_U8* HCom_OutBuf(void)
+uint8_t* HCom_OutBuf(void)
 {
     return hostCom.outputBuf;
 }
 
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 

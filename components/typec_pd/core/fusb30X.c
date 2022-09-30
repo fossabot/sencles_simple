@@ -17,15 +17,15 @@
 #include "fusb30X.h"
 #include "platform.h"
 
-FSC_BOOL DeviceWrite(FSC_U8 i2cAddr, FSC_U8 regAddr,
-                     FSC_U8 length, FSC_U8* data)
+bool DeviceWrite(uint8_t i2cAddr, uint8_t regAddr,
+                     uint8_t length, uint8_t* data)
 {
     return platform_i2c_write(i2cAddr, FUSB300AddrLength, length,
                               length, FUSB300IncSize, regAddr, data);
 }
 
-FSC_BOOL DeviceRead(FSC_U8 i2cAddr, FSC_U8 regAddr,
-                    FSC_U8 length, FSC_U8* data)
+bool DeviceRead(uint8_t i2cAddr, uint8_t regAddr,
+                    uint8_t length, uint8_t* data)
 {
     return platform_i2c_read(i2cAddr, FUSB300AddrLength, length,
                              length, FUSB300IncSize, regAddr, data);

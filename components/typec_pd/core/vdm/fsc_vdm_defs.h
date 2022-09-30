@@ -19,23 +19,23 @@
 
 #include "vdm_types.h"
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 
 /*
  *  definition/configuration object - these are all the things that the system needs to configure.
  */
 typedef struct {
-    FSC_BOOL                        data_capable_as_usb_host    : 1;
-    FSC_BOOL                        data_capable_as_usb_device  : 1;
+    bool                        data_capable_as_usb_host    : 1;
+    bool                        data_capable_as_usb_device  : 1;
     ProductType                     product_type                : 3;
-    FSC_BOOL                        modal_operation_supported   : 1;
-    FSC_U16                         usb_vendor_id               : 16;
+    bool                        modal_operation_supported   : 1;
+    uint16_t                         usb_vendor_id               : 16;
     /* for Cert Stat VDO, "allocated by USB-IF during certification" */
-    FSC_U32                         test_id                     : 20;
-    FSC_U16                         usb_product_id              : 16;
-    FSC_U16                         bcd_device                  : 16;
-    FSC_U8                          cable_hw_version            : 4;
-    FSC_U8                          cable_fw_version            : 4;
+    uint32_t                         test_id                     : 20;
+    uint16_t                         usb_product_id              : 16;
+    uint16_t                         bcd_device                  : 16;
+    uint8_t                          cable_hw_version            : 4;
+    uint8_t                          cable_fw_version            : 4;
     CableToType                     cable_to_type               : 2;
     CableToPr                       cable_to_pr                 : 1;
     CableLatency                    cable_latency               : 4;
@@ -55,16 +55,16 @@ typedef struct {
     UsbSsSupport                    usb_ss_supp                 : 3;
     AmaUsbSsSupport                 ama_usb_ss_supp             : 3;
 
-    FSC_U32                         num_svids;
-    FSC_U16                         svids[MAX_NUM_SVIDS];
-    FSC_U32                         num_modes_for_svid[MAX_NUM_SVIDS];
+    uint32_t                         num_svids;
+    uint16_t                         svids[MAX_NUM_SVIDS];
+    uint32_t                         num_modes_for_svid[MAX_NUM_SVIDS];
 
     /* TODO: A lot of potential wasted memory here... */
-    FSC_U32                         modes[MAX_NUM_SVIDS][MAX_MODES_PER_SVID];
+    uint32_t                         modes[MAX_NUM_SVIDS][MAX_MODES_PER_SVID];
 
 } VendorDefinition;
 
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
 #endif /* __FSC_VDM_DEFS_H__*/
 

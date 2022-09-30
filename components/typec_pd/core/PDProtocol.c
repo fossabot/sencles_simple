@@ -21,13 +21,13 @@
 #include "PDProtocol.h"
 #include "PD_Types.h"
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 #include "vdm/vdm_callbacks.h"
 #include "vdm/vdm_callbacks_defs.h"
 #include "vdm/vdm.h"
 #include "vdm/vdm_types.h"
 #include "vdm/bitfield_translators.h"
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
 /* USB PD Protocol Layer Routines */
 void USBPDProtocol(Port_t *port)
@@ -35,7 +35,7 @@ void USBPDProtocol(Port_t *port)
     if (port->Registers.Status.I_HARDRST ||
         port->Registers.Status.I_HARDSENT)
     {
-        ResetProtocolLayer(port, TRUE);
+        ResetProtocolLayer(port, true);
         if (port->PolicyIsSource)
         {
             TimerStart(&port->PolicyStateTimer, tPSHardReset);
@@ -46,12 +46,12 @@ void USBPDProtocol(Port_t *port)
           SetPEState(port, peSinkTransitionDefault);
         }
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
         if (port->Registers.Status.I_HARDSENT)
-            StoreUSBPDToken(port, FALSE, pdtHardResetTxd);
+            StoreUSBPDToken(port, false, pdtHardResetTxd);
         else
-            StoreUSBPDToken(port, FALSE, pdtHardResetRxd);
-#endif /* FSC_DEBUG */
+            StoreUSBPDToken(port, false, pdtHardResetRxd);
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
     }
     else
     {
@@ -103,9 +103,9 @@ void ProtocolSendCableReset(Port_t *port)
     port->Registers.Control.TX_START = 0;
     port->MessageIDCounter[port->ProtocolMsgTxSop] = 0;
     port->MessageID[port->ProtocolMsgTxSop] = 0xFF;
-#ifdef FSC_DEBUG
-    StoreUSBPDToken(port, TRUE, pdtCableReset);
-#endif /* FSC_DEBUG */
+#ifdef CONFIG_CONFIG_FSC_DEBUG
+    StoreUSBPDToken(port, true, pdtCableReset);
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 }
 
 void ProtocolIdle(Port_t *port)
@@ -122,7 +122,7 @@ void ProtocolIdle(Port_t *port)
         if (port->DoTxFlush)
         {
             ProtocolFlushTxFIFO(port);
-            port->DoTxFlush = FALSE;
+            port->DoTxFlush = false;
         }
 
         if (!port->ProtocolMsgRx)
@@ -130,12 +130,12 @@ void ProtocolIdle(Port_t *port)
             /* Only read in a new msg if there isn't already one waiting
              * to be processed by the PE.
              */
-            ProtocolGetRxPacket(port, FALSE);
+            ProtocolGetRxPacket(port, false);
         }
         else
         {
             /* Otherwise make a note to handle it later. */
-            port->ProtocolMsgRxPending = TRUE;
+            port->ProtocolMsgRxPending = true;
         }
 
         port->Registers.Status.I_CRC_CHK = 0;
@@ -147,7 +147,7 @@ void ProtocolIdle(Port_t *port)
         if (port->DoTxFlush)
         {
             ProtocolFlushTxFIFO(port);
-            port->DoTxFlush = FALSE;
+            port->DoTxFlush = false;
         }
 
         if (!port->ProtocolMsgRx)
@@ -155,12 +155,12 @@ void ProtocolIdle(Port_t *port)
             /* Only read in a new msg if there isn't already one waiting
              * to be processed by the PE.
              */
-            ProtocolGetRxPacket(port, FALSE);
+            ProtocolGetRxPacket(port, false);
         }
         else
         {
             /* Otherwise make a note to handle it later. */
-            port->ProtocolMsgRxPending = TRUE;
+            port->ProtocolMsgRxPending = true;
         }
 
         port->Registers.Status.I_GCRCSENT = 0;
@@ -178,12 +178,12 @@ void ProtocolIdle(Port_t *port)
             ProtocolTransmitMessage(port);
         }
     }
-#ifdef FSC_HAVE_EXT_MSG
-    else if (port->ExtTxOrRx != NoXfer && port->ExtWaitTxRx == FALSE)
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
+    else if (port->ExtTxOrRx != NoXfer && port->ExtWaitTxRx == false)
     {
         port->PDTxStatus = txSend;
     }
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
 }
 
 void ProtocolResetWait(Port_t *port)
@@ -195,15 +195,15 @@ void ProtocolResetWait(Port_t *port)
     }
 }
 
-void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
+void ProtocolGetRxPacket(Port_t *port, bool HeaderReceived)
 {
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
     sopMainHeader_t logHeader;
-#endif /* FSC_DEBUG */
-    FSC_U32 i = 0, j = 0;
-    FSC_U8 data[4];
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
+    uint32_t i = 0, j = 0;
+    uint8_t data[4];
 
-    port->ProtocolMsgRxPending = FALSE;
+    port->ProtocolMsgRxPending = false;
 
     TimerDisable(&port->ProtocolTimer);
 
@@ -217,7 +217,7 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
         return;
     }
 
-    if (HeaderReceived == FALSE)
+    if (HeaderReceived == false)
     {
         /* Read the Rx token and two header bytes */
         DeviceRead(port->I2cAddr, regFIFO, 3, &data[0]);
@@ -241,7 +241,7 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
      */
     if (port->PolicyRxHeader.NumDataObjects == 0 &&
         port->PolicyRxHeader.MessageType == CMTGetSourceCapExt &&
-        port->SendFastGoodCRC == FALSE)
+        port->SendFastGoodCRC == false)
     {
         /* Pre-load manual GoodCRC */
         port->FastGoodCRCBuffer[5] |= port->PolicyIsDFP << 5;
@@ -249,10 +249,10 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
         port->FastGoodCRCBuffer[6] |= port->PolicyRxHeader.MessageID << 1;
         DeviceWrite(port->I2cAddr, regFIFO, 10, port->FastGoodCRCBuffer);
 
-        port->SendFastGoodCRC = TRUE;
+        port->SendFastGoodCRC = true;
         return;
     }
-    else if(port->SendFastGoodCRC == FALSE)
+    else if(port->SendFastGoodCRC == false)
     {
         /* For normal usage, wait on the GCRCSENT interrupt.  Should
          * be no longer than 700us later
@@ -262,10 +262,10 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
          */
         platform_delay_10us(70); /* 700us */
     }
-    port->SendFastGoodCRC = FALSE;
+    port->SendFastGoodCRC = false;
 #endif /* FSC_GSCE_FIX */
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
     /* Log the auto goodcrc */
     logHeader.word = 0;
     logHeader.NumDataObjects = 0;
@@ -274,7 +274,7 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
     logHeader.PortPowerRole = port->PolicyIsSource;
     logHeader.SpecRevision = DPM_SpecRev(port, port->ProtocolMsgRxSop);
     logHeader.MessageID = port->PolicyRxHeader.MessageID;
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 
     if (port->ProtocolMsgRxSop == SOP_TYPE_ERROR)
     {
@@ -291,17 +291,17 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
         /* For a soft reset, reset ID's, etc. */
         port->MessageIDCounter[port->ProtocolMsgRxSop] = 0;
         port->MessageID[port->ProtocolMsgRxSop] = 0xFF;
-        port->ProtocolMsgRx = TRUE;
-#ifdef FSC_DEBUG
-        port->SourceCapsUpdated = TRUE;
-#endif /* FSC_DEBUG */
+        port->ProtocolMsgRx = true;
+#ifdef CONFIG_CONFIG_FSC_DEBUG
+        port->SourceCapsUpdated = true;
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
     }
     else if (port->PolicyRxHeader.MessageID !=
              port->MessageID[port->ProtocolMsgRxSop])
     {
         port->MessageID[port->ProtocolMsgRxSop] =
             port->PolicyRxHeader.MessageID;
-        port->ProtocolMsgRx = TRUE;
+        port->ProtocolMsgRx = true;
     }
 
     if ((port->PolicyRxHeader.NumDataObjects == 0) &&
@@ -316,9 +316,9 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
 
         port->ProtocolState = PRLIdle;
         port->PDTxStatus = txSuccess;
-        port->ProtocolMsgRx = FALSE;
+        port->ProtocolMsgRx = false;
 
-        ProtocolGetRxPacket(port, FALSE);
+        ProtocolGetRxPacket(port, false);
 
         return;
     }
@@ -329,7 +329,7 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
                    ((port->PolicyRxHeader.NumDataObjects << 2) + 4),
                    &port->ProtocolRxBuffer[0]);
 
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
         if (port->PolicyRxHeader.Extended == 1)
         {
             /* Copy ext header first */
@@ -339,7 +339,7 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
             if (port->ExtRxHeader.ReqChunk == 1)
             {
                 /* Received request for another chunk. Continue sending....*/
-                port->ExtWaitTxRx = FALSE;
+                port->ExtWaitTxRx = false;
                 if (port->ExtRxHeader.ChunkNum < port->ExtChunkNum)
                 {
                     /* Resend the previous chunk */
@@ -364,12 +364,12 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
                 }
             }
         }
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
         for (i = 0; i < port->PolicyRxHeader.NumDataObjects; i++)
         {
             for (j = 0; j < 4; j++)
             {
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
                 if (port->PolicyRxHeader.Extended == 1)
                 {
                     /* Skip ext header */
@@ -382,7 +382,7 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
                     }
                 }
                 else
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
                 {
                     port->PolicyRxDataObj[i].byte[j] =
                             port->ProtocolRxBuffer[j + (i << 2)];
@@ -390,7 +390,7 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
             }
        }
 
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
         if (port->PolicyRxHeader.Extended == 1)
         {
             if (port->ExtRxHeader.ReqChunk == 0)
@@ -399,19 +399,19 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
                 {
                     /* more message left. continue receiving */
                     port->ExtTxOrRx = RXing;
-                    port->ProtocolMsgRx = FALSE;
-                    port->ExtWaitTxRx = FALSE;
+                    port->ProtocolMsgRx = false;
+                    port->ExtWaitTxRx = false;
                 }
                 else
                 {
                     port->ExtTxOrRx = NoXfer;
-                    port->ProtocolMsgRx = TRUE;
+                    port->ProtocolMsgRx = true;
                 }
             }
             else if (port->ExtRxHeader.ReqChunk == 1 &&
                      port->ExtChunkOffset < port->ExtTxHeader.DataSize)
             {
-                port->ExtWaitTxRx = FALSE;
+                port->ExtWaitTxRx = false;
             }
             else
             {
@@ -419,7 +419,7 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
                 port->ExtTxOrRx = NoXfer;
             }
         }
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
     }
     else
     {
@@ -428,14 +428,14 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
         DeviceRead(port->I2cAddr, regFIFO, 4, data);
     }
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
     /* Store the received PD message for the device policy manager */
     StoreUSBPDMessage(port, port->PolicyRxHeader,
                       (doDataObject_t*)port->ProtocolRxBuffer,
-                      FALSE, port->ProtocolMsgRxSop);
+                      false, port->ProtocolMsgRxSop);
 
     /* Store the GoodCRC message that we have sent (SOP) */
-    StoreUSBPDMessage(port, logHeader, &port->PolicyTxDataObj[0], TRUE,
+    StoreUSBPDMessage(port, logHeader, &port->PolicyTxDataObj[0], true,
                       port->ProtocolMsgRxSop);
 
     /*
@@ -443,7 +443,7 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
      * in this function, and the number of I2C bytes read during this period.
      */
     WriteStateLog(&port->PDStateLog, dbgGetRxPacket, platform_get_log_time());
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 
     /* Special VDM use case where a second message appears too quickly */
     if ((port->PolicyRxHeader.NumDataObjects != 0) &&
@@ -463,7 +463,7 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
             !port->Registers.Status.RX_EMPTY)
         {
             /* Get the next message - overwriting the current message */
-            ProtocolGetRxPacket(port, FALSE);
+            ProtocolGetRxPacket(port, false);
         }
     }
     else
@@ -484,7 +484,7 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
             if (!port->Registers.Status.ACTIVITY &&
                 !port->Registers.Status.RX_EMPTY)
             {
-                port->ProtocolMsgRxPending = TRUE;
+                port->ProtocolMsgRxPending = true;
             }
         }
     }
@@ -500,15 +500,15 @@ void ProtocolGetRxPacket(Port_t *port, FSC_BOOL HeaderReceived)
 
 void ProtocolTransmitMessage(Port_t *port)
 {
-    FSC_U32 i, j;
+    uint32_t i, j;
     sopMainHeader_t temp_PolicyTxHeader = { 0 };
 
-    port->DoTxFlush = FALSE;
+    port->DoTxFlush = false;
 
     /* Note: Power needs to be set a bit before we write TX_START to update */
     ProtocolLoadSOP(port, port->ProtocolMsgTxSop);
 
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
     if (port->ExtTxOrRx == RXing)
     {
         /* Set up chunk request */
@@ -517,7 +517,7 @@ void ProtocolTransmitMessage(Port_t *port)
         temp_PolicyTxHeader.PortDataRole = port->PolicyIsDFP;
     }
     else
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
     {
         temp_PolicyTxHeader.word = port->PolicyTxHeader.word;
     }
@@ -527,12 +527,12 @@ void ProtocolTransmitMessage(Port_t *port)
     {
         port->MessageIDCounter[port->ProtocolMsgTxSop] = 0;
         port->MessageID[port->ProtocolMsgTxSop] = 0xFF;
-#ifdef FSC_DEBUG
-        port->SourceCapsUpdated = TRUE;
-#endif /* FSC_DEBUG */
+#ifdef CONFIG_CONFIG_FSC_DEBUG
+        port->SourceCapsUpdated = true;
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
     }
 
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
     if (temp_PolicyTxHeader.Extended == 1)
     {
         if (port->ExtTxOrRx == TXing)
@@ -559,9 +559,9 @@ void ProtocolTransmitMessage(Port_t *port)
         {
             temp_PolicyTxHeader.NumDataObjects = 1;
         }
-        port->ExtWaitTxRx = TRUE;
+        port->ExtWaitTxRx = true;
     }
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
 
     temp_PolicyTxHeader.MessageID =
             port->MessageIDCounter[port->ProtocolMsgTxSop];
@@ -575,7 +575,7 @@ void ProtocolTransmitMessage(Port_t *port)
     /* If this is a data object... */
     if (temp_PolicyTxHeader.NumDataObjects > 0)
     {
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
         if (temp_PolicyTxHeader.Extended == 1)
         {
             if (port->ExtTxOrRx == RXing)
@@ -596,12 +596,12 @@ void ProtocolTransmitMessage(Port_t *port)
             port->ProtocolTxBuffer[port->ProtocolTxBytes++] =
                     port->ExtTxHeader.byte[1];
         }
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
         for (i = 0; i < temp_PolicyTxHeader.NumDataObjects; i++)
         {
             for (j = 0; j < 4; j++)
             {
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
                 if (temp_PolicyTxHeader.Extended == 1)
                 {
                     /* Skip extended header */
@@ -618,7 +618,7 @@ void ProtocolTransmitMessage(Port_t *port)
                     }
                 }
                 else
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
                 {
                     /* Load the actual bytes */
                     port->ProtocolTxBuffer[port->ProtocolTxBytes++] =
@@ -633,12 +633,12 @@ void ProtocolTransmitMessage(Port_t *port)
 
     /* Commit the FIFO to the device */
     if (DeviceWrite(port->I2cAddr, regFIFO, port->ProtocolTxBytes,
-                    &port->ProtocolTxBuffer[0]) == FALSE)
+                    &port->ProtocolTxBuffer[0]) == false)
     {
         /* If a FIFO write happens while a GoodCRC is being transmitted,
          * the transaction will NAK and will need to be discarded.
          */
-        port->DoTxFlush = TRUE;
+        port->DoTxFlush = true;
         port->PDTxStatus = txAbort;
         return;
     }
@@ -661,13 +661,13 @@ void ProtocolTransmitMessage(Port_t *port)
      */
     TimerStart(&port->ProtocolTimer, tChunkSenderRequest);
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
     /* Store all messages that we attempt to send for debugging (SOP) */
     StoreUSBPDMessage(port, temp_PolicyTxHeader,
                       (doDataObject_t*)&port->ProtocolTxBuffer[7],
-                      TRUE, port->ProtocolMsgTxSop);
+                      true, port->ProtocolMsgTxSop);
     WriteStateLog(&port->PDStateLog, dbgSendTxPacket, platform_get_log_time());
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 }
 
 void ProtocolSendingMessage(Port_t *port)
@@ -697,7 +697,7 @@ void ProtocolSendingMessage(Port_t *port)
         /* Interruption */
         port->PDTxStatus = txError;
         port->ProtocolState = PRLIdle;
-        port->ProtocolMsgRxPending = TRUE;
+        port->ProtocolMsgRxPending = true;
         port->Registers.Status.I_GCRCSENT = 0;
     }
 
@@ -710,7 +710,7 @@ void ProtocolSendingMessage(Port_t *port)
 
 void ProtocolVerifyGoodCRC(Port_t *port)
 {
-    FSC_U8 data[4];
+    uint8_t data[4];
     sopMainHeader_t header;
     SopType sop;
 
@@ -725,26 +725,26 @@ void ProtocolVerifyGoodCRC(Port_t *port)
     if ((header.NumDataObjects == 0) &&
         (header.MessageType == CMTGoodCRC))
     {
-        FSC_U8 MIDcompare;
+        uint8_t MIDcompare;
         if (sop == SOP_TYPE_ERROR)
             MIDcompare = 0xFF;
         else
             MIDcompare = port->MessageIDCounter[sop];
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
         /* Store the received PD message for the DPM (GUI) */
         StoreUSBPDMessage(port, header, &port->PolicyRxDataObj[0],
-                          FALSE, sop);
-#endif /* FSC_DEBUG */
+                          false, sop);
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 
         if (header.MessageID != MIDcompare)
         {
             /* Read out the 4 CRC bytes to move the addr to the next packet */
             DeviceRead(port->I2cAddr, regFIFO, 4, data);
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
             /* Store that there was a bad message ID received in the buffer */
-            StoreUSBPDToken(port, FALSE, pdtBadMessageID);
-#endif /* FSC_DEBUG */
+            StoreUSBPDToken(port, false, pdtBadMessageID);
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
             port->PDTxStatus = txError;
             port->ProtocolState = PRLIdle;
         }
@@ -755,7 +755,7 @@ void ProtocolVerifyGoodCRC(Port_t *port)
                 /* Increment and roll over */
                 port->MessageIDCounter[sop]++;
                 port->MessageIDCounter[sop] &= 0x07;
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
                 if (port->ExtTxOrRx != NoXfer)
                 {
                     if (port->ExtChunkOffset >= port->ExtTxHeader.DataSize)
@@ -765,7 +765,7 @@ void ProtocolVerifyGoodCRC(Port_t *port)
                     }
                     port->ExtChunkNum++;
                 }
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
             }
             port->ProtocolState = PRLIdle;
             port->PDTxStatus = txSuccess;
@@ -784,11 +784,11 @@ void ProtocolVerifyGoodCRC(Port_t *port)
         port->ProtocolMsgRxSop = sop;
 
         /* Rare case, next received message preempts GoodCRC */
-        ProtocolGetRxPacket(port, TRUE);
+        ProtocolGetRxPacket(port, true);
     }
 }
 
-SopType DecodeSopFromPdMsg(FSC_U8 msg0, FSC_U8 msg1)
+SopType DecodeSopFromPdMsg(uint8_t msg0, uint8_t msg1)
 {
     /* this SOP* decoding is based on FUSB302 GUI:
      * SOP   => 0b 0xx1 xxxx xxx0 xxxx
@@ -857,12 +857,12 @@ void ProtocolLoadEOP(Port_t *port)
 
 void ProtocolSendHardReset(Port_t *port)
 {
-    FSC_U8 data = port->Registers.Control.byte[3] | 0x40;  /* Hard Reset bit */
+    uint8_t data = port->Registers.Control.byte[3] | 0x40;  /* Hard Reset bit */
 
     /* If the shortcut flag is set, we've already sent the HR command */
     if (port->WaitingOnHR)
     {
-        port->WaitingOnHR = FALSE;
+        port->WaitingOnHR = false;
     }
     else
     {
@@ -872,20 +872,20 @@ void ProtocolSendHardReset(Port_t *port)
 
 void ProtocolFlushRxFIFO(Port_t *port)
 {
-    FSC_U8 data = port->Registers.Control.byte[1] | 0x04;  /* RX_FLUSH bit */
+    uint8_t data = port->Registers.Control.byte[1] | 0x04;  /* RX_FLUSH bit */
     DeviceWrite(port->I2cAddr, regControl1, 1, &data);
 }
 
 void ProtocolFlushTxFIFO(Port_t *port)
 {
-    FSC_U8 data = port->Registers.Control.byte[0] | 0x40;  /* TX_FLUSH bit */
+    uint8_t data = port->Registers.Control.byte[0] | 0x40;  /* TX_FLUSH bit */
     DeviceWrite(port->I2cAddr, regControl0, 1, &data);
 }
 
-void ResetProtocolLayer(Port_t *port, FSC_BOOL ResetPDLogic)
+void ResetProtocolLayer(Port_t *port, bool ResetPDLogic)
 {
-    FSC_U32 i;
-    FSC_U8 data = 0x02; /* PD_RESET bit */
+    uint32_t i;
+    uint8_t data = 0x02; /* PD_RESET bit */
 
     if (ResetPDLogic)
     {
@@ -895,12 +895,12 @@ void ResetProtocolLayer(Port_t *port, FSC_BOOL ResetPDLogic)
     port->ProtocolState = PRLIdle;
     port->PDTxStatus = txIdle;
 
-    port->WaitingOnHR = FALSE;
+    port->WaitingOnHR = false;
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
     TimerDisable(&port->VdmTimer);
-    port->VdmTimerStarted = FALSE;
-#endif /* FSC_HAVE_VDM */
+    port->VdmTimerStarted = false;
+#endif /* CONFIG_FSC_HAVE_VDM */
 
     port->ProtocolTxBytes = 0;
 
@@ -910,16 +910,16 @@ void ResetProtocolLayer(Port_t *port, FSC_BOOL ResetPDLogic)
         port->MessageID[i] = 0xFF;
     }
 
-    port->ProtocolMsgRx = FALSE;
+    port->ProtocolMsgRx = false;
     port->ProtocolMsgRxSop = SOP_TYPE_SOP;
-    port->ProtocolMsgRxPending = FALSE;
-    port->USBPDTxFlag = FALSE;
-    port->PolicyHasContract = FALSE;
+    port->ProtocolMsgRxPending = false;
+    port->USBPDTxFlag = false;
+    port->PolicyHasContract = false;
     port->USBPDContract.object = 0;
 
-#ifdef FSC_DEBUG
-    port->SourceCapsUpdated = TRUE;
-#endif // FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
+    port->SourceCapsUpdated = true;
+#endif // CONFIG_CONFIG_FSC_DEBUG
 
     port->SrcCapsHeaderReceived.word = 0;
     port->SnkCapsHeaderReceived.word = 0;
@@ -929,26 +929,26 @@ void ResetProtocolLayer(Port_t *port, FSC_BOOL ResetPDLogic)
         port->SnkCapsReceived[i].object = 0;
     }
 
-#ifdef FSC_HAVE_EXT_MSG
-    port->ExtWaitTxRx = FALSE;
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
+    port->ExtWaitTxRx = false;
     port->ExtChunkNum = 0;
     port->ExtTxOrRx = NoXfer;
     port->ExtChunkOffset = 0;
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
     
-    port->SendFastGoodCRC = FALSE;
+    port->SendFastGoodCRC = false;
 }
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
 /* USB PD Debug Buffer Routines */
-FSC_BOOL StoreUSBPDToken(Port_t *port, FSC_BOOL transmitter,
+bool StoreUSBPDToken(Port_t *port, bool transmitter,
                          USBPD_BufferTokens_t token)
 {
-    FSC_U8 header1 = 1;
+    uint8_t header1 = 1;
 
-    if (ClaimBufferSpace(port, 2) == FALSE)
+    if (ClaimBufferSpace(port, 2) == false)
     {
-        return FALSE;
+        return false;
     }
 
     if (transmitter)
@@ -962,21 +962,21 @@ FSC_BOOL StoreUSBPDToken(Port_t *port, FSC_BOOL transmitter,
     port->USBPDBuf[port->USBPDBufEnd++] = token;
     port->USBPDBufEnd %= PDBUFSIZE;
 
-    return TRUE;
+    return true;
 }
 
-FSC_BOOL StoreUSBPDMessage(Port_t *port, sopMainHeader_t Header,
+bool StoreUSBPDMessage(Port_t *port, sopMainHeader_t Header,
                            doDataObject_t* DataObject,
-                           FSC_BOOL transmitter, FSC_U8 SOPToken)
+                           bool transmitter, uint8_t SOPToken)
 {
-    FSC_U32 i, j, required;
-    FSC_U8 header1;
+    uint32_t i, j, required;
+    uint8_t header1;
 
     required = Header.NumDataObjects * 4 + 2 + 2;
 
-    if (ClaimBufferSpace(port, required) == FALSE)
+    if (ClaimBufferSpace(port, required) == false)
     {
-        return FALSE;
+        return false;
     }
 
     header1 = (0x1F & (required - 1)) | 0x80;
@@ -1004,12 +1004,12 @@ FSC_BOOL StoreUSBPDMessage(Port_t *port, sopMainHeader_t Header,
         }
     }
 
-    return TRUE;
+    return true;
 }
 
-FSC_U8 GetNextUSBPDMessageSize(Port_t *port)
+uint8_t GetNextUSBPDMessageSize(Port_t *port)
 {
-    FSC_U8 numBytes = 0;
+    uint8_t numBytes = 0;
 
     if (port->USBPDBufStart == port->USBPDBufEnd)
     {
@@ -1023,9 +1023,9 @@ FSC_U8 GetNextUSBPDMessageSize(Port_t *port)
     return numBytes;
 }
 
-FSC_U8 GetUSBPDBufferNumBytes(Port_t *port)
+uint8_t GetUSBPDBufferNumBytes(Port_t *port)
 {
-    FSC_U8 bytes = 0;
+    uint8_t bytes = 0;
 
     if (port->USBPDBufStart == port->USBPDBufEnd)
     {
@@ -1043,14 +1043,14 @@ FSC_U8 GetUSBPDBufferNumBytes(Port_t *port)
     return bytes;
 }
 
-FSC_BOOL ClaimBufferSpace(Port_t *port, FSC_S32 intReqSize)
+bool ClaimBufferSpace(Port_t *port, int32_t intReqSize)
 {
-    FSC_S32 available;
-    FSC_U8 numBytes;
+    int32_t available;
+    uint8_t numBytes;
 
     if (intReqSize >= PDBUFSIZE)
     {
-        return FALSE;
+        return false;
     }
 
     if (port->USBPDBufStart == port->USBPDBufEnd)
@@ -1071,11 +1071,11 @@ FSC_BOOL ClaimBufferSpace(Port_t *port, FSC_S32 intReqSize)
         /* Overwrite entries until space is adequate */
         if (intReqSize >= available)
         {
-            port->USBPDBufOverflow = TRUE;
+            port->USBPDBufOverflow = true;
             numBytes = GetNextUSBPDMessageSize(port);
             if (numBytes == 0)
             {
-                return FALSE;
+                return false;
             }
             available += numBytes;
             port->USBPDBufStart += numBytes;
@@ -1087,13 +1087,13 @@ FSC_BOOL ClaimBufferSpace(Port_t *port, FSC_S32 intReqSize)
         }
     } while (1);
 
-    return TRUE;
+    return true;
 }
 
 /* USB HID Commmunication Routines */
-FSC_U8 ReadUSBPDBuffer(Port_t *port, FSC_U8* pData, FSC_U8 bytesAvail)
+uint8_t ReadUSBPDBuffer(Port_t *port, uint8_t* pData, uint8_t bytesAvail)
 {
-    FSC_U8 i, msgSize, bytesRead;
+    uint8_t i, msgSize, bytesRead;
     bytesRead = 0;
     msgSize = GetNextUSBPDMessageSize(port);
 
@@ -1112,4 +1112,4 @@ FSC_U8 ReadUSBPDBuffer(Port_t *port, FSC_U8* pData, FSC_U8 bytesAvail)
     return bytesRead;
 }
 
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */

@@ -21,7 +21,7 @@
 #include "TypeC.h"
 #include "fusb30X.h"
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 #include "vdm/vdm_callbacks.h"
 #include "vdm/vdm_callbacks_defs.h"
 #include "vdm/vdm.h"
@@ -29,14 +29,14 @@
 #include "vdm/bitfield_translators.h"
 #include "vdm/DisplayPort/dp_types.h"
 #include "vdm/DisplayPort/dp.h"
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
 #include "Log.h"
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 
 /* USB PD Enable / Disable Routines */
-void USBPDEnable(Port_t *port, FSC_BOOL DeviceUpdate, SourceOrSink TypeCDFP)
+void USBPDEnable(Port_t *port, bool DeviceUpdate, SourceOrSink TypeCDFP)
 {
     port->PortConfig.reqPRSwapAsSrc = Requests_PR_Swap_As_Src;
     port->PortConfig.reqPRSwapAsSnk = Requests_PR_Swap_As_Snk;
@@ -45,13 +45,13 @@ void USBPDEnable(Port_t *port, FSC_BOOL DeviceUpdate, SourceOrSink TypeCDFP)
     port->PortConfig.reqVconnSwapToOnAsSink = Attempt_Vconn_Swap_to_On_As_Sink;
     port->PortConfig.reqVconnSwapToOffAsSrc = Attempt_Vconn_Swap_to_Off_As_Src;
 
-    port->IsHardReset = FALSE;
-    port->IsPRSwap = FALSE;
+    port->IsHardReset = false;
+    port->IsPRSwap = false;
     port->HardResetCounter = 0;
 
-    if (port->USBPDEnabled == TRUE)
+    if (port->USBPDEnabled == true)
     {
-        ResetProtocolLayer(port, TRUE);
+        ResetProtocolLayer(port, true);
                     
         /* Check CC pin to monitor */
         if (port->CCPin == CC1)
@@ -73,11 +73,11 @@ void USBPDEnable(Port_t *port, FSC_BOOL DeviceUpdate, SourceOrSink TypeCDFP)
 
         if (port->CCPin != CCNone)
         {
-            port->USBPDActive = TRUE;
+            port->USBPDActive = true;
 
-            port->PolicyIsSource = (TypeCDFP == SOURCE) ? TRUE : FALSE;
-            port->PolicyIsDFP = (TypeCDFP == SOURCE) ? TRUE : FALSE;
-            port->IsVCONNSource = (TypeCDFP == SOURCE) ? TRUE : FALSE;
+            port->PolicyIsSource = (TypeCDFP == SOURCE) ? true : false;
+            port->PolicyIsDFP = (TypeCDFP == SOURCE) ? true : false;
+            port->IsVCONNSource = (TypeCDFP == SOURCE) ? true : false;
 
             if (port->PolicyIsSource)
             {
@@ -115,15 +115,15 @@ void USBPDEnable(Port_t *port, FSC_BOOL DeviceUpdate, SourceOrSink TypeCDFP)
 
             TimerDisable(&port->SwapSourceStartTimer);
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
             /* Store the PD attach token in the log */
-            StoreUSBPDToken(port, TRUE, pdtAttach);
-#endif /* FSC_DEBUG */
+            StoreUSBPDToken(port, true, pdtAttach);
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
         }
 
-        port->PEIdle = FALSE;
+        port->PEIdle = false;
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
         if(Attempts_Discov_SOP)
         {
             port->AutoVdmState = AUTO_VDM_INIT;
@@ -132,13 +132,13 @@ void USBPDEnable(Port_t *port, FSC_BOOL DeviceUpdate, SourceOrSink TypeCDFP)
         {
             port->AutoVdmState = AUTO_VDM_DONE;
         }
-        port->cblPresent = FALSE;
+        port->cblPresent = false;
         port->cblRstState = CBL_RST_DISABLED;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
     }
 }
 
-void USBPDDisable(Port_t *port, FSC_BOOL DeviceUpdate)
+void USBPDDisable(Port_t *port, bool DeviceUpdate)
 {
     if (port->Registers.Control.BIST_MODE2 != 0)
     {
@@ -147,29 +147,29 @@ void USBPDDisable(Port_t *port, FSC_BOOL DeviceUpdate)
                     &port->Registers.Control.byte[1]);
     }
 
-    port->IsHardReset = FALSE;
-    port->IsPRSwap = FALSE;
+    port->IsHardReset = false;
+    port->IsPRSwap = false;
 
-    port->PEIdle = TRUE;
+    port->PEIdle = true;
 
-#ifdef FSC_DEBUG
-    if (port->USBPDActive == TRUE)
+#ifdef CONFIG_CONFIG_FSC_DEBUG
+    if (port->USBPDActive == true)
     {
         /* Store the PD detach token */
-        StoreUSBPDToken(port, TRUE, pdtDetach);
+        StoreUSBPDToken(port, true, pdtDetach);
     }
 
     /* Set the source caps updated flag to trigger an update of the GUI */
-    port->SourceCapsUpdated = TRUE;
-#endif /* FSC_DEBUG */
+    port->SourceCapsUpdated = true;
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 
     port->PdRevSop = port->PortConfig.PdRevPreferred;
     port->PdRevCable = port->PortConfig.PdRevPreferred;
-    port->USBPDActive = FALSE;
+    port->USBPDActive = false;
     port->ProtocolState = PRLDisabled;
     SetPEState(port, peDisabled);
-    port->PolicyIsSource = FALSE;
-    port->PolicyHasContract = FALSE;
+    port->PolicyIsSource = false;
+    port->PolicyHasContract = false;
     port->DetachThreshold = VBUS_MV_VSAFE5V_DISC;
 
     notify_observers(BIST_DISABLED, port->I2cAddr, 0);
@@ -217,8 +217,8 @@ void USBPDPolicyEngine(Port_t *port)
     case peErrorRecovery:
         PolicyErrorRecovery(port);
         break;
-#if (defined(FSC_HAVE_SRC) || \
-     (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)))
+#if (defined(CONFIG_FSC_HAVE_SRC) || \
+     (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)))
     /* Source States */
     case peSourceSendHardReset:
         PolicySourceSendHardReset(port);
@@ -298,8 +298,8 @@ void USBPDPolicyEngine(Port_t *port)
     case peSourceAlertReceived:
         PolicySourceAlertReceived(port);
         break;
-#endif /* FSC_HAVE_SRC */
-#ifdef FSC_HAVE_SNK
+#endif /* CONFIG_FSC_HAVE_SRC */
+#ifdef CONFIG_FSC_HAVE_SNK
     /* Sink States */
     case peSinkStartup:
         PolicySinkStartup(port);
@@ -367,21 +367,21 @@ void USBPDPolicyEngine(Port_t *port)
     case peSinkAlertReceived:
         PolicySinkAlertReceived(port);
         break;
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
     case peNotSupported:
         PolicyNotSupported(port);
         break;
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
     case peSendCableReset:
         PolicySendCableReset(port);
         break;
-#endif /* FSC_HAVE_VDM */
-#ifdef FSC_HAVE_VDM
+#endif /* CONFIG_FSC_HAVE_VDM */
+#ifdef CONFIG_FSC_HAVE_VDM
         case peGiveVdm:
         PolicyGiveVdm(port);
         break;
-#endif /* FSC_HAVE_VDM */
-#ifdef FSC_HAVE_EXT_MSG
+#endif /* CONFIG_FSC_HAVE_VDM */
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
     case peGiveCountryCodes:
         PolicyGiveCountryCodes(port);
         break;
@@ -397,7 +397,7 @@ void USBPDPolicyEngine(Port_t *port)
     case peGetPPSStatus:
         PolicyGetPPSStatus(port);
         break;
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
     case PE_BIST_Receive_Mode:
         policyBISTReceiveMode(port);
         break;
@@ -417,7 +417,7 @@ void USBPDPolicyEngine(Port_t *port)
         PolicySendGenericData(port);
         break;
     default:
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
         if ((port->PolicyState >= FIRST_VDM_STATE) &&
             (port->PolicyState <= LAST_VDM_STATE))
         {
@@ -425,7 +425,7 @@ void USBPDPolicyEngine(Port_t *port)
             PolicyVdm(port);
         }
         else
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
         {
             /* Invalid state, reset */
             PolicyInvalidState(port);
@@ -439,7 +439,7 @@ void PolicyErrorRecovery(Port_t *port)
     SetStateErrorRecovery(port);
 }
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 void PolicySendCableReset(Port_t *port)
 {
     switch(port->PolicySubIndex)
@@ -456,7 +456,7 @@ void PolicySendCableReset(Port_t *port)
         if (TimerExpired(&port->PolicyStateTimer))
         {
             SetPEState(port,
-                    port->PolicyIsSource == TRUE ? peSourceReady : peSinkReady);
+                    port->PolicyIsSource == true ? peSourceReady : peSinkReady);
             port->Registers.Control.AUTO_RETRY = 1;
             DeviceWrite(port->I2cAddr, regControl3, 1,
                         &port->Registers.Control.byte[3]);
@@ -464,10 +464,10 @@ void PolicySendCableReset(Port_t *port)
         }
     }
 }
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
-#if (defined(FSC_HAVE_SRC) || \
-     (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)))
+#if (defined(CONFIG_FSC_HAVE_SRC) || \
+     (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)))
 void PolicySourceSendHardReset(Port_t *port)
 {
     PolicySendHardReset(port);
@@ -478,9 +478,9 @@ void PolicySourceSoftReset(Port_t *port, SopType sop)
     if (PolicySendCommand(port, CMTAccept, peSourceSendCaps, 0,
                           sop) == STAT_SUCCESS)
     {
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
         port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
     }
 }
 
@@ -493,20 +493,20 @@ void PolicySourceSendSoftReset(Port_t *port)
                               SOP_TYPE_SOP) == STAT_SUCCESS)
         {
             TimerStart(&port->PolicyStateTimer, tSenderResponse);
-            port->WaitingOnHR = TRUE;
-            port->PEIdle = TRUE;
+            port->WaitingOnHR = true;
+            port->PEIdle = true;
         }
         break;
     default:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if ((port->PolicyRxHeader.NumDataObjects == 0) &&
                 (port->PolicyRxHeader.MessageType == CMTAccept))
             {
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                 port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
                 SetPEState(port, peSourceDiscovery);
             }
             else
@@ -520,7 +520,7 @@ void PolicySourceSendSoftReset(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -528,9 +528,9 @@ void PolicySourceSendSoftReset(Port_t *port)
 
 void PolicySourceStartup(Port_t *port)
 {
-#ifdef FSC_HAVE_VDM
-    FSC_S32 i;
-#endif /* FSC_HAVE_VDM */
+#ifdef CONFIG_FSC_HAVE_VDM
+    int32_t i;
+#endif /* CONFIG_FSC_HAVE_VDM */
 
     switch (port->PolicySubIndex)
     {
@@ -574,17 +574,17 @@ void PolicySourceStartup(Port_t *port)
 
         port->USBPDContract.object = 0;
         port->PartnerCaps.object = 0;
-        port->IsPRSwap = FALSE;
-        port->WaitSent = FALSE;
-        port->IsHardReset = FALSE;
-        port->PolicyIsSource = TRUE;
-        port->PpsEnabled = FALSE;
+        port->IsPRSwap = false;
+        port->WaitSent = false;
+        port->IsHardReset = false;
+        port->PolicyIsSource = true;
+        port->PpsEnabled = false;
 
         port->Registers.Switches.POWERROLE = port->PolicyIsSource;
         DeviceWrite(port->I2cAddr, regSwitches1, 1,
                     &port->Registers.Switches.byte[1]);
 
-        ResetProtocolLayer(port, FALSE);
+        ResetProtocolLayer(port, false);
         port->Registers.Switches.AUTO_CRC = 1;
         DeviceWrite(port->I2cAddr, regSwitches1, 1,
                     &port->Registers.Switches.byte[1]);
@@ -611,7 +611,7 @@ void PolicySourceStartup(Port_t *port)
         else
         {
             TimerStart(&port->VBusPollTimer, tVBusPollShort);
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 2:
@@ -620,7 +620,7 @@ void PolicySourceStartup(Port_t *port)
             TimerDisable(&port->PolicyStateTimer);
             TimerDisable(&port->SwapSourceStartTimer);
             SetPEState(port, peSourceSendCaps);
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
             port->discoverIdCounter = 0;
             if (Attempts_DiscvId_SOP_P_First)
             {
@@ -636,24 +636,24 @@ void PolicySourceStartup(Port_t *port)
                 }
             }
 
-            port->mode_entered = FALSE;
+            port->mode_entered = false;
             port->core_svid_info.num_svids = 0;
             for (i = 0; i < MAX_NUM_SVIDS; i++)
             {
                 port->core_svid_info.svids[i] = 0;
             }
             port->AutoModeEntryObjPos = -1;
-            port->svid_discvry_done = FALSE;
+            port->svid_discvry_done = false;
             port->svid_discvry_idx  = -1;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
             DP_Initialize(port);
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     default:
@@ -667,12 +667,12 @@ void PolicySourceDiscovery(Port_t *port)
     switch (port->PolicySubIndex)
     {
     case 0:
-        if (TimerDisabled(&port->PolicyStateTimer) == TRUE)
+        if (TimerDisabled(&port->PolicyStateTimer) == true)
         {
             /* Start timer only when inactive. When waiting for timer send
              * sop' discovery messages */
             TimerStart(&port->PolicyStateTimer, tTypeCSendSourceCap);
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
             if (Attempts_DiscvId_SOP_P_First && port->discoverIdCounter *
                     (DPM_Retries(port, SOP_TYPE_SOP1) + 1) <
                         nDiscoverIdentityCount)
@@ -686,14 +686,14 @@ void PolicySourceDiscovery(Port_t *port)
         break;
     default:
         if ((port->HardResetCounter > nHardResetCount) &&
-            (port->PolicyHasContract == TRUE))
+            (port->PolicyHasContract == true))
         {
             TimerDisable(&port->PolicyStateTimer);
             /* If we previously had a contract in place, go to ErrorRecovery */
             SetPEState(port, peErrorRecovery);
         }
         else if ((port->HardResetCounter > nHardResetCount) &&
-                 (port->PolicyHasContract == FALSE))
+                 (port->PolicyHasContract == false))
         {
             TimerDisable(&port->PolicyStateTimer);
             /* Otherwise, disable and wait for detach */
@@ -709,7 +709,7 @@ void PolicySourceDiscovery(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -726,18 +726,18 @@ void PolicySourceSendCaps(Port_t *port)
                            DPM_GetSourceCapHeader(port->dpm, port)->
                                 NumDataObjects*4,
                            peSourceSendCaps, 1,
-                           SOP_TYPE_SOP, FALSE) == STAT_SUCCESS)
+                           SOP_TYPE_SOP, false) == STAT_SUCCESS)
         {
             port->HardResetCounter = 0;
             port->CapsCounter = 0;
             TimerStart(&port->PolicyStateTimer, tSenderResponse);
-            port->WaitingOnHR = TRUE;
+            port->WaitingOnHR = true;
         }
         break;
     default:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if ((port->PolicyRxHeader.NumDataObjects == 1) &&
                 (port->PolicyRxHeader.MessageType == DMTRequest))
             {
@@ -755,12 +755,12 @@ void PolicySourceSendCaps(Port_t *port)
         }
         else if (TimerExpired(&port->PolicyStateTimer))
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             SetPEState(port, peSourceSendHardReset);
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -774,7 +774,7 @@ void PolicySourceDisabled(Port_t *port)
     /* Wait for a hard reset or detach... */
     if(port->loopCounter == 0)
     {
-        port->PEIdle = TRUE;
+        port->PEIdle = true;
 
         if (port->Registers.Power.POWER != 0x7)
         {
@@ -792,7 +792,7 @@ void PolicySourceTransitionDefault(Port_t *port)
     case 0:
         if (TimerExpired(&port->PolicyStateTimer))
         {
-            port->PolicyHasContract = FALSE;
+            port->PolicyHasContract = false;
             port->PdRevSop = port->PortConfig.PdRevPreferred;
             port->PdRevCable = port->PortConfig.PdRevPreferred;
             port->DetachThreshold = VBUS_MV_VSAFE5V_DISC;
@@ -804,16 +804,16 @@ void PolicySourceTransitionDefault(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 1:
-        platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, FALSE, FALSE);
-        platform_set_vbus_discharge(port->PortID, TRUE);
+        platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL, false, false);
+        platform_set_vbus_discharge(port->PortID, true);
 
         if (!port->PolicyIsDFP)
         {
-            port->PolicyIsDFP = TRUE;
+            port->PolicyIsDFP = true;
             port->Registers.Switches.DATAROLE = port->PolicyIsDFP;
             DeviceWrite(port->I2cAddr, regSwitches1, 1,
                         &port->Registers.Switches.byte[1]);
@@ -835,7 +835,7 @@ void PolicySourceTransitionDefault(Port_t *port)
 
         ProtocolFlushTxFIFO(port);
         ProtocolFlushRxFIFO(port);
-        ResetProtocolLayer(port, TRUE);
+        ResetProtocolLayer(port, true);
 
         TimerStart(&port->PolicyStateTimer,
                 tPSHardResetMax + tSafe0V + tSrcRecover);
@@ -845,7 +845,7 @@ void PolicySourceTransitionDefault(Port_t *port)
     case 2:
         if (VbusVSafe0V(port))
         {
-            platform_set_vbus_discharge(port->PortID, FALSE);
+            platform_set_vbus_discharge(port->PortID, false);
             TimerStart(&port->PolicyStateTimer, tSrcRecover);
             port->PolicySubIndex++;
         }
@@ -864,7 +864,7 @@ void PolicySourceTransitionDefault(Port_t *port)
         else
         {
             TimerStart(&port->VBusPollTimer, tVBusPollShort);
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 3:
@@ -874,11 +874,11 @@ void PolicySourceTransitionDefault(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     default:
-        platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_5V, TRUE, FALSE);
+        platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_5V, true, false);
 
         /* Turn on VConn */
         if (Type_C_Sources_VCONN)
@@ -891,7 +891,7 @@ void PolicySourceTransitionDefault(Port_t *port)
             DeviceWrite(port->I2cAddr, regSwitches0, 1,
                     &port->Registers.Switches.byte[0]);
         }
-        port->IsVCONNSource = TRUE;
+        port->IsVCONNSource = true;
 
         TimerDisable(&port->SwapSourceStartTimer);
 
@@ -902,9 +902,9 @@ void PolicySourceTransitionDefault(Port_t *port)
 
 void PolicySourceNegotiateCap(Port_t *port)
 {
-    FSC_BOOL reqAccept = FALSE;
-    FSC_U8 objPosition;
-    FSC_U32 minvoltage, maxvoltage;
+    bool reqAccept = false;
+    uint8_t objPosition;
+    uint32_t minvoltage, maxvoltage;
 
     objPosition = port->PolicyRxDataObj[0].FVRDO.ObjectPosition - 1;
 
@@ -931,7 +931,7 @@ void PolicySourceNegotiateCap(Port_t *port)
             DPM_GetSourceCap(port->dpm, port)[objPosition].
                 FPDOSupply.MaxCurrent)
         {
-            reqAccept = TRUE;
+            reqAccept = true;
         }
     }
 
@@ -944,12 +944,12 @@ void PolicySourceNegotiateCap(Port_t *port)
         SetPEState(port, peSourceCapabilityResponse);
     }
 
-    port->PEIdle = FALSE;
+    port->PEIdle = false;
 }
 
 void PolicySourceTransitionSupply(Port_t *port)
 {
-    FSC_BOOL newIsPPS = FALSE;
+    bool newIsPPS = false;
 
     switch (port->PolicySubIndex)
     {
@@ -961,7 +961,7 @@ void PolicySourceTransitionSupply(Port_t *port)
         port->USBPDContract.object = port->PolicyRxDataObj[0].object;
         newIsPPS = (DPM_GetSourceCap(port->dpm, port)
                 [port->USBPDContract.FVRDO.ObjectPosition - 1].PDO.SupplyType
-                        == pdoTypeAugmented) ? TRUE : FALSE;
+                        == pdoTypeAugmented) ? true : false;
 
         if (newIsPPS && port->PpsEnabled)
         {
@@ -989,11 +989,11 @@ void PolicySourceTransitionSupply(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 3:
-        port->PolicyHasContract = TRUE;
+        port->PolicyHasContract = true;
         DPM_TransitionSource(port->dpm, port,
                 port->USBPDContract.FVRDO.ObjectPosition - 1);
 
@@ -1022,7 +1022,7 @@ void PolicySourceTransitionSupply(Port_t *port)
         else
         {
             TimerStart(&port->VBusPollTimer, tVBusPollShort);
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     default:
@@ -1069,7 +1069,7 @@ void PolicySourceReady(Port_t *port)
     if (port->ProtocolMsgRx)
     {
         /* Message received from partner */
-        port->ProtocolMsgRx = FALSE;
+        port->ProtocolMsgRx = false;
         if (port->PolicyRxHeader.NumDataObjects == 0)
         {
             switch (port->PolicyRxHeader.MessageType)
@@ -1119,14 +1119,14 @@ void PolicySourceReady(Port_t *port)
             switch(port->PolicyRxHeader.MessageType)
             {
             default:
-#ifndef FSC_HAVE_EXT_MSG
+#ifndef CONFIG_FSC_HAVE_EXT_MSG
                 port->ExtHeader.byte[0] = port->PolicyRxDataObj[0].byte[0];
                 port->ExtHeader.byte[1] = port->PolicyRxDataObj[0].byte[1];
                 if (port->ExtHeader.DataSize > EXT_MAX_MSG_LEGACY_LEN) {
                     /* Request takes more than one chunk which is not
                      * supported
                      */
-                    port->WaitForNotSupported = TRUE;
+                    port->WaitForNotSupported = true;
                 }
 #endif
                 SetPEState(port, peNotSupported);
@@ -1146,11 +1146,11 @@ void PolicySourceReady(Port_t *port)
             case DMTAlert:
                 SetPEState(port, peSourceAlertReceived);
                 break;
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
             case DMTVenderDefined:
                 convertAndProcessVdmMessage(port, port->ProtocolMsgRxSop);
                 break;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
             case DMTBIST:
                 processDMTBIST(port);
                 break;
@@ -1184,11 +1184,11 @@ void PolicySourceReady(Port_t *port)
             case CMTGotoMin:
                 SetPEState(port, peSourceGotoMin);
                 break;
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
             case CMTPR_Swap:
                 SetPEState(port, peSourceSendPRSwap);
                 break;
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
             case CMTDR_Swap:
                 SetPEState(port, peSourceSendDRSwap);
                 break;
@@ -1204,10 +1204,10 @@ void PolicySourceReady(Port_t *port)
                 break;
 #endif /* 0 */
             default:
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
                 /* Transmit other messages directly from the GUI/DPM */
                 SetPEState(port, peSendGenericCommand);
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
                 break;
             }
         }
@@ -1219,19 +1219,19 @@ void PolicySourceReady(Port_t *port)
                 SetPEState(port, peSourceSendCaps);
                 break;
             case DMTVenderDefined:
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                 doVdmCommand(port);
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
                 break;
             default:
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
                 /* Transmit other messages directly from the GUI/DPM */
                 SetPEState(port, peSendGenericData);
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
                 break;
             }
         }
-        port->USBPDTxFlag = FALSE;
+        port->USBPDTxFlag = false;
     }
     else if (port->PpsEnabled && TimerExpired(&port->PpsTimer))
     {
@@ -1239,7 +1239,7 @@ void PolicySourceReady(Port_t *port)
     }
     else if (port->PartnerCaps.object == 0)
     {
-        if (port->WaitInSReady == TRUE)
+        if (port->WaitInSReady == true)
         {
             if (TimerExpired(&port->PolicyStateTimer))
             {
@@ -1249,8 +1249,8 @@ void PolicySourceReady(Port_t *port)
         }
         else
         {
-            TimerStart(&port->PolicyStateTimer, 20 * TICK_SCALE_TO_MS);
-            port->WaitInSReady = TRUE;
+            TimerStart(&port->PolicyStateTimer, 20);
+            port->WaitInSReady = true;
         }
     }
     else if ((port->PortConfig.PortType == USBTypeC_DRP) &&
@@ -1259,19 +1259,19 @@ void PolicySourceReady(Port_t *port)
     {
         SetPEState(port, peSourceSendPRSwap);
     }
-    else if (port->PortConfig.reqDRSwapToUfpAsSrc == TRUE &&
-             port->PolicyIsDFP == TRUE &&
+    else if (port->PortConfig.reqDRSwapToUfpAsSrc == true &&
+             port->PolicyIsDFP == true &&
              DR_Swap_To_UFP_Supported)
     {
         SetPEState(port, peSourceSendDRSwap);
     }
-    else if (port->PortConfig.reqVconnSwapToOffAsSrc == TRUE &&
-             port->IsVCONNSource == TRUE &&
+    else if (port->PortConfig.reqVconnSwapToOffAsSrc == true &&
+             port->IsVCONNSource == true &&
              VCONN_Swap_To_Off_Supported)
     {
         SetPEState(port, peSourceSendVCONNSwap);
     }
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
     else if (port->PolicyIsDFP && (port->AutoVdmState != AUTO_VDM_DONE))
     {
         autoVdmDiscovery(port);
@@ -1280,10 +1280,10 @@ void PolicySourceReady(Port_t *port)
     {
         processCableResetState(port);
     }
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
     else
     {
-        port->PEIdle = TRUE;
+        port->PEIdle = true;
 
         if (port->SourceCurrent != utcc3p0A)
         {
@@ -1301,7 +1301,7 @@ void PolicySourceGiveSourceCap(Port_t *port)
                    DPM_GetSourceCap(port->dpm, port),
                    DPM_GetSourceCapHeader(port->dpm, port)->
                         NumDataObjects * sizeof(doDataObject_t),
-                   peSourceReady, 0, SOP_TYPE_SOP, FALSE);
+                   peSourceReady, 0, SOP_TYPE_SOP, false);
 }
 
 void PolicySourceGetSourceCap(Port_t *port)
@@ -1318,11 +1318,11 @@ void PolicySourceGetSourceCap(Port_t *port)
     default:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if ((port->PolicyRxHeader.NumDataObjects > 0) &&
                 (port->PolicyRxHeader.MessageType == DMTSourceCapabilities))
             {
-                UpdateCapabilitiesRx(port, TRUE);
+                UpdateCapabilitiesRx(port, true);
                 SetPEState(port, peSourceReady);
             }
             else if ((port->PolicyRxHeader.NumDataObjects == 0) &&
@@ -1342,7 +1342,7 @@ void PolicySourceGetSourceCap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -1362,11 +1362,11 @@ void PolicySourceGetSinkCap(Port_t *port)
     default:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if ((port->PolicyRxHeader.NumDataObjects > 0) &&
                (port->PolicyRxHeader.MessageType == DMTSinkCapabilities))
             {
-                UpdateCapabilitiesRx(port, FALSE);
+                UpdateCapabilitiesRx(port, false);
                 SetPEState(port, peSourceReady);
             }
             else
@@ -1380,7 +1380,7 @@ void PolicySourceGetSinkCap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -1388,7 +1388,7 @@ void PolicySourceGetSinkCap(Port_t *port)
 
 void PolicySourceGiveSinkCap(Port_t *port)
 {
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
     if (port->PortConfig.PortType == USBTypeC_DRP)
     {
         PolicySendData(port,
@@ -1397,10 +1397,10 @@ void PolicySourceGiveSinkCap(Port_t *port)
                        DPM_GetSinkCapHeader(port->dpm, port)->
                        NumDataObjects * sizeof(doDataObject_t),
                        peSourceReady, 0,
-                       SOP_TYPE_SOP, FALSE);
+                       SOP_TYPE_SOP, false);
     }
     else
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
     {
         SetPEState(port, peNotSupported);
     }
@@ -1415,7 +1415,7 @@ void PolicySourceGotoMin(Port_t *port)
 {
     if (port->ProtocolMsgRx)
     {
-        port->ProtocolMsgRx = FALSE;
+        port->ProtocolMsgRx = false;
         if (port->PolicyRxHeader.NumDataObjects == 0)
         {
             switch (port->PolicyRxHeader.MessageType)
@@ -1450,7 +1450,7 @@ void PolicySourceGotoMin(Port_t *port)
             }
             else
             {
-                port->PEIdle = TRUE;
+                port->PEIdle = true;
             }
             break;
         case 3:
@@ -1477,21 +1477,21 @@ void PolicySourceSendDRSwap(Port_t *port)
                                    1, SOP_TYPE_SOP) == STAT_SUCCESS)
         {
             /* Set it to false so there is only one try */
-            port->PortConfig.reqDRSwapToUfpAsSrc = FALSE;
+            port->PortConfig.reqDRSwapToUfpAsSrc = false;
             TimerStart(&port->PolicyStateTimer, tSenderResponse);
         }
         break;
     default:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
                 {
                 case CMTAccept:
                     port->PolicyIsDFP =
-                            (port->PolicyIsDFP == TRUE) ? FALSE : TRUE;
+                            (port->PolicyIsDFP == true) ? false : true;
                     port->Registers.Switches.DATAROLE = port->PolicyIsDFP;
                     DeviceWrite(port->I2cAddr, regSwitches1, 1,
                                 &port->Registers.Switches.byte[1]);
@@ -1499,13 +1499,13 @@ void PolicySourceSendDRSwap(Port_t *port)
                     if (port->PdRevSop == USBPDSPECREV2p0)
                     {
                         /* In PD2.0, DFP controls SOP* coms */
-                        if (port->PolicyIsDFP == TRUE)
+                        if (port->PolicyIsDFP == true)
                         {
                             port->Registers.Control.ENSOP1 = SOP_P_Capable;
                             port->Registers.Control.ENSOP2 = SOP_PP_Capable;
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                             port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
                         }
                         else
                         {
@@ -1535,7 +1535,7 @@ void PolicySourceSendDRSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -1543,14 +1543,14 @@ void PolicySourceSendDRSwap(Port_t *port)
 
 void PolicySourceEvaluateDRSwap(Port_t *port)
 {
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
     /* If were are in modal operation, send a hard reset */
-    if (port->mode_entered == TRUE)
+    if (port->mode_entered == true)
     {
         SetPEState(port, peSourceSendHardReset);
         return;
     }
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
     if (!DR_Swap_To_UFP_Supported)
     {
@@ -1562,7 +1562,7 @@ void PolicySourceEvaluateDRSwap(Port_t *port)
         if (PolicySendCommand(port, CMTAccept, peSourceReady, 0,
                                    port->ProtocolMsgRxSop) == STAT_SUCCESS)
         {
-            port->PolicyIsDFP = (port->PolicyIsDFP == TRUE) ? FALSE : TRUE;
+            port->PolicyIsDFP = (port->PolicyIsDFP == true) ? false : true;
             port->Registers.Switches.DATAROLE = port->PolicyIsDFP;
             DeviceWrite(port->I2cAddr, regSwitches1, 1,
                     &port->Registers.Switches.byte[1]);
@@ -1570,13 +1570,13 @@ void PolicySourceEvaluateDRSwap(Port_t *port)
             if (port->PdRevSop == USBPDSPECREV2p0)
             {
                 /* In PD2.0, DFP controls SOP* coms */
-                if (port->PolicyIsDFP == TRUE)
+                if (port->PolicyIsDFP == true)
                 {
                     port->Registers.Control.ENSOP1 = SOP_P_Capable;
                     port->Registers.Control.ENSOP2 = SOP_PP_Capable;
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                     port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
                 }
                 else
                 {
@@ -1599,14 +1599,14 @@ void PolicySourceSendVCONNSwap(Port_t *port)
                               SOP_TYPE_SOP) == STAT_SUCCESS)
         {
             /* Set it to false so there is only one try */
-            port->PortConfig.reqVconnSwapToOffAsSrc = FALSE;
+            port->PortConfig.reqVconnSwapToOffAsSrc = false;
             TimerStart(&port->PolicyStateTimer, tSenderResponse);
         }
         break;
     case 1:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
@@ -1634,7 +1634,7 @@ void PolicySourceSendVCONNSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 2:
@@ -1656,7 +1656,7 @@ void PolicySourceSendVCONNSwap(Port_t *port)
                         &port->Registers.Switches.byte[0]);
             }
 
-            port->IsVCONNSource = TRUE;
+            port->IsVCONNSource = true;
 
             if (port->PdRevSop == USBPDSPECREV3p0)
             {
@@ -1665,9 +1665,9 @@ void PolicySourceSendVCONNSwap(Port_t *port)
                 port->Registers.Control.ENSOP2 = SOP_PP_Capable;
                 DeviceWrite(port->I2cAddr, regControl1, 1,
                             &port->Registers.Control.byte[1]);
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                 port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
             }
 
             TimerStart(&port->PolicyStateTimer, tVCONNTransition);
@@ -1677,7 +1677,7 @@ void PolicySourceSendVCONNSwap(Port_t *port)
     case 3:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
@@ -1689,7 +1689,7 @@ void PolicySourceSendVCONNSwap(Port_t *port)
                     DeviceWrite(port->I2cAddr, regSwitches0, 1,
                                 &port->Registers.Switches.byte[0]);
 
-                    port->IsVCONNSource = FALSE;
+                    port->IsVCONNSource = false;
 
                     if (port->PdRevSop == USBPDSPECREV3p0)
                     {
@@ -1698,9 +1698,9 @@ void PolicySourceSendVCONNSwap(Port_t *port)
                         port->Registers.Control.ENSOP2 = 0;
                         DeviceWrite(port->I2cAddr, regControl1, 1,
                                     &port->Registers.Control.byte[1]);
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                         port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
                     }
                     SetPEState(port, peSourceReady);
                     break;
@@ -1716,18 +1716,19 @@ void PolicySourceSendVCONNSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 4:
-        if (TimerExpired(&port->PolicyStateTimer) == TRUE)
+        if (TimerExpired(&port->PolicyStateTimer) == true)
         {
             port->PolicySubIndex++;
-            /* Fall through to default. Immediately send PS_RDY */
+            PolicySendCommand(port, CMTPS_RDY, peSourceReady, 0, SOP_TYPE_SOP);
+            break;
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
             break;
         }
     default:
@@ -1774,7 +1775,7 @@ void PolicySourceEvaluateVCONNSwap(Port_t *port)
                         &port->Registers.Switches.byte[0]);
             }
 
-            port->IsVCONNSource = TRUE;
+            port->IsVCONNSource = true;
 
             if (port->PdRevSop == USBPDSPECREV3p0)
             {
@@ -1783,9 +1784,9 @@ void PolicySourceEvaluateVCONNSwap(Port_t *port)
                 port->Registers.Control.ENSOP2 = SOP_PP_Capable;
                 DeviceWrite(port->I2cAddr, regControl1, 1,
                             &port->Registers.Control.byte[1]);
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                 port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
             }
 
             TimerStart(&port->PolicyStateTimer, tVCONNTransition);
@@ -1796,7 +1797,7 @@ void PolicySourceEvaluateVCONNSwap(Port_t *port)
         /* Swap to Off */
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
@@ -1808,7 +1809,7 @@ void PolicySourceEvaluateVCONNSwap(Port_t *port)
                     DeviceWrite(port->I2cAddr, regSwitches0, 1,
                                 &port->Registers.Switches.byte[0]);
 
-                    port->IsVCONNSource = FALSE;
+                    port->IsVCONNSource = false;
 
                     if (port->PdRevSop == USBPDSPECREV3p0)
                     {
@@ -1817,9 +1818,9 @@ void PolicySourceEvaluateVCONNSwap(Port_t *port)
                         port->Registers.Control.ENSOP2 = 0;
                         DeviceWrite(port->I2cAddr, regControl1, 1,
                                     &port->Registers.Control.byte[1]);
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                         port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
                     }
 
                     SetPEState(port, peSourceReady);
@@ -1836,19 +1837,21 @@ void PolicySourceEvaluateVCONNSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 3:
         /* Done - PS_RDY */
-        if (TimerExpired(&port->PolicyStateTimer) == TRUE)
+        if (TimerExpired(&port->PolicyStateTimer) == true)
         {
             port->PolicySubIndex++;
-            /* Fall through. Immediately send PS_RDY after timer expires. */
+            PolicySendCommand(port, CMTPS_RDY, peSourceReady, 0,
+                              port->ProtocolMsgRxSop);
+            break;
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
             break;
         }
     default:
@@ -1860,8 +1863,8 @@ void PolicySourceEvaluateVCONNSwap(Port_t *port)
 
 void PolicySourceSendPRSwap(Port_t *port)
 {
-#ifdef FSC_HAVE_DRP
-    FSC_U8 Status;
+#ifdef CONFIG_FSC_HAVE_DRP
+    uint8_t Status;
 
     switch (port->PolicySubIndex)
     {
@@ -1871,7 +1874,7 @@ void PolicySourceSendPRSwap(Port_t *port)
                               SOP_TYPE_SOP) == STAT_SUCCESS)
         {
             /* Disable the config flag if we got here during automatic request */
-            port->PortConfig.reqPRSwapAsSrc = FALSE;
+            port->PortConfig.reqPRSwapAsSrc = false;
             TimerStart(&port->PolicyStateTimer, tSenderResponse);
         }
         break;
@@ -1879,14 +1882,14 @@ void PolicySourceSendPRSwap(Port_t *port)
         /* Wait for accept */
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
                 {
                 case CMTAccept:
-                    port->IsPRSwap = TRUE;
-                    port->PolicyHasContract = FALSE;
+                    port->IsPRSwap = true;
+                    port->PolicyHasContract = false;
                     port->DetachThreshold = VBUS_MV_VSAFE5V_DISC;
 
                     notify_observers(PD_NO_CONTRACT, port->I2cAddr, 0);
@@ -1897,7 +1900,7 @@ void PolicySourceSendPRSwap(Port_t *port)
                 case CMTWait:
                 case CMTReject:
                     SetPEState(port, peSourceReady);
-                    port->IsPRSwap = FALSE;
+                    port->IsPRSwap = false;
                     break;
                 default:
                     SetPEState(port, peSourceSendSoftReset);
@@ -1912,11 +1915,11 @@ void PolicySourceSendPRSwap(Port_t *port)
         else if (TimerExpired(&port->PolicyStateTimer))
         {
             SetPEState(port, peSourceReady);
-            port->IsPRSwap = FALSE;
+            port->IsPRSwap = false;
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 2:
@@ -1924,15 +1927,15 @@ void PolicySourceSendPRSwap(Port_t *port)
         if (TimerExpired(&port->PolicyStateTimer))
         {
             platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL,
-                                         FALSE, FALSE);
-            platform_set_vbus_discharge(port->PortID, TRUE);
+                                         false, false);
+            platform_set_vbus_discharge(port->PortID, true);
 
             TimerStart(&port->PolicyStateTimer, tPSHardResetMax + tSafe0V);
             port->PolicySubIndex++;
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 3:
@@ -1940,8 +1943,8 @@ void PolicySourceSendPRSwap(Port_t *port)
         if (VbusVSafe0V(port))
         {
             RoleSwapToAttachedSink(port);
-            platform_set_vbus_discharge(port->PortID, FALSE);
-            port->PolicyIsSource = FALSE;
+            platform_set_vbus_discharge(port->PortID, false);
+            port->PolicyIsSource = false;
 
             port->Registers.Switches.POWERROLE = port->PolicyIsSource;
             DeviceWrite(port->I2cAddr, regSwitches1, 1,
@@ -1955,7 +1958,7 @@ void PolicySourceSendPRSwap(Port_t *port)
         else
         {
             TimerStart(&port->VBusPollTimer, tVBusPollShort);
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 4:
@@ -1971,7 +1974,7 @@ void PolicySourceSendPRSwap(Port_t *port)
         /* Wait for PS_Rdy */
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
@@ -1992,7 +1995,7 @@ void PolicySourceSendPRSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     default:
@@ -2004,17 +2007,17 @@ void PolicySourceSendPRSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 }
 
 void PolicySourceEvaluatePRSwap(Port_t *port)
 {
-#ifdef FSC_HAVE_DRP
-    FSC_U8 Status;
+#ifdef CONFIG_FSC_HAVE_DRP
+    uint8_t Status;
     switch (port->PolicySubIndex)
     {
     case 0:
@@ -2026,31 +2029,31 @@ void PolicySourceEvaluatePRSwap(Port_t *port)
         else if (!Accepts_PR_Swap_As_Src ||
             port->PortConfig.PortType != USBTypeC_DRP ||
             DPM_GetSourceCap(port->dpm, port)[0].
-                FPDOSupply.DualRolePower == FALSE)
+                FPDOSupply.DualRolePower == false)
         {
             PolicySendCommand(port, CMTReject, peSourceReady, 0,
                                   port->ProtocolMsgRxSop);
         }
-        else if (port->WaitSent == FALSE)
+        else if (port->WaitSent == false)
         {
             if (PolicySendCommand(port, CMTWait, peSourceGetSourceCaps, 0,
                                   port->ProtocolMsgRxSop) == STAT_SUCCESS)
             {
-                port->WaitSent = TRUE;
+                port->WaitSent = true;
             }
         }
-        else if(port->PartnerCaps.FPDOSupply.DualRolePower == FALSE ||
+        else if(port->PartnerCaps.FPDOSupply.DualRolePower == false ||
             /* Determine Accept/Reject based on DRP bit in current PDO */
                 ((DPM_GetSourceCap(port->dpm, port)[0].FPDOSupply.
-                    ExternallyPowered == TRUE) &&
+                    ExternallyPowered == true) &&
             /* Must also reject if we are ext powered and partner is not */
                  (port->PartnerCaps.FPDOSupply.SupplyType == pdoTypeFixed) &&
-                 (port->PartnerCaps.FPDOSupply.ExternallyPowered == FALSE)))
+                 (port->PartnerCaps.FPDOSupply.ExternallyPowered == false)))
         {
             if (PolicySendCommand(port, CMTReject, peSourceReady, 0,
                                   port->ProtocolMsgRxSop) == STAT_SUCCESS)
             {
-                port->WaitSent = FALSE;
+                port->WaitSent = false;
             }
         }
         else
@@ -2058,9 +2061,9 @@ void PolicySourceEvaluatePRSwap(Port_t *port)
             if (PolicySendCommand(port, CMTAccept, peSourceEvaluatePRSwap, 1,
                                   port->ProtocolMsgRxSop) == STAT_SUCCESS)
             {
-                port->IsPRSwap = TRUE;
-                port->WaitSent = FALSE;
-                port->PolicyHasContract = FALSE;
+                port->IsPRSwap = true;
+                port->WaitSent = false;
+                port->PolicyHasContract = false;
                 port->DetachThreshold = VBUS_MV_VSAFE5V_DISC;
 
                 notify_observers(PD_NO_CONTRACT, port->I2cAddr, 0);
@@ -2075,14 +2078,14 @@ void PolicySourceEvaluatePRSwap(Port_t *port)
         if (TimerExpired(&port->PolicyStateTimer))
         {
             platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_ALL,
-                                         FALSE, FALSE);
-            platform_set_vbus_discharge(port->PortID, TRUE);
+                                         false, false);
+            platform_set_vbus_discharge(port->PortID, true);
             TimerStart(&port->PolicyStateTimer, tPSHardResetMax + tSafe0V);
             port->PolicySubIndex++;
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 2:
@@ -2090,7 +2093,7 @@ void PolicySourceEvaluatePRSwap(Port_t *port)
         if (VbusVSafe0V(port))
         {
             TimerStart(&port->PolicyStateTimer, tSrcTransition);
-            port->PolicyIsSource = FALSE;
+            port->PolicyIsSource = false;
             port->Registers.Switches.POWERROLE = port->PolicyIsSource;
             DeviceWrite(port->I2cAddr, regSwitches1, 1,
                     &port->Registers.Switches.byte[1]);
@@ -2103,19 +2106,19 @@ void PolicySourceEvaluatePRSwap(Port_t *port)
         else
         {
             TimerStart(&port->VBusPollTimer, tVBusPollShort);
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 3:
         /* Wait on transition time */
         if (TimerExpired(&port->PolicyStateTimer))
         {
-            platform_set_vbus_discharge(port->PortID, FALSE);
+            platform_set_vbus_discharge(port->PortID, false);
             port->PolicySubIndex++;
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 4:
@@ -2135,14 +2138,14 @@ void PolicySourceEvaluatePRSwap(Port_t *port)
         /* Wait to receive a PS_RDY message from the new DFP */
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
                 {
                 case CMTPS_RDY:
                     port->PolicySubIndex++;
-                    port->IsPRSwap = FALSE;
+                    port->IsPRSwap = false;
                     TimerStart(&port->PolicyStateTimer, tGoodCRCDelay);
                     break;
                 default:
@@ -2154,13 +2157,13 @@ void PolicySourceEvaluatePRSwap(Port_t *port)
         }
         else if (TimerExpired(&port->PolicyStateTimer))
         {
-            port->IsPRSwap = FALSE;
+            port->IsPRSwap = false;
             SetPEState(port, peErrorRecovery);
-            port->PEIdle = FALSE;
+            port->PEIdle = false;
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     default:
@@ -2171,24 +2174,24 @@ void PolicySourceEvaluatePRSwap(Port_t *port)
             TimerDisable(&port->PolicyStateTimer);
 
             /* Disable auto PR swap flag to prevent swapping back */
-            port->PortConfig.reqPRSwapAsSnk = FALSE;
+            port->PortConfig.reqPRSwapAsSnk = false;
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
 #else
     PolicySendCommand(port, CMTReject, peSourceReady, 0,port->ProtocolMsgRxSop);
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 }
 
 void PolicySourceWaitNewCapabilities(Port_t *port)
 {
     if(port->loopCounter == 0)
     {
-        port->PEIdle = TRUE;
+        port->PEIdle = true;
 
         port->Registers.Mask.M_COMP_CHNG = 0;
         DeviceWrite(port->I2cAddr, regMask, 1, &port->Registers.Mask.byte);
@@ -2209,7 +2212,7 @@ void PolicySourceWaitNewCapabilities(Port_t *port)
         break;
     }
 }
-#endif /* FSC_HAVE_SRC */
+#endif /* CONFIG_FSC_HAVE_SRC */
 
 
 void PolicySourceAlertReceived(Port_t *port)
@@ -2240,13 +2243,13 @@ void PolicyNotSupported(Port_t *port)
     {
         switch(port->PolicySubIndex)
         {
-#ifndef FSC_HAVE_EXT_MSG
+#ifndef CONFIG_FSC_HAVE_EXT_MSG
         case 0:
-            if (port->WaitForNotSupported == TRUE)
+            if (port->WaitForNotSupported == true)
             {
                 TimerStart(&port->PolicyStateTimer, tChunkingNotSupported);
                 port->PolicySubIndex++;
-                port->WaitForNotSupported = FALSE;
+                port->WaitForNotSupported = false;
             }
             else
             {
@@ -2275,7 +2278,7 @@ void PolicyNotSupported(Port_t *port)
     }
 }
 
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
 void PolicySinkSendHardReset(Port_t *port)
 {
     PolicySendHardReset(port);
@@ -2287,9 +2290,9 @@ void PolicySinkSoftReset(Port_t *port)
                           SOP_TYPE_SOP) == STAT_SUCCESS)
     {
         TimerStart(&port->PolicyStateTimer, tSinkWaitCap);
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
         port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
     }
 }
 
@@ -2302,19 +2305,19 @@ void PolicySinkSendSoftReset(Port_t *port)
                               SOP_TYPE_SOP) == STAT_SUCCESS)
         {
             TimerStart(&port->PolicyStateTimer, tSenderResponse);
-            port->WaitingOnHR = TRUE;
+            port->WaitingOnHR = true;
         }
         break;
     default:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if ((port->PolicyRxHeader.NumDataObjects == 0) &&
                 (port->PolicyRxHeader.MessageType == CMTAccept))
             {
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                 port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
                 SetPEState(port, peSinkWaitCaps);
                 TimerStart(&port->PolicyStateTimer, tSinkWaitCap);
             }
@@ -2329,7 +2332,7 @@ void PolicySinkSendSoftReset(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -2349,8 +2352,8 @@ void PolicySinkTransitionDefault(Port_t *port)
         DeviceWrite(port->I2cAddr, regMeasure, 1,
                     &port->Registers.Measure.byte);
 
-        port->IsHardReset = TRUE;
-        port->PolicyHasContract = FALSE;
+        port->IsHardReset = true;
+        port->PolicyHasContract = false;
         port->PdRevSop = port->PortConfig.PdRevPreferred;
         port->PdRevCable = port->PortConfig.PdRevPreferred;
         port->DetachThreshold = VBUS_MV_VSAFE5V_DISC;
@@ -2363,7 +2366,7 @@ void PolicySinkTransitionDefault(Port_t *port)
 
         if (port->PolicyIsDFP)
         {
-            port->PolicyIsDFP = FALSE;
+            port->PolicyIsDFP = false;
             port->Registers.Switches.DATAROLE = port->PolicyIsDFP;
             DeviceWrite(port->I2cAddr, regSwitches1, 1,
                         &port->Registers.Switches.byte[1]);
@@ -2380,12 +2383,12 @@ void PolicySinkTransitionDefault(Port_t *port)
             port->Registers.Switches.VCONN_CC2 = 0;
             DeviceWrite(port->I2cAddr, regSwitches0, 1,
                         &port->Registers.Switches.byte[0]);
-            port->IsVCONNSource = FALSE;
+            port->IsVCONNSource = false;
         }
 
         ProtocolFlushTxFIFO(port);
         ProtocolFlushRxFIFO(port);
-        ResetProtocolLayer(port, TRUE);
+        ResetProtocolLayer(port, true);
         port->PolicySubIndex++;
         break;
     case 1:
@@ -2410,7 +2413,7 @@ void PolicySinkTransitionDefault(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 2:
@@ -2429,7 +2432,7 @@ void PolicySinkTransitionDefault(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     default:
@@ -2440,9 +2443,9 @@ void PolicySinkTransitionDefault(Port_t *port)
 
 void PolicySinkStartup(Port_t *port)
 {
-#ifdef FSC_HAVE_VDM
-    FSC_S32 i;
-#endif /* FSC_HAVE_VDM */
+#ifdef CONFIG_FSC_HAVE_VDM
+    int32_t i;
+#endif /* CONFIG_FSC_HAVE_VDM */
 
     /* Set or restore MDAC detach value */
     port->Registers.Measure.MEAS_VBUS = 1;
@@ -2485,15 +2488,15 @@ void PolicySinkStartup(Port_t *port)
 
     port->USBPDContract.object = 0;
     port->PartnerCaps.object = 0;
-    port->IsPRSwap = FALSE;
-    port->PolicyIsSource = FALSE;
-    port->PpsEnabled = FALSE;
+    port->IsPRSwap = false;
+    port->PolicyIsSource = false;
+    port->PpsEnabled = false;
 
     port->Registers.Switches.POWERROLE = port->PolicyIsSource;
     DeviceWrite(port->I2cAddr, regSwitches1, 1,
             &port->Registers.Switches.byte[1]);
 
-    ResetProtocolLayer(port, FALSE);
+    ResetProtocolLayer(port, false);
 
     port->Registers.Switches.AUTO_CRC = 1;
     DeviceWrite(port->I2cAddr, regSwitches1, 1,
@@ -2507,8 +2510,8 @@ void PolicySinkStartup(Port_t *port)
     TimerDisable(&port->PolicyStateTimer);
     SetPEState(port, peSinkDiscovery);
 
-#ifdef FSC_HAVE_VDM
-    port->mode_entered = FALSE;
+#ifdef CONFIG_FSC_HAVE_VDM
+    port->mode_entered = false;
 
     port->core_svid_info.num_svids = 0;
     for (i = 0; i < MAX_NUM_SVIDS; i++)
@@ -2516,21 +2519,21 @@ void PolicySinkStartup(Port_t *port)
         port->core_svid_info.svids[i] = 0;
     }
     port->AutoModeEntryObjPos = -1;
-    port->svid_discvry_done = FALSE;
+    port->svid_discvry_done = false;
     port->svid_discvry_idx  = -1;
     port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
     DP_Initialize(port);
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
 }
 
 void PolicySinkDiscovery(Port_t *port)
 {
     if (isVSafe5V(port))
     {
-        port->IsHardReset = FALSE;
+        port->IsHardReset = false;
 
         SetPEState(port, peSinkWaitCaps);
         TimerStart(&port->PolicyStateTimer, tTypeCSinkWaitCap);
@@ -2538,7 +2541,7 @@ void PolicySinkDiscovery(Port_t *port)
     else
     {
         TimerStart(&port->PolicyStateTimer, tVBusPollShort);
-        port->PEIdle = TRUE;
+        port->PEIdle = true;
     }
 }
 
@@ -2546,11 +2549,11 @@ void PolicySinkWaitCaps(Port_t *port)
 {
     if (port->ProtocolMsgRx)
     {
-        port->ProtocolMsgRx = FALSE;
+        port->ProtocolMsgRx = false;
         if ((port->PolicyRxHeader.NumDataObjects > 0) &&
             (port->PolicyRxHeader.MessageType == DMTSourceCapabilities))
         {
-            UpdateCapabilitiesRx(port, TRUE);
+            UpdateCapabilitiesRx(port, true);
 
             /* Align our PD spec rev with the port partner */
             DPM_SetSpecRev(port, SOP_TYPE_SOP,
@@ -2564,7 +2567,7 @@ void PolicySinkWaitCaps(Port_t *port)
             SetPEState(port, peSinkSoftReset);
         }
     }
-    else if ((port->PolicyHasContract == TRUE) &&
+    else if ((port->PolicyHasContract == true) &&
              (port->HardResetCounter > nHardResetCount))
     {
         SetPEState(port, peErrorRecovery);
@@ -2576,7 +2579,7 @@ void PolicySinkWaitCaps(Port_t *port)
     }
     else
     {
-        port->PEIdle = TRUE;
+        port->PEIdle = true;
     }
 }
 
@@ -2585,9 +2588,9 @@ void PolicySinkEvaluateCaps(Port_t *port)
     /* All units in mA, mV, mW when possible. Some PD structure values are
      * converted otherwise.
      */
-    FSC_S32 i, reqPos = 0;
-    FSC_U32 objVoltage = 0;
-    FSC_U32 objCurrent = 0, objPower, MaxPower = 0, SelVoltage = 0, ReqCurrent;
+    int32_t i, reqPos = 0;
+    uint32_t objVoltage = 0;
+    uint32_t objCurrent = 0, objPower, MaxPower = 0, SelVoltage = 0, ReqCurrent;
 
     port->HardResetCounter = 0;
     port->PortConfig.SinkRequestMaxVoltage = 0;
@@ -2650,7 +2653,7 @@ void PolicySinkEvaluateCaps(Port_t *port)
          * but some initial PPS functionality is included below.
          */
         port->PpsEnabled = (port->SrcCapsReceived[reqPos - 1].PDO.SupplyType
-                == pdoTypeAugmented) ? TRUE : FALSE;
+                == pdoTypeAugmented) ? true : false;
 
         port->PartnerCaps.object = port->SrcCapsReceived[0].object;
 
@@ -2688,7 +2691,7 @@ void PolicySinkEvaluateCaps(Port_t *port)
         /* If the give back flag is set there can't be a mismatch */
         if (port->PortConfig.SinkGotoMinCompatible)
         {
-            port->SinkRequest.FVRDO.CapabilityMismatch = FALSE;
+            port->SinkRequest.FVRDO.CapabilityMismatch = false;
         }
         else
         {
@@ -2697,7 +2700,7 @@ void PolicySinkEvaluateCaps(Port_t *port)
              *   Validate PPS requested current against advertised max */
             if (objCurrent < ReqCurrent)
             {
-                port->SinkRequest.FVRDO.CapabilityMismatch = TRUE;
+                port->SinkRequest.FVRDO.CapabilityMismatch = true;
                 port->SinkRequest.FVRDO.MinMaxCurrent =
                     DPM_GetSinkCap(port->dpm, port)[0].
                         FPDOSink.OperationalCurrent;
@@ -2705,7 +2708,7 @@ void PolicySinkEvaluateCaps(Port_t *port)
             }
             else
             {
-                port->SinkRequest.FVRDO.CapabilityMismatch = FALSE;
+                port->SinkRequest.FVRDO.CapabilityMismatch = false;
             }
         }
 
@@ -2728,16 +2731,16 @@ void PolicySinkSelectCapability(Port_t *port)
     case 0:
         if (PolicySendData(port, DMTRequest, &port->SinkRequest,
                            sizeof(doDataObject_t), peSinkSelectCapability, 1,
-                           SOP_TYPE_SOP, FALSE) == STAT_SUCCESS)
+                           SOP_TYPE_SOP, false) == STAT_SUCCESS)
         {
             TimerStart(&port->PolicyStateTimer, tSenderResponse);
-            port->WaitingOnHR = TRUE;
+            port->WaitingOnHR = true;
         }
         break;
     case 1:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
@@ -2746,14 +2749,14 @@ void PolicySinkSelectCapability(Port_t *port)
                     /* Check if PPS was selected (Here as well, for GUI req) */
                     port->PpsEnabled = (port->SrcCapsReceived[
                         port->SinkRequest.FVRDO.ObjectPosition - 1].PDO.
-                            SupplyType == pdoTypeAugmented) ? TRUE : FALSE;
+                            SupplyType == pdoTypeAugmented) ? true : false;
 
-                    port->PolicyHasContract = TRUE;
+                    port->PolicyHasContract = true;
                     port->USBPDContract.object = port->SinkRequest.object;
                     TimerStart(&port->PolicyStateTimer, tPSTransition);
                     SetPEState(port, peSinkTransitionSink);
 
-                    if (port->PpsEnabled == TRUE)
+                    if (port->PpsEnabled == true)
                     {
                         TimerStart(&port->PpsTimer, tPPSRequest);
                     }
@@ -2785,7 +2788,7 @@ void PolicySinkSelectCapability(Port_t *port)
                 switch (port->PolicyRxHeader.MessageType)
                 {
                 case DMTSourceCapabilities:
-                    UpdateCapabilitiesRx(port, TRUE);
+                    UpdateCapabilitiesRx(port, true);
                     SetPEState(port, peSinkEvaluateCaps);
                     break;
                 default:
@@ -2800,7 +2803,7 @@ void PolicySinkSelectCapability(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -2808,11 +2811,11 @@ void PolicySinkSelectCapability(Port_t *port)
 
 void PolicySinkTransitionSink(Port_t *port)
 {
-    port->PEIdle = FALSE;
+    port->PEIdle = false;
 
     if (port->ProtocolMsgRx)
     {
-        port->ProtocolMsgRx = FALSE;
+        port->ProtocolMsgRx = false;
         if (port->PolicyRxHeader.NumDataObjects == 0)
         {
             switch (port->PolicyRxHeader.MessageType)
@@ -2857,7 +2860,7 @@ void PolicySinkTransitionSink(Port_t *port)
             switch (port->PolicyRxHeader.MessageType)
             {
             case DMTSourceCapabilities:
-                UpdateCapabilitiesRx(port, TRUE);
+                UpdateCapabilitiesRx(port, true);
                 SetPEState(port, peSinkEvaluateCaps);
                 break;
             default:
@@ -2872,7 +2875,7 @@ void PolicySinkTransitionSink(Port_t *port)
     }
     else
     {
-        port->PEIdle = TRUE;
+        port->PEIdle = true;
     }
 }
 
@@ -2881,7 +2884,7 @@ void PolicySinkReady(Port_t *port)
     if (port->ProtocolMsgRx)
     {
         /* Handle a received message */
-        port->ProtocolMsgRx = FALSE;
+        port->ProtocolMsgRx = false;
         if (port->PolicyRxHeader.NumDataObjects == 0)
         {
             switch (port->PolicyRxHeader.MessageType)
@@ -2951,14 +2954,14 @@ void PolicySinkReady(Port_t *port)
                 break;
 #endif /* 0 */
             default:
-#ifndef FSC_HAVE_EXT_MSG
+#ifndef CONFIG_FSC_HAVE_EXT_MSG
                 port->ExtHeader.byte[0] = port->PolicyRxDataObj[0].byte[0];
                 port->ExtHeader.byte[1] = port->PolicyRxDataObj[0].byte[1];
                 if (port->ExtHeader.DataSize > EXT_MAX_MSG_LEGACY_LEN) {
                     /* Request takes more than one chunk which is not
                      * supported
                      */
-                    port->WaitForNotSupported = TRUE;
+                    port->WaitForNotSupported = true;
                 }
 #endif
                 SetPEState(port, peNotSupported);
@@ -2970,7 +2973,7 @@ void PolicySinkReady(Port_t *port)
             switch (port->PolicyRxHeader.MessageType)
             {
             case DMTSourceCapabilities:
-                UpdateCapabilitiesRx(port, TRUE);
+                UpdateCapabilitiesRx(port, true);
                 SetPEState(port, peSinkEvaluateCaps);
                 break;
             case DMTSinkCapabilities:
@@ -2983,11 +2986,11 @@ void PolicySinkReady(Port_t *port)
                 SetPEState(port, peGiveCountryInfo);
                 break;
 #endif /* 0 */
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
             case DMTVenderDefined:
                 convertAndProcessVdmMessage(port, port->ProtocolMsgRxSop);
                 break;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
             case DMTBIST:
                 processDMTBIST(port);
                 break;
@@ -3016,11 +3019,11 @@ void PolicySinkReady(Port_t *port)
             case CMTVCONN_Swap:
                 SetPEState(port, peSinkSendVCONNSwap);
                 break;
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
             case CMTPR_Swap:
                 SetPEState(port, peSinkSendPRSwap);
                 break;
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
             case CMTSoftReset:
                 SetPEState(port, peSinkSendSoftReset);
                 break;
@@ -3033,10 +3036,10 @@ void PolicySinkReady(Port_t *port)
                 SetPEState(port, peGetPPSStatus);
                 break;
             default:
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
                 /* Transmit other messages directly from the GUI/DPM */
                 SetPEState(port, peSendGenericCommand);
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
                 break;
             }
         }
@@ -3049,42 +3052,42 @@ void PolicySinkReady(Port_t *port)
                 SetPEState(port, peSinkSelectCapability);
                 break;
             case DMTVenderDefined:
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                 doVdmCommand(port);
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
                 break;
             default:
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
                 /* Transmit other messages directly from the GUI/DPM */
                 SetPEState(port, peSendGenericData);
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
                 break;
             }
         }
-        port->USBPDTxFlag = FALSE;
+        port->USBPDTxFlag = false;
     }
     else if ((port->PortConfig.PortType == USBTypeC_DRP) &&
              (port->PortConfig.reqPRSwapAsSnk) &&
-             (port->PartnerCaps.FPDOSupply.DualRolePower == TRUE))
+             (port->PartnerCaps.FPDOSupply.DualRolePower == true))
     {
         SetPEState(port, peSinkSendPRSwap);
     }
-    else if (port->PortConfig.reqDRSwapToDfpAsSink == TRUE &&
-             port->PolicyIsDFP == FALSE &&
+    else if (port->PortConfig.reqDRSwapToDfpAsSink == true &&
+             port->PolicyIsDFP == false &&
              DR_Swap_To_DFP_Supported)
     {
         SetPEState(port, peSinkSendDRSwap);
     }
-    else if (port->PortConfig.reqVconnSwapToOnAsSink == TRUE &&
-             port->IsVCONNSource == FALSE &&
+    else if (port->PortConfig.reqVconnSwapToOnAsSink == true &&
+             port->IsVCONNSource == false &&
              VCONN_Swap_To_On_Supported)
     {
         SetPEState(port, peSinkSendVCONNSwap);
     }
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
     else if (port->PolicyIsDFP && (port->AutoVdmState != AUTO_VDM_DONE))
     {
-        if (port->WaitInSReady == TRUE)
+        if (port->WaitInSReady == true)
         {
             if (TimerExpired(&port->PolicyStateTimer) ||
                 TimerDisabled(&port->PolicyStateTimer))
@@ -3095,16 +3098,16 @@ void PolicySinkReady(Port_t *port)
         }
         else
         {
-            TimerStart(&port->PolicyStateTimer, 20 * TICK_SCALE_TO_MS);
-            port->WaitInSReady = TRUE;
+            TimerStart(&port->PolicyStateTimer, 20);
+            port->WaitInSReady = true;
         }
     }
     else if (port->cblRstState > CBL_RST_DISABLED)
     {
         processCableResetState(port);
     }
-#endif /* FSC_HAVE_VDM */
-    else if (port->PpsEnabled == TRUE && TimerExpired(&port->PpsTimer))
+#endif /* CONFIG_FSC_HAVE_VDM */
+    else if (port->PpsEnabled == true && TimerExpired(&port->PpsTimer))
     {
         /* PPS Timer send sink request to keep PPS */
         /* Request stored in the SinkRequest object */
@@ -3113,7 +3116,7 @@ void PolicySinkReady(Port_t *port)
     else
     {
         /* Wait for VBUSOK or HARDRST or GCRCSENT */
-        port->PEIdle = TRUE;
+        port->PEIdle = true;
     }
 }
 
@@ -3123,7 +3126,7 @@ void PolicySinkGiveSinkCap(Port_t *port)
                    DPM_GetSinkCap(port->dpm, port),
                    DPM_GetSinkCapHeader(port->dpm, port)->NumDataObjects *
                     sizeof(doDataObject_t),
-                   peSinkReady, 0, SOP_TYPE_SOP, FALSE);
+                   peSinkReady, 0, SOP_TYPE_SOP, false);
 }
 
 void PolicySinkGetSinkCap(Port_t *port)
@@ -3140,7 +3143,7 @@ void PolicySinkGetSinkCap(Port_t *port)
     default:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if ((port->PolicyRxHeader.NumDataObjects > 0) &&
                 (port->PolicyRxHeader.MessageType == DMTSinkCapabilities))
             {
@@ -3164,7 +3167,7 @@ void PolicySinkGetSinkCap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -3172,7 +3175,7 @@ void PolicySinkGetSinkCap(Port_t *port)
 
 void PolicySinkGiveSourceCap(Port_t *port)
 {
-#ifdef FSC_HAVE_DRP
+#ifdef CONFIG_FSC_HAVE_DRP
     if (port->PortConfig.PortType == USBTypeC_DRP)
     {
         PolicySendData(port, DMTSourceCapabilities,
@@ -3180,10 +3183,10 @@ void PolicySinkGiveSourceCap(Port_t *port)
                        DPM_GetSourceCapHeader(port->dpm,port)->NumDataObjects *
                         sizeof(doDataObject_t),
                        peSinkReady, 0,
-                       SOP_TYPE_SOP, FALSE);
+                       SOP_TYPE_SOP, false);
     }
     else
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
     {
         SetPEState(port, peNotSupported);
     }
@@ -3203,12 +3206,12 @@ void PolicySinkGetSourceCap(Port_t *port)
     default:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if ((port->PolicyRxHeader.NumDataObjects > 0) &&
                 (port->PolicyRxHeader.MessageType == DMTSourceCapabilities))
             {
                 /* Notify DPM or others of new source caps */
-                UpdateCapabilitiesRx(port, TRUE);
+                UpdateCapabilitiesRx(port, true);
                 SetPEState(port, peSinkEvaluateCaps);
             }
             else
@@ -3222,7 +3225,7 @@ void PolicySinkGetSourceCap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -3236,21 +3239,21 @@ void PolicySinkSendDRSwap(Port_t *port)
         if (PolicySendCommand(port, CMTDR_Swap, peSinkSendDRSwap, 1,
                                    SOP_TYPE_SOP) == STAT_SUCCESS)
         {
-            port->PortConfig.reqDRSwapToDfpAsSink = FALSE;
+            port->PortConfig.reqDRSwapToDfpAsSink = false;
             TimerStart(&port->PolicyStateTimer, tSenderResponse);
         }
         break;
     default:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
                 {
                 case CMTAccept:
                     port->PolicyIsDFP =
-                            (port->PolicyIsDFP == TRUE) ? FALSE : TRUE;
+                            (port->PolicyIsDFP == true) ? false : true;
 
                     port->Registers.Switches.DATAROLE = port->PolicyIsDFP;
                     DeviceWrite(port->I2cAddr, regSwitches1, 1,
@@ -3259,13 +3262,13 @@ void PolicySinkSendDRSwap(Port_t *port)
                     if (port->PdRevSop == USBPDSPECREV2p0)
                     {
                         /* In PD2.0, DFP controls SOP* coms */
-                        if (port->PolicyIsDFP == TRUE)
+                        if (port->PolicyIsDFP == true)
                         {
                             port->Registers.Control.ENSOP1 = SOP_P_Capable;
                             port->Registers.Control.ENSOP2 = SOP_PP_Capable;
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                             port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
                         }
                         else
                         {
@@ -3295,7 +3298,7 @@ void PolicySinkSendDRSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -3303,13 +3306,13 @@ void PolicySinkSendDRSwap(Port_t *port)
 
 void PolicySinkEvaluateDRSwap(Port_t *port)
 {
-#ifdef FSC_HAVE_VDM
-    if (port->mode_entered == TRUE)
+#ifdef CONFIG_FSC_HAVE_VDM
+    if (port->mode_entered == true)
     {
         SetPEState(port, peSinkSendHardReset);
         return;
     }
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
     if (!DR_Swap_To_DFP_Supported)
     {
@@ -3320,7 +3323,7 @@ void PolicySinkEvaluateDRSwap(Port_t *port)
         if (PolicySendCommand(port, CMTAccept, peSinkReady, 0,
                                    SOP_TYPE_SOP) == STAT_SUCCESS)
         {
-            port->PolicyIsDFP = (port->PolicyIsDFP == TRUE) ? FALSE : TRUE;
+            port->PolicyIsDFP = (port->PolicyIsDFP == true) ? false : true;
             port->Registers.Switches.DATAROLE = port->PolicyIsDFP;
             DeviceWrite(port->I2cAddr, regSwitches1, 1,
                     &port->Registers.Switches.byte[1]);
@@ -3328,13 +3331,13 @@ void PolicySinkEvaluateDRSwap(Port_t *port)
             if (port->PdRevSop == USBPDSPECREV2p0)
             {
                 /* In PD2.0, DFP controls SOP* coms */
-                if (port->PolicyIsDFP == TRUE)
+                if (port->PolicyIsDFP == true)
                 {
                     port->Registers.Control.ENSOP1 = SOP_P_Capable;
                     port->Registers.Control.ENSOP2 = SOP_PP_Capable;
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                     port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
                 }
                 else
                 {
@@ -3356,14 +3359,14 @@ void PolicySinkSendVCONNSwap(Port_t *port)
         if (PolicySendCommand(port, CMTVCONN_Swap, peSinkSendVCONNSwap, 1,
                               SOP_TYPE_SOP) == STAT_SUCCESS)
         {
-            port->PortConfig.reqVconnSwapToOnAsSink = FALSE;
+            port->PortConfig.reqVconnSwapToOnAsSink = false;
             TimerStart(&port->PolicyStateTimer, tSenderResponse);
         }
         break;
     case 1:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
@@ -3391,7 +3394,7 @@ void PolicySinkSendVCONNSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 2:
@@ -3419,7 +3422,7 @@ void PolicySinkSendVCONNSwap(Port_t *port)
                         &port->Registers.Switches.byte[0]);
             }
 
-            port->IsVCONNSource = TRUE;
+            port->IsVCONNSource = true;
 
             if (port->PdRevSop == USBPDSPECREV3p0)
             {
@@ -3428,9 +3431,9 @@ void PolicySinkSendVCONNSwap(Port_t *port)
                 port->Registers.Control.ENSOP2 = SOP_PP_Capable;
                 DeviceWrite(port->I2cAddr, regControl1, 1,
                             &port->Registers.Control.byte[1]);
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                 port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
             }
             TimerStart(&port->PolicyStateTimer, tVCONNTransition);
             port->PolicySubIndex = 4;
@@ -3439,7 +3442,7 @@ void PolicySinkSendVCONNSwap(Port_t *port)
     case 3:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
@@ -3453,7 +3456,7 @@ void PolicySinkSendVCONNSwap(Port_t *port)
                     DeviceWrite(port->I2cAddr, regSwitches0, 1,
                                 &port->Registers.Switches.byte[0]);
 
-                    port->IsVCONNSource = FALSE;
+                    port->IsVCONNSource = false;
 
                     if (port->PdRevSop == USBPDSPECREV3p0)
                     {
@@ -3462,9 +3465,9 @@ void PolicySinkSendVCONNSwap(Port_t *port)
                         port->Registers.Control.ENSOP2 = 0;
                         DeviceWrite(port->I2cAddr, regControl1, 1,
                                     &port->Registers.Control.byte[1]);
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                         port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
                     }
 
                     SetPEState(port, peSinkReady);
@@ -3482,18 +3485,19 @@ void PolicySinkSendVCONNSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 4:
-        if (TimerExpired(&port->PolicyStateTimer) == TRUE)
+        if (TimerExpired(&port->PolicyStateTimer) == true)
         {
             port->PolicySubIndex++;
-            /* Fall through to immediately send PS_RDY when timer expires. */
+            PolicySendCommand(port, CMTPS_RDY, peSinkReady, 0, SOP_TYPE_SOP);
+            break;
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
             break;
         }
     default:
@@ -3544,7 +3548,7 @@ void PolicySinkEvaluateVCONNSwap(Port_t *port)
                         &port->Registers.Switches.byte[0]);
             }
 
-            port->IsVCONNSource = TRUE;
+            port->IsVCONNSource = true;
 
             if (port->PdRevSop == USBPDSPECREV3p0)
             {
@@ -3553,9 +3557,9 @@ void PolicySinkEvaluateVCONNSwap(Port_t *port)
                 port->Registers.Control.ENSOP2 = SOP_PP_Capable;
                 DeviceWrite(port->I2cAddr, regControl1, 1,
                             &port->Registers.Control.byte[1]);
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                 port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
             }
 
             TimerStart(&port->PolicyStateTimer, tVCONNTransition);
@@ -3567,7 +3571,7 @@ void PolicySinkEvaluateVCONNSwap(Port_t *port)
     case 2:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
@@ -3580,7 +3584,7 @@ void PolicySinkEvaluateVCONNSwap(Port_t *port)
                     DeviceWrite(port->I2cAddr, regSwitches0, 1,
                                 &port->Registers.Switches.byte[0]);
 
-                    port->IsVCONNSource = FALSE;
+                    port->IsVCONNSource = false;
 
                     if (port->PdRevSop == USBPDSPECREV3p0)
                     {
@@ -3589,9 +3593,9 @@ void PolicySinkEvaluateVCONNSwap(Port_t *port)
                         port->Registers.Control.ENSOP2 = 0;
                         DeviceWrite(port->I2cAddr, regControl1, 1,
                                     &port->Registers.Control.byte[1]);
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
                         port->discoverIdCounter = 0;
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
                     }
 
                     SetPEState(port, peSinkReady);
@@ -3608,18 +3612,19 @@ void PolicySinkEvaluateVCONNSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 3:
-        if (TimerExpired(&port->PolicyStateTimer) == TRUE)
+        if (TimerExpired(&port->PolicyStateTimer) == true)
         {
             port->PolicySubIndex++;
-            /* Fall through if timer expired. Immediately send PS_RDY. */
+            PolicySendCommand(port, CMTPS_RDY, peSinkReady, 0, SOP_TYPE_SOP);
+            break;
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
             break;
         }
     default:
@@ -3630,8 +3635,8 @@ void PolicySinkEvaluateVCONNSwap(Port_t *port)
 
 void PolicySinkSendPRSwap(Port_t *port)
 {
-#ifdef FSC_HAVE_DRP
-    FSC_U8 Status;
+#ifdef CONFIG_FSC_HAVE_DRP
+    uint8_t Status;
     
     switch (port->PolicySubIndex)
     {
@@ -3641,7 +3646,7 @@ void PolicySinkSendPRSwap(Port_t *port)
                               SOP_TYPE_SOP) == STAT_SUCCESS)
         {
             /* Disable the config flag if we got here during automatic request */
-            port->PortConfig.reqPRSwapAsSnk = FALSE;
+            port->PortConfig.reqPRSwapAsSnk = false;
             TimerStart(&port->PolicyStateTimer, tSenderResponse);
         }
         break;
@@ -3649,14 +3654,14 @@ void PolicySinkSendPRSwap(Port_t *port)
         /* Wait for Accept */
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
                 {
                 case CMTAccept:
-                    port->IsPRSwap = TRUE;
-                    port->PolicyHasContract = FALSE;
+                    port->IsPRSwap = true;
+                    port->PolicyHasContract = false;
                     port->DetachThreshold = VBUS_MV_VSAFE5V_DISC;
 
                     notify_observers(PD_NO_CONTRACT, port->I2cAddr, 0);
@@ -3667,7 +3672,7 @@ void PolicySinkSendPRSwap(Port_t *port)
                 case CMTWait:
                 case CMTReject:
                     SetPEState(port, peSinkReady);
-                    port->IsPRSwap = FALSE;
+                    port->IsPRSwap = false;
                     break;
                 default:
                     SetPEState(port, peSinkSendSoftReset);
@@ -3682,25 +3687,25 @@ void PolicySinkSendPRSwap(Port_t *port)
         else if (TimerExpired(&port->PolicyStateTimer))
         {
             SetPEState(port, peSinkReady);
-            port->IsPRSwap = FALSE;
+            port->IsPRSwap = false;
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 2:
         /* Wait for PS_RDY and perform the swap */
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
                 {
                 case CMTPS_RDY:
                     RoleSwapToAttachedSource(port);
-                    port->PolicyIsSource = TRUE;
+                    port->PolicyIsSource = true;
                     port->Registers.Switches.POWERROLE = port->PolicyIsSource;
                     DeviceWrite(port->I2cAddr, regSwitches1, 1,
                                 &port->Registers.Switches.byte[1]);
@@ -3719,7 +3724,7 @@ void PolicySinkSendPRSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 3:
@@ -3734,7 +3739,7 @@ void PolicySinkSendPRSwap(Port_t *port)
         else
         {
             TimerStart(&port->VBusPollTimer, tVBusPollShort);
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 4:
@@ -3746,7 +3751,7 @@ void PolicySinkSendPRSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 5:
@@ -3765,13 +3770,13 @@ void PolicySinkSendPRSwap(Port_t *port)
         port->PolicySubIndex = 0;
         break;
     }
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 }
 
 void PolicySinkEvaluatePRSwap(Port_t *port)
 {
-#ifdef FSC_HAVE_DRP
-    FSC_U8 Status;
+#ifdef CONFIG_FSC_HAVE_DRP
+    uint8_t Status;
     switch (port->PolicySubIndex)
     {
     case 0:
@@ -3782,18 +3787,18 @@ void PolicySinkEvaluatePRSwap(Port_t *port)
         }
         else if (!Accepts_PR_Swap_As_Snk ||
             (port->PortConfig.PortType != USBTypeC_DRP) ||
-            (port->SrcCapsReceived[0].FPDOSupply.DualRolePower == FALSE))
+            (port->SrcCapsReceived[0].FPDOSupply.DualRolePower == false))
         {
             PolicySendCommand(port, CMTReject, peSinkReady, 0,
                               port->ProtocolMsgRxSop);
         }
         else
         {
-            port->IsPRSwap = TRUE;
+            port->IsPRSwap = true;
             if (PolicySendCommand(port, CMTAccept, peSinkEvaluatePRSwap, 1,
                                   SOP_TYPE_SOP) == STAT_SUCCESS)
             {
-                port->PolicyHasContract = FALSE;
+                port->PolicyHasContract = false;
                 port->DetachThreshold = VBUS_MV_VSAFE5V_DISC;
 
                 notify_observers(PD_NO_CONTRACT, port->I2cAddr, 0);
@@ -3806,14 +3811,14 @@ void PolicySinkEvaluatePRSwap(Port_t *port)
         /* Wait for PS_RDY and perform the swap */
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if (port->PolicyRxHeader.NumDataObjects == 0)
             {
                 switch (port->PolicyRxHeader.MessageType)
                 {
                 case CMTPS_RDY:
                     RoleSwapToAttachedSource(port);
-                    port->PolicyIsSource = TRUE;
+                    port->PolicyIsSource = true;
 
                     port->Registers.Switches.POWERROLE = port->PolicyIsSource;
                     DeviceWrite(port->I2cAddr, regSwitches1, 1,
@@ -3834,7 +3839,7 @@ void PolicySinkEvaluatePRSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 2:
@@ -3849,7 +3854,7 @@ void PolicySinkEvaluatePRSwap(Port_t *port)
         else
         {
             TimerStart(&port->VBusPollTimer, tVBusPollShort);
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 3:
@@ -3860,7 +3865,7 @@ void PolicySinkEvaluatePRSwap(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 4:
@@ -3872,11 +3877,11 @@ void PolicySinkEvaluatePRSwap(Port_t *port)
         }
         else if (Status == STAT_SUCCESS)
         {
-            port->IsPRSwap = FALSE;
+            port->IsPRSwap = false;
             TimerStart(&port->SwapSourceStartTimer, tSwapSourceStart);
 
             /* Disable auto PR swap flag to prevent swapping back */
-            port->PortConfig.reqPRSwapAsSrc = FALSE;
+            port->PortConfig.reqPRSwapAsSrc = false;
         }
         break;
     default:
@@ -3885,9 +3890,9 @@ void PolicySinkEvaluatePRSwap(Port_t *port)
     }
 #else
     PolicySendCommand(port, CMTReject, peSinkReady, 0, port->ProtocolMsgRxSop);
-#endif /* FSC_HAVE_DRP */
+#endif /* CONFIG_FSC_HAVE_DRP */
 }
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
 
 void PolicySinkAlertReceived(Port_t *port)
 {
@@ -3905,10 +3910,10 @@ void PolicySinkAlertReceived(Port_t *port)
     SetPEState(port, peSinkReady);
 }
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 void PolicyGiveVdm(Port_t *port)
 {
-    port->PEIdle = TRUE;
+    port->PEIdle = true;
 
     if (port->ProtocolMsgRx &&
         port->PolicyRxHeader.MessageType == DMTVenderDefined &&
@@ -3922,11 +3927,11 @@ void PolicyGiveVdm(Port_t *port)
     else if (port->sendingVdmData)
     {
 
-        FSC_U8 result = PolicySendData(port, DMTVenderDefined,
+        uint8_t result = PolicySendData(port, DMTVenderDefined,
                                    port->vdm_msg_obj,
                                    port->vdm_msg_length*sizeof(doDataObject_t),
                                    port->vdm_next_ps, 0,
-                                   port->VdmMsgTxSop, FALSE);
+                                   port->VdmMsgTxSop, false);
         if (result == STAT_SUCCESS)
         {
             if (port->vdm_expectingresponse)
@@ -3937,15 +3942,15 @@ void PolicyGiveVdm(Port_t *port)
             {
                 resetPolicyState(port);
             }
-            port->sendingVdmData = FALSE;
+            port->sendingVdmData = false;
         }
         else if (result == STAT_ERROR)
         {
             sendVdmMessageFailed(port);
-            port->sendingVdmData = FALSE;
+            port->sendingVdmData = false;
         }
 
-        port->PEIdle = FALSE;
+        port->PEIdle = false;
     }
     else
     {
@@ -3963,7 +3968,7 @@ void PolicyVdm(Port_t *port)
             {
             case DMTVenderDefined:
                 convertAndProcessVdmMessage(port, port->ProtocolMsgRxSop);
-                port->ProtocolMsgRx = FALSE;
+                port->ProtocolMsgRx = false;
                 break;
             default:
                 resetPolicyState(port);
@@ -3977,7 +3982,7 @@ void PolicyVdm(Port_t *port)
     }
     else
     {
-        port->PEIdle = TRUE;
+        port->PEIdle = true;
     }
 
     if (port->VdmTimerStarted && (TimerExpired(&port->VdmTimer)))
@@ -3990,7 +3995,7 @@ void PolicyVdm(Port_t *port)
     }
 }
 
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
 void PolicyInvalidState(Port_t *port)
 {
@@ -4007,7 +4012,7 @@ void PolicyInvalidState(Port_t *port)
 
 void PolicySendGenericCommand(Port_t *port)
 {
-    FSC_U8 status;
+    uint8_t status;
     switch (port->PolicySubIndex)
     {
     case 0:
@@ -4026,7 +4031,7 @@ void PolicySendGenericCommand(Port_t *port)
     default:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
 
             /* Check and handle message response */
 
@@ -4043,7 +4048,7 @@ void PolicySendGenericCommand(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -4051,7 +4056,7 @@ void PolicySendGenericCommand(Port_t *port)
 
 void PolicySendGenericData(Port_t *port)
 {
-    FSC_U8 status;
+    uint8_t status;
     switch (port->PolicySubIndex)
     {
     case 0:
@@ -4059,7 +4064,7 @@ void PolicySendGenericData(Port_t *port)
                 port->PDTransmitObjects,
                 port->PDTransmitHeader.NumDataObjects * sizeof(doDataObject_t),
                 peSendGenericData, 1,
-                port->PolicyMsgTxSop, FALSE);
+                port->PolicyMsgTxSop, false);
         if (status == STAT_SUCCESS)
         {
             TimerStart(&port->PolicyStateTimer, tSenderResponse);
@@ -4073,7 +4078,7 @@ void PolicySendGenericData(Port_t *port)
     default:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
 
             /* Check and handle message response */
 
@@ -4090,7 +4095,7 @@ void PolicySendGenericData(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -4099,20 +4104,20 @@ void PolicySendGenericData(Port_t *port)
 /* General PD Messaging */
 void PolicySendHardReset(Port_t *port)
 {
-    FSC_U8 data;
+    uint8_t data;
     if (!port->IsHardReset)
     {
         port->HardResetCounter++;
-        port->IsHardReset = TRUE;
+        port->IsHardReset = true;
         data = port->Registers.Control.byte[3] | 0x40;
         DeviceWrite(port->I2cAddr, regControl3, 1, &data);
     }
 }
 
-FSC_U8 PolicySendCommand(Port_t *port, FSC_U8 Command, PolicyState_t nextState,
-                         FSC_U8 subIndex, SopType sop)
+uint8_t PolicySendCommand(Port_t *port, uint8_t Command, PolicyState_t nextState,
+                         uint8_t subIndex, SopType sop)
 {
-    FSC_U8 Status = STAT_BUSY;
+    uint8_t Status = STAT_BUSY;
     switch (port->PDTxStatus)
     {
     case txIdle:
@@ -4158,7 +4163,7 @@ FSC_U8 PolicySendCommand(Port_t *port, FSC_U8 Command, PolicyState_t nextState,
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case txSuccess:
@@ -4227,14 +4232,14 @@ FSC_U8 PolicySendCommand(Port_t *port, FSC_U8 Command, PolicyState_t nextState,
     return Status;
 }
 
-FSC_U8 PolicySendData(Port_t *port, FSC_U8 MessageType, void* data,
-                      FSC_U32 len, PolicyState_t nextState,
-                      FSC_U8 subIndex, SopType sop, FSC_BOOL extMsg)
+uint8_t PolicySendData(Port_t *port, uint8_t MessageType, void* data,
+                      uint32_t len, PolicyState_t nextState,
+                      uint8_t subIndex, SopType sop, bool extMsg)
 {
-    FSC_U8 Status = STAT_BUSY;
-    FSC_U32 i;
-    FSC_U8* pData = (FSC_U8*)data;
-    FSC_U8* pOutBuf = (FSC_U8*)port->PolicyTxDataObj;
+    uint8_t Status = STAT_BUSY;
+    uint32_t i;
+    uint8_t* pData = (uint8_t*)data;
+    uint8_t* pOutBuf = (uint8_t*)port->PolicyTxDataObj;
 
     switch (port->PDTxStatus)
     {
@@ -4256,16 +4261,16 @@ FSC_U8 PolicySendData(Port_t *port, FSC_U8 MessageType, void* data,
         }
         port->PolicyTxHeader.SpecRevision = DPM_SpecRev(port, sop);
 
-        if (extMsg == TRUE)
+        if (extMsg == true)
         {
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
             /* Set extended bit */
             port->PolicyTxHeader.Extended = 1;
             /* Initialize extended messaging state */
             port->ExtChunkOffset = 0;
             port->ExtChunkNum = 0;
             port->ExtTxOrRx = TXing;
-            port->ExtWaitTxRx = FALSE;
+            port->ExtWaitTxRx = false;
             /* Set extended header */
             port->ExtTxHeader.word = 0;
             len = (len > EXT_MAX_MSG_LEN) ? EXT_MAX_MSG_LEN : len;
@@ -4273,7 +4278,7 @@ FSC_U8 PolicySendData(Port_t *port, FSC_U8 MessageType, void* data,
             port->ExtTxHeader.DataSize = len;
             /* Set the tx buffer */
             pOutBuf = port->ExtMsgBuffer;
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
         }
 
         /* Copy message */
@@ -4312,34 +4317,34 @@ FSC_U8 PolicySendData(Port_t *port, FSC_U8 MessageType, void* data,
 
             Status = STAT_ERROR;
 
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
             /* Possible timeout when trying to send a chunked message to
              * a device that doesn't support chunking.
              * TODO - Notify DPM of failure if necessary.
              */
-            port->ExtWaitTxRx = FALSE;
+            port->ExtWaitTxRx = false;
             port->ExtChunkNum = 0;
             port->ExtTxOrRx = NoXfer;
             port->ExtChunkOffset = 0;
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case txCollision:
         Status = STAT_ERROR;
         break;
     case txSuccess:
-#ifdef FSC_HAVE_EXT_MSG
-        if (extMsg == TRUE &&
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
+        if (extMsg == true &&
             port->ExtChunkOffset < port->ExtTxHeader.DataSize)
         {
             port->PDTxStatus = txBusy;
             break;
         }
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
         SetPEState(port, nextState);
         port->PolicySubIndex = subIndex;
         TimerDisable(&port->ProtocolTimer);
@@ -4350,7 +4355,7 @@ FSC_U8 PolicySendData(Port_t *port, FSC_U8 MessageType, void* data,
         if (sop == SOP_TYPE_SOP)
         {
             if (port->PolicyState == peSourceSendCaps &&
-                port->PolicyHasContract == FALSE)
+                port->PolicyHasContract == false)
             {
                 SetPEState(port, peSourceDiscovery);
             }
@@ -4365,12 +4370,12 @@ FSC_U8 PolicySendData(Port_t *port, FSC_U8 MessageType, void* data,
         }
         else
         {
-#ifdef FSC_HAVE_VDM
-            if (port->cblPresent == TRUE)
+#ifdef CONFIG_FSC_HAVE_VDM
+            if (port->cblPresent == true)
             {
                 port->cblRstState = CBL_RST_START;
             }
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
         }
         Status = STAT_ERROR;
         break;
@@ -4398,13 +4403,13 @@ FSC_U8 PolicySendData(Port_t *port, FSC_U8 MessageType, void* data,
     return Status;
 }
 
-void UpdateCapabilitiesRx(Port_t *port, FSC_BOOL IsSourceCaps)
+void UpdateCapabilitiesRx(Port_t *port, bool IsSourceCaps)
 {
-    FSC_U32 i;
+    uint32_t i;
     sopMainHeader_t *capsHeaderRecieved;
     doDataObject_t *capsReceived;
 
-    if (IsSourceCaps == TRUE)
+    if (IsSourceCaps == true)
     {
         capsHeaderRecieved = &port->SrcCapsHeaderReceived;
         capsReceived = port->SrcCapsReceived;
@@ -4425,20 +4430,20 @@ void UpdateCapabilitiesRx(Port_t *port, FSC_BOOL IsSourceCaps)
 
     port->PartnerCaps.object = capsReceived[0].object;
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
     /* Set the flag to indicate that the received capabilities are valid */
     port->SourceCapsUpdated = IsSourceCaps;
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 }
 
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
 void PolicyGiveCountryCodes(Port_t *port)
 {
-    FSC_U32 noCodes = gCountry_codes[0] | gCountry_codes[1] << 8;
+    uint32_t noCodes = gCountry_codes[0] | gCountry_codes[1] << 8;
 
     PolicySendData(port, EXTCountryCodes, gCountry_codes, noCodes*2+2,
                    port->PolicyIsSource ? peSourceReady : peSinkReady, 0,
-                   SOP_TYPE_SOP, TRUE);
+                   SOP_TYPE_SOP, true);
 }
 
 void PolicyGetCountryCodes(Port_t *port)
@@ -4451,7 +4456,7 @@ void PolicyGetCountryCodes(Port_t *port)
 void PolicyGiveCountryInfo(Port_t *port)
 {
     /* Allocate 4-byte buffer so we don't need a full 260 byte data */
-    FSC_U8 buf[4] = {0};
+    uint8_t buf[4] = {0};
     CountryInfoReq *req = (CountryInfoReq*)(port->PolicyRxDataObj);
     /* Echo the first to bytes of country code */
     CountryInfoResp *resp = (CountryInfoResp*)buf;
@@ -4459,12 +4464,12 @@ void PolicyGiveCountryInfo(Port_t *port)
     resp->CountryCode[0] = req->CountryCode[1];
     resp->Reserved[0] = resp->Reserved[1] = 0;
     PolicySendData(port, EXTCountryInfo, resp, 4,
-                   (port->PolicyIsSource == TRUE) ? peSourceReady : peSinkReady,
-                   0, SOP_TYPE_SOP, TRUE);
+                   (port->PolicyIsSource == true) ? peSourceReady : peSinkReady,
+                   0, SOP_TYPE_SOP, true);
 }
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
 
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
 void PolicyGetPPSStatus(Port_t *port)
 {
     switch (port->PolicySubIndex)
@@ -4479,7 +4484,7 @@ void PolicyGetPPSStatus(Port_t *port)
     default:
         if (port->ProtocolMsgRx)
         {
-            port->ProtocolMsgRx = FALSE;
+            port->ProtocolMsgRx = false;
             if ((port->PolicyRxHeader.NumDataObjects > 0) &&
                 (port->PolicyRxHeader.MessageType == EXTPPSStatus))
             {
@@ -4499,7 +4504,7 @@ void PolicyGetPPSStatus(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -4522,13 +4527,13 @@ void PolicyGivePPSStatus(Port_t *port)
     case 1:
         PolicySendData(port, EXTPPSStatus, ppsstatus.byte, 4,
                        port->PolicyIsSource ? peSourceReady : peSinkReady, 0,
-                       SOP_TYPE_SOP, TRUE);
+                       SOP_TYPE_SOP, true);
         break;
     default:
         break;
     }
 }
-#endif /* FSC_HAVE_EXT */
+#endif /* CONFIG_FSC_HAVE_EXT */
 
 /* BIST Receive Mode */
 void policyBISTReceiveMode(Port_t *port)
@@ -4589,7 +4594,7 @@ void policyBISTCarrierMode2(Port_t *port)
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     case 2:
@@ -4602,22 +4607,22 @@ void policyBISTCarrierMode2(Port_t *port)
 
             if (port->PolicyIsSource)
             {
-#if (defined(FSC_HAVE_SRC) || \
-     (defined(FSC_HAVE_SNK) && defined(FSC_HAVE_ACCMODE)))
+#if (defined(CONFIG_FSC_HAVE_SRC) || \
+     (defined(CONFIG_FSC_HAVE_SNK) && defined(CONFIG_FSC_HAVE_ACCMODE)))
                 SetPEState(port, peSourceSendHardReset);
-#endif /* FSC_HAVE_SRC || (FSC_HAVE_SNK && FSC_HAVE_ACCMODE) */
+#endif /* CONFIG_FSC_HAVE_SRC || (CONFIG_FSC_HAVE_SNK && CONFIG_FSC_HAVE_ACCMODE) */
             }
             else
             {
-#ifdef FSC_HAVE_SNK
+#ifdef CONFIG_FSC_HAVE_SNK
                 SetPEState(port, peSinkSendHardReset);
-#endif /* FSC_HAVE_SNK */
+#endif /* CONFIG_FSC_HAVE_SNK */
             }
 
         }
         else
         {
-            port->PEIdle = TRUE;
+            port->PEIdle = true;
         }
         break;
     }
@@ -4634,10 +4639,10 @@ void policyBISTTestData(Port_t *port)
     }
 
     /* Waiting for HR */
-    port->PEIdle = TRUE;
+    port->PEIdle = true;
 }
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 void InitializeVdmManager(Port_t *port)
 {
     initializeVdm(port);
@@ -4659,8 +4664,8 @@ void InitializeVdmManager(Port_t *port)
 void convertAndProcessVdmMessage(Port_t *port, SopType sop)
 {
     /* Form the word arrays that VDM block expects */
-    FSC_U32 i;
-    FSC_U32 vdm_arr[7];
+    uint32_t i;
+    uint32_t vdm_arr[7];
 
     for (i = 0; i < port->PolicyRxHeader.NumDataObjects; i++)
     {
@@ -4670,10 +4675,10 @@ void convertAndProcessVdmMessage(Port_t *port, SopType sop)
     processVdmMessage(port, sop, vdm_arr, port->PolicyRxHeader.NumDataObjects);
 }
 
-void sendVdmMessage(Port_t *port, SopType sop, FSC_U32* arr,
-                    FSC_U32 length, PolicyState_t next_ps)
+void sendVdmMessage(Port_t *port, SopType sop, uint32_t* arr,
+                    uint32_t length, PolicyState_t next_ps)
 {
-    FSC_U32 i;
+    uint32_t i;
     /* 'cast' to type that PolicySendData expects
      * didn't think this was necessary, but it fixed some problems. - Gabe
      */
@@ -4684,16 +4689,16 @@ void sendVdmMessage(Port_t *port, SopType sop, FSC_U32* arr,
         port->vdm_msg_obj[i].object = arr[i];
     }
     port->VdmMsgTxSop = sop;
-    port->sendingVdmData = TRUE;
-    port->VdmTimerStarted = FALSE;
+    port->sendingVdmData = true;
+    port->VdmTimerStarted = false;
     SetPEState(port, peGiveVdm);
 }
 
 void doVdmCommand(Port_t *port)
 {
-    FSC_U32 command;
-    FSC_U32 svid;
-    FSC_U32 mode_index;
+    uint32_t command;
+    uint32_t svid;
+    uint32_t mode_index;
     SopType sop;
 
     if (port->PDTransmitObjects[0].UVDM.VDMType == 0)
@@ -4703,8 +4708,8 @@ void doVdmCommand(Port_t *port)
                        port->PDTransmitObjects,
                        port->PDTransmitHeader.NumDataObjects *
                            sizeof(doDataObject_t),
-                       port->PolicyIsSource == TRUE ? peSourceReady:peSinkReady,
-                       0, port->PolicyMsgTxSop, FALSE);
+                       port->PolicyIsSource == true ? peSourceReady:peSinkReady,
+                       0, port->PolicyMsgTxSop, false);
         return;
     }
 
@@ -4721,7 +4726,7 @@ void doVdmCommand(Port_t *port)
      */
     sop = port->PolicyMsgTxSop;
 
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
     if (svid == DP_SID)
     {
         if (command == DP_COMMAND_STATUS)
@@ -4735,7 +4740,7 @@ void doVdmCommand(Port_t *port)
             DP_RequestPartnerConfig(port, temp);
         }
     }
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
 
     if (command == DISCOVER_IDENTITY)
     {
@@ -4852,7 +4857,7 @@ void autoVdmDiscovery(Port_t *port)
             port->AutoVdmState = AUTO_VDM_DISCOVER_SVIDS_PP;
             break;
         case AUTO_VDM_DISCOVER_SVIDS_PP:
-            if (port->svid_discvry_done == FALSE) {
+            if (port->svid_discvry_done == false) {
                 requestDiscoverSvids(port, SOP_TYPE_SOP);
             }
             else {
@@ -4876,19 +4881,19 @@ void autoVdmDiscovery(Port_t *port)
                         port, SOP_TYPE_SOP,
                         port->core_svid_info.svids[port->svid_discvry_idx],
                         port->AutoModeEntryObjPos);
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
                 if (port->core_svid_info.svids[port->svid_discvry_idx] ==
                         DP_SID)
                 {
                     port->AutoVdmState = AUTO_VDM_DP_GET_STATUS;
                     break;
                 }
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
                 port->AutoVdmState = AUTO_VDM_DP_GET_STATUS;
             }
             port->AutoVdmState = AUTO_VDM_DONE;
             break;
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
         case AUTO_VDM_DP_GET_STATUS:
             if (port->DisplayPortData.DpModeEntered > 0) {
                 DP_RequestPartnerStatus(port);
@@ -4914,7 +4919,7 @@ void autoVdmDiscovery(Port_t *port)
                 port->AutoVdmState = AUTO_VDM_DONE;
             }
             break;
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */
         default:
             port->AutoVdmState = AUTO_VDM_DONE;
             break;
@@ -4922,13 +4927,13 @@ void autoVdmDiscovery(Port_t *port)
     }
 }
 
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
 /* This function is FUSB302 specific */
-SopType TokenToSopType(FSC_U8 data)
+SopType TokenToSopType(uint8_t data)
 {
     SopType ret;
-    FSC_U8 maskedSop = data & 0xE0;
+    uint8_t maskedSop = data & 0xE0;
 
     if (maskedSop == SOP_CODE_SOP)              ret = SOP_TYPE_SOP;
     else if (maskedSop == SOP_CODE_SOP1)        ret = SOP_TYPE_SOP1;
@@ -4942,7 +4947,7 @@ SopType TokenToSopType(FSC_U8 data)
 
 void processDMTBIST(Port_t *port)
 {
-    FSC_U8 bdo = port->PolicyRxDataObj[0].byte[3] >> 4;
+    uint8_t bdo = port->PolicyRxDataObj[0].byte[3] >> 4;
 
     notify_observers(BIST_ENABLED, port->I2cAddr, 0);
 
@@ -5001,12 +5006,12 @@ void processDMTBIST(Port_t *port)
             port->ProtocolState = PRLDisabled;
         }
 
-        port->PEIdle = TRUE;
+        port->PEIdle = true;
         break;
     }
 }
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
 void SendUSBPDHardReset(Port_t *port)
 {
     /* Src or Snk Hard Reset */
@@ -5020,4 +5025,4 @@ void SendUSBPDHardReset(Port_t *port)
     }
 }
 
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */

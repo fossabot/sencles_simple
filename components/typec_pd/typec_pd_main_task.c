@@ -35,7 +35,7 @@ static void InitializeSystem(void)
     /* Timers, GPIO, Type-C/PD configuration, etc... */
 
     core_initialize(&ports[0], 0x11);
-    core_enable_typec(&ports[0], TRUE);
+    core_enable_typec(&ports[0], true);
 }
 
 /**
@@ -43,8 +43,9 @@ static void InitializeSystem(void)
  * @param None
  * @return None
  */
-int main(void)
+void typec_pd_main_task(void *pvParameters)
 {
+    (void) pvParameters;
     ports[0].PortID = 0;
 
     InitializeSystem();

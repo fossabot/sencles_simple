@@ -30,11 +30,11 @@
  * @param data Pointer to byte array being written from or read to
  * @return TRUE on successful access
  */
-FSC_BOOL DeviceWrite(FSC_U8 i2cAddr, FSC_U8 regAddr,
-                     FSC_U8 length, FSC_U8* data);
+bool DeviceWrite(uint8_t i2cAddr, uint8_t regAddr,
+                     uint8_t length, uint8_t* data);
 
-FSC_BOOL DeviceRead(FSC_U8 i2cAddr, FSC_U8 regAddr,
-                    FSC_U8 length, FSC_U8* data);
+bool DeviceRead(uint8_t i2cAddr, uint8_t regAddr,
+                    uint8_t length, uint8_t* data);
 
 /* FUSB302 Device ID */
 #define VERSION_302A 0x08
@@ -140,221 +140,221 @@ FSC_BOOL DeviceRead(FSC_U8 i2cAddr, FSC_U8 regAddr,
 #define VBUS_MV_TO_MDAC(v) ((v/420)-1)  /* MDAC (VBUS) value is 420mv res - 1 */
 
 typedef union {
-    FSC_U8 byte;
+    uint8_t byte;
     struct {
-        FSC_U8 REVISION_ID:2;
-        FSC_U8 PRODUCT_ID:2;
-        FSC_U8 VERSION_ID:4;
+        uint8_t REVISION_ID:2;
+        uint8_t PRODUCT_ID:2;
+        uint8_t VERSION_ID:4;
     };
 } regDeviceID_t;
 
 typedef union {
-    FSC_U16 word;
-    FSC_U8 byte[2];
+    uint16_t word;
+    uint8_t byte[2];
     struct {
         /* Switches0 */
-        FSC_U8 PDWN1:1;
-        FSC_U8 PDWN2:1;
-        FSC_U8 MEAS_CC1:1;
-        FSC_U8 MEAS_CC2:1;
-        FSC_U8 VCONN_CC1:1;
-        FSC_U8 VCONN_CC2:1;
-        FSC_U8 PU_EN1:1;
-        FSC_U8 PU_EN2:1;
+        uint8_t PDWN1:1;
+        uint8_t PDWN2:1;
+        uint8_t MEAS_CC1:1;
+        uint8_t MEAS_CC2:1;
+        uint8_t VCONN_CC1:1;
+        uint8_t VCONN_CC2:1;
+        uint8_t PU_EN1:1;
+        uint8_t PU_EN2:1;
         /* Switches1 */
-        FSC_U8 TXCC1:1;
-        FSC_U8 TXCC2:1;
-        FSC_U8 AUTO_CRC:1;
-        FSC_U8 :1;
-        FSC_U8 DATAROLE:1;
-        FSC_U8 SPECREV:2;
-        FSC_U8 POWERROLE:1;
+        uint8_t TXCC1:1;
+        uint8_t TXCC2:1;
+        uint8_t AUTO_CRC:1;
+        uint8_t :1;
+        uint8_t DATAROLE:1;
+        uint8_t SPECREV:2;
+        uint8_t POWERROLE:1;
     };
 } regSwitches_t;
 
 typedef union {
-    FSC_U8 byte;
+    uint8_t byte;
     struct {
-        FSC_U8 MDAC:6;
-        FSC_U8 MEAS_VBUS:1;
-        FSC_U8 :1;
+        uint8_t MDAC:6;
+        uint8_t MEAS_VBUS:1;
+        uint8_t :1;
     };
 } regMeasure_t;
 
 typedef union {
-    FSC_U8 byte;
+    uint8_t byte;
     struct {
-        FSC_U8 SDAC:6;
-        FSC_U8 SDAC_HYS:2;
+        uint8_t SDAC:6;
+        uint8_t SDAC_HYS:2;
     };
 } regSlice_t;
 
 typedef union {
-    FSC_U32 dword;
-    FSC_U8 byte[4];
+    uint32_t dword;
+    uint8_t byte[4];
     struct {
         /* Control0 */
-        FSC_U8 TX_START:1;
-        FSC_U8 AUTO_PRE:1;
-        FSC_U8 HOST_CUR:2;
-        FSC_U8 LOOPBACK:1;
-        FSC_U8 INT_MASK:1;
-        FSC_U8 TX_FLUSH:1;
-        FSC_U8 :1;
+        uint8_t TX_START:1;
+        uint8_t AUTO_PRE:1;
+        uint8_t HOST_CUR:2;
+        uint8_t LOOPBACK:1;
+        uint8_t INT_MASK:1;
+        uint8_t TX_FLUSH:1;
+        uint8_t :1;
         /* Control1 */
-        FSC_U8 ENSOP1:1;
-        FSC_U8 ENSOP2:1;
-        FSC_U8 RX_FLUSH:1;
-        FSC_U8 :1;
-        FSC_U8 BIST_MODE2:1;
-        FSC_U8 ENSOP1DP:1;
-        FSC_U8 ENSOP2DB:1;
-        FSC_U8 :1;
+        uint8_t ENSOP1:1;
+        uint8_t ENSOP2:1;
+        uint8_t RX_FLUSH:1;
+        uint8_t :1;
+        uint8_t BIST_MODE2:1;
+        uint8_t ENSOP1DP:1;
+        uint8_t ENSOP2DB:1;
+        uint8_t :1;
         /* Control2 */
-        FSC_U8 TOGGLE:1;
-        FSC_U8 MODE:2;
-        FSC_U8 WAKE_EN:1;
-        FSC_U8 WAKE_SELF:1;
-        FSC_U8 TOG_RD_ONLY:1;
-        FSC_U8 :2;
+        uint8_t TOGGLE:1;
+        uint8_t MODE:2;
+        uint8_t WAKE_EN:1;
+        uint8_t WAKE_SELF:1;
+        uint8_t TOG_RD_ONLY:1;
+        uint8_t :2;
         /* Control3 */
-        FSC_U8 AUTO_RETRY:1;
-        FSC_U8 N_RETRIES:2;
-        FSC_U8 AUTO_SOFTRESET:1;
-        FSC_U8 AUTO_HARDRESET:1;
-        FSC_U8 BIST_TMODE:1;          /* 302B Only */
-        FSC_U8 SEND_HARDRESET:1;
-        FSC_U8 :1;
+        uint8_t AUTO_RETRY:1;
+        uint8_t N_RETRIES:2;
+        uint8_t AUTO_SOFTRESET:1;
+        uint8_t AUTO_HARDRESET:1;
+        uint8_t BIST_TMODE:1;          /* 302B Only */
+        uint8_t SEND_HARDRESET:1;
+        uint8_t :1;
     };
 } regControl_t;
 
 typedef union {
-    FSC_U8 byte;
+    uint8_t byte;
     struct {
-        FSC_U8 M_BC_LVL:1;
-        FSC_U8 M_COLLISION:1;
-        FSC_U8 M_WAKE:1;
-        FSC_U8 M_ALERT:1;
-        FSC_U8 M_CRC_CHK:1;
-        FSC_U8 M_COMP_CHNG:1;
-        FSC_U8 M_ACTIVITY:1;
-        FSC_U8 M_VBUSOK:1;
+        uint8_t M_BC_LVL:1;
+        uint8_t M_COLLISION:1;
+        uint8_t M_WAKE:1;
+        uint8_t M_ALERT:1;
+        uint8_t M_CRC_CHK:1;
+        uint8_t M_COMP_CHNG:1;
+        uint8_t M_ACTIVITY:1;
+        uint8_t M_VBUSOK:1;
     };
 } regMask_t;
 
 typedef union {
-    FSC_U8 byte;
+    uint8_t byte;
     struct {
-        FSC_U8 POWER:4;
-        FSC_U8 :4;
+        uint8_t POWER:4;
+        uint8_t :4;
     };
 } regPower_t;
 
 typedef union {
-    FSC_U8 byte;
+    uint8_t byte;
     struct {
-        FSC_U8 SW_RES:1;
-        FSC_U8 :7;
+        uint8_t SW_RES:1;
+        uint8_t :7;
     };
 } regReset_t;
 
 typedef union {
-    FSC_U8 byte;
+    uint8_t byte;
     struct {
-        FSC_U8 OCP_CUR:3;
-        FSC_U8 OCP_RANGE:1;
-        FSC_U8 :4;
+        uint8_t OCP_CUR:3;
+        uint8_t OCP_RANGE:1;
+        uint8_t :4;
     };
 } regOCPreg_t;
 
 typedef union {
-    FSC_U16 word;
-    FSC_U8 byte[2];
+    uint16_t word;
+    uint8_t byte[2];
     struct {
         /* Maska */
-        FSC_U8 M_HARDRST:1;
-        FSC_U8 M_SOFTRST:1;
-        FSC_U8 M_TXSENT:1;
-        FSC_U8 M_HARDSENT:1;
-        FSC_U8 M_RETRYFAIL:1;
-        FSC_U8 M_SOFTFAIL:1;
-        FSC_U8 M_TOGDONE:1;
-        FSC_U8 M_OCP_TEMP:1;
+        uint8_t M_HARDRST:1;
+        uint8_t M_SOFTRST:1;
+        uint8_t M_TXSENT:1;
+        uint8_t M_HARDSENT:1;
+        uint8_t M_RETRYFAIL:1;
+        uint8_t M_SOFTFAIL:1;
+        uint8_t M_TOGDONE:1;
+        uint8_t M_OCP_TEMP:1;
         /* Maskb */
-        FSC_U8 M_GCRCSENT:1;
-        FSC_U8 :7;
+        uint8_t M_GCRCSENT:1;
+        uint8_t :7;
     };
 } regMaskAdv_t;
 
 typedef union {
-    FSC_U8 byte;
+    uint8_t byte;
     struct {
-        FSC_U8 TOG_USRC_EXIT:1;
-        FSC_U8 :7;
+        uint8_t TOG_USRC_EXIT:1;
+        uint8_t :7;
     };
 } regControl4_t;
 
 typedef union {
-    FSC_U8 byte[7];
+    uint8_t byte[7];
     struct {
-        FSC_U16  StatusAdv;
-        FSC_U16  InterruptAdv;
-        FSC_U16  Status;
-        FSC_U8   Interrupt1;
+        uint16_t  StatusAdv;
+        uint16_t  InterruptAdv;
+        uint16_t  Status;
+        uint8_t   Interrupt1;
     };
     struct {
         /* Status0a */
-        FSC_U8 HARDRST:1;
-        FSC_U8 SOFTRST:1;
-        FSC_U8 POWER23:2;
-        FSC_U8 RETRYFAIL:1;
-        FSC_U8 SOFTFAIL:1;
-        FSC_U8 TOGDONE:1;
-        FSC_U8 M_OCP_TEMP:1;
+        uint8_t HARDRST:1;
+        uint8_t SOFTRST:1;
+        uint8_t POWER23:2;
+        uint8_t RETRYFAIL:1;
+        uint8_t SOFTFAIL:1;
+        uint8_t TOGDONE:1;
+        uint8_t M_OCP_TEMP:1;
         /* Status1a */
-        FSC_U8 RXSOP:1;
-        FSC_U8 RXSOP1DB:1;
-        FSC_U8 RXSOP2DB:1;
-        FSC_U8 TOGSS:3;
-        FSC_U8 :2;
+        uint8_t RXSOP:1;
+        uint8_t RXSOP1DB:1;
+        uint8_t RXSOP2DB:1;
+        uint8_t TOGSS:3;
+        uint8_t :2;
         /* Interrupta */
-        FSC_U8 I_HARDRST:1;
-        FSC_U8 I_SOFTRST:1;
-        FSC_U8 I_TXSENT:1;
-        FSC_U8 I_HARDSENT:1;
-        FSC_U8 I_RETRYFAIL:1;
-        FSC_U8 I_SOFTFAIL:1;
-        FSC_U8 I_TOGDONE:1;
-        FSC_U8 I_OCP_TEMP:1;
+        uint8_t I_HARDRST:1;
+        uint8_t I_SOFTRST:1;
+        uint8_t I_TXSENT:1;
+        uint8_t I_HARDSENT:1;
+        uint8_t I_RETRYFAIL:1;
+        uint8_t I_SOFTFAIL:1;
+        uint8_t I_TOGDONE:1;
+        uint8_t I_OCP_TEMP:1;
         /* Interruptb */
-        FSC_U8 I_GCRCSENT:1;
-        FSC_U8 :7;
+        uint8_t I_GCRCSENT:1;
+        uint8_t :7;
         /* Status0 */
-        FSC_U8 BC_LVL:2;
-        FSC_U8 WAKE:1;
-        FSC_U8 ALERT:1;
-        FSC_U8 CRC_CHK:1;
-        FSC_U8 COMPARATOR:1;
-        FSC_U8 ACTIVITY:1;
-        FSC_U8 VBUSOK:1;
+        uint8_t BC_LVL:2;
+        uint8_t WAKE:1;
+        uint8_t ALERT:1;
+        uint8_t CRC_CHK:1;
+        uint8_t COMPARATOR:1;
+        uint8_t ACTIVITY:1;
+        uint8_t VBUSOK:1;
         /* Status1 */
-        FSC_U8 OCP:1;
-        FSC_U8 OVRTEMP:1;
-        FSC_U8 TX_FULL:1;
-        FSC_U8 TX_EMPTY:1;
-        FSC_U8 RX_FULL:1;
-        FSC_U8 RX_EMPTY:1;
-        FSC_U8 RXSOP1:1;
-        FSC_U8 RXSOP2:1;
+        uint8_t OCP:1;
+        uint8_t OVRTEMP:1;
+        uint8_t TX_FULL:1;
+        uint8_t TX_EMPTY:1;
+        uint8_t RX_FULL:1;
+        uint8_t RX_EMPTY:1;
+        uint8_t RXSOP1:1;
+        uint8_t RXSOP2:1;
         /* Interrupt */
-        FSC_U8 I_BC_LVL:1;
-        FSC_U8 I_COLLISION:1;
-        FSC_U8 I_WAKE:1;
-        FSC_U8 I_ALERT:1;
-        FSC_U8 I_CRC_CHK:1;
-        FSC_U8 I_COMP_CHNG:1;
-        FSC_U8 I_ACTIVITY:1;
-        FSC_U8 I_VBUSOK:1;
+        uint8_t I_BC_LVL:1;
+        uint8_t I_COLLISION:1;
+        uint8_t I_WAKE:1;
+        uint8_t I_ALERT:1;
+        uint8_t I_CRC_CHK:1;
+        uint8_t I_COMP_CHNG:1;
+        uint8_t I_ACTIVITY:1;
+        uint8_t I_VBUSOK:1;
     };
 } regStatus_t;
 

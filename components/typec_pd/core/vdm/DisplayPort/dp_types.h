@@ -14,7 +14,7 @@
  * READ AND YOU AGREE TO THE LIMITED TERMS AND CONDITIONS. BY USING THIS
  * SOFTWARE AND/OR DOCUMENTATION, YOU AGREE TO THE LIMITED TERMS AND CONDITIONS.
  ******************************************************************************/
-#ifdef FSC_HAVE_DP
+#ifdef CONFIG_FSC_HAVE_DP
 
 #ifndef __DISPLAYPORT_TYPES_H__
 #define __DISPLAYPORT_TYPES_H__
@@ -35,17 +35,17 @@ typedef enum
 } DisplayPortReceptacle_t;
 
 typedef union {
-  FSC_U32 word;
-  FSC_U8 byte[4];
+  uint32_t word;
+  uint8_t byte[4];
   struct {
-    FSC_U32 UfpDCapable :1;                           /* 0 - reserved, 01b - UFP_D, 10b - DFP, 11b - Both */
-    FSC_U32 DfpDCapable :1;
-    FSC_U32 Transport :4;
-    FSC_U32 ReceptacleIndication:1;                   /* 1 = Receptacle, 0 = Plug */
-    FSC_U32 USB2p0NotUsed:1;                          /* 1 = USB r2.0 signaling not required, 0 = _may_ be required */
-    FSC_U32 DFP_DPinAssignments:8;
-    FSC_U32 UFP_DPinAssignments:8;
-    FSC_U32 Rsvd0:8;
+    uint32_t UfpDCapable :1;                           /* 0 - reserved, 01b - UFP_D, 10b - DFP, 11b - Both */
+    uint32_t DfpDCapable :1;
+    uint32_t Transport :4;
+    uint32_t ReceptacleIndication:1;                   /* 1 = Receptacle, 0 = Plug */
+    uint32_t USB2p0NotUsed:1;                          /* 1 = USB r2.0 signaling not required, 0 = _may_ be required */
+    uint32_t DFP_DPinAssignments:8;
+    uint32_t UFP_DPinAssignments:8;
+    uint32_t Rsvd0:8;
   };
 } DisplayPortCaps_t;
 
@@ -58,18 +58,18 @@ typedef enum {
 } DisplayPortConn_t;
 
 typedef union {
-  FSC_U32 word;
-  FSC_U8 byte[4];
+  uint32_t word;
+  uint8_t byte[4];
   struct {
     DisplayPortConn_t Connection:2;                            /* Connected-to information */
-    FSC_U32           PowerLow:1;                              /* Adaptor has detected low power and disabled DisplayPort support */
-    FSC_U32           Enabled:1;                               /* Adaptor DisplayPort functionality is enabled and operational */
-    FSC_U32           MultiFunctionPreferred:1;                /* Multi-function preference */
-    FSC_U32           UsbConfigRequest:1;                      /* 0 = Maintain current configuration, 1 = request switch to USB Configuration (if in DP Config) */
-    FSC_U32           ExitDpModeRequest:1;                     /* 0 = Maintain current mode, 1 = Request exit from DisplayPort Mode (if in DP Mode) */
-    FSC_U32           HpdState:1;                              /* 0 = HPD_Low, 1 = HPD_High */
-    FSC_U32           IrqHpd:1;                                /* 0 = No IRQ_HPD since last status message, 1 = IRQ_HPD */
-    FSC_U32           Rsvd0:23;
+    uint32_t           PowerLow:1;                              /* Adaptor has detected low power and disabled DisplayPort support */
+    uint32_t           Enabled:1;                               /* Adaptor DisplayPort functionality is enabled and operational */
+    uint32_t           MultiFunctionPreferred:1;                /* Multi-function preference */
+    uint32_t           UsbConfigRequest:1;                      /* 0 = Maintain current configuration, 1 = request switch to USB Configuration (if in DP Config) */
+    uint32_t           ExitDpModeRequest:1;                     /* 0 = Maintain current mode, 1 = Request exit from DisplayPort Mode (if in DP Mode) */
+    uint32_t           HpdState:1;                              /* 0 = HPD_Low, 1 = HPD_High */
+    uint32_t           IrqHpd:1;                                /* 0 = No IRQ_HPD since last status message, 1 = IRQ_HPD */
+    uint32_t           Rsvd0:23;
   };
 } DisplayPortStatus_t;
 
@@ -96,24 +96,24 @@ typedef enum {
 } DisplayPortPinAssign_t;
 
 typedef union {
-  FSC_U32 word;
-  FSC_U8 byte[4];
+  uint32_t word;
+  uint8_t byte[4];
   struct {
     DisplayPortMode_t       Mode:2;                                 /* UFP_D, DFP_D */
     DpConfSignaling_t       SignalConfig:4;                         /* Signaling configuration */
-    FSC_U32                 Rsvd0:2;
+    uint32_t                 Rsvd0:2;
     DisplayPortPinAssign_t  PinAssign:8;                            /* Configure UFP_U with DFP_D Pin Assigment */
-    FSC_U32                 Rsvd1:8;
+    uint32_t                 Rsvd1:8;
   };
 } DisplayPortConfig_t;
 
 typedef struct
 {
-  FSC_BOOL DpAutoModeEntryEnabled;                    /* Automatically enter mode if DP_SID found */
-  FSC_BOOL DpEnabled;                                 /* DP is enabled */
-  FSC_BOOL DpConfigured;                              /* Currently acting as DP UFP_D or DFP_D */
-  FSC_BOOL DpCapMatched;                              /* Port's capability matches partner's capability */
-  FSC_U32  DpModeEntered;                              /* Mode index of display port mode entered */
+  bool DpAutoModeEntryEnabled;                    /* Automatically enter mode if DP_SID found */
+  bool DpEnabled;                                 /* DP is enabled */
+  bool DpConfigured;                              /* Currently acting as DP UFP_D or DFP_D */
+  bool DpCapMatched;                              /* Port's capability matches partner's capability */
+  uint32_t  DpModeEntered;                              /* Mode index of display port mode entered */
 
   /*  DisplayPort Status/Config objects */
   DisplayPortCaps_t DpCap;                            /* Port DP capability */
@@ -128,4 +128,4 @@ typedef struct
 
 #endif  /* __DISPLAYPORT_TYPES_H__ */
 
-#endif /* FSC_HAVE_DP */
+#endif /* CONFIG_FSC_HAVE_DP */

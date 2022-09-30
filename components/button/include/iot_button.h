@@ -14,7 +14,6 @@
 #ifndef _IOT_BUTTON_H_
 #define _IOT_BUTTON_H_
 
-#include "button_adc.h"
 #include "button_gpio.h"
 
 #ifdef __cplusplus
@@ -40,26 +39,6 @@ typedef enum {
     BUTTON_NONE_PRESS,
 } button_event_t;
 
-/**
- * @brief Supported button type
- *
- */
-typedef enum {
-    BUTTON_TYPE_GPIO,
-    BUTTON_TYPE_ADC,
-} button_type_t;
-
-/**
- * @brief Button configuration
- *
- */
-typedef struct {
-    button_type_t type;                           /**< button type, The corresponding button configuration must be filled */
-    union {
-        button_gpio_config_t gpio_button_config; /**< gpio button configuration */
-        button_adc_config_t adc_button_config;   /**< adc button configuration */
-    }; /**< button configuration */
-} button_config_t;
 
 /**
  * @brief Create a button
@@ -68,7 +47,7 @@ typedef struct {
  *
  * @return A handle to the created button, or NULL in case of error.
  */
-button_handle_t iot_button_create(const button_config_t *config);
+button_handle_t iot_button_create(const button_gpio_config_t *config);
 
 /**
  * @brief Delete a button

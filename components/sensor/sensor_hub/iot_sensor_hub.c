@@ -151,8 +151,8 @@ static sensor_info_t s_sensor_info[] = {
 #endif
 #ifdef CONFIG_SENSOR_INCLUDED_LIGHT
     {"BH1750", "Light Intensity sensor", SENSOR_BH1750_ID, (const uint8_t *)"\x23"},
-    {"VEML6040", "Light Color sensor", SENSOR_VEML6040_ID, (const uint8_t *)"\x10"},
-    {"VEML6075", "Light UV sensor", SENSOR_VEML6075_ID, (const uint8_t *)"\x10"},
+    {"VEML6040", "Light Color sensor", SENSOR_VEML6040_ID, (const uint8_t *)"\x20"},
+    {"VEML7700", "Light sensor", SENSOR_VEML7700_ID, (const uint8_t *)"\x10"},
 #endif
 };
 
@@ -378,7 +378,7 @@ static void IRAM_ATTR sensors_intr_isr_handler(void *arg)
 static TimerHandle_t sensor_polling_mode_init(const char *const pcTimerName, uint32_t min_delay, void *arg)
 {
     SENSOR_CHECK((pcTimerName != NULL) && (min_delay != 0), "sensor polling mode init failed", NULL);
-    TimerHandle_t timer_handle = xTimerCreate(pcTimerName, (min_delay / portTICK_RATE_MS), pdTRUE, arg, sensors_timer_cb);
+    TimerHandle_t timer_handle = xTimerCreate(pcTimerName, pdMS_TO_TICKS(min_delay), pdTRUE, arg, sensors_timer_cb);
 
     if (timer_handle == NULL)
     {

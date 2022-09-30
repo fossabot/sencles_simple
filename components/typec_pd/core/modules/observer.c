@@ -21,7 +21,7 @@
  */
 typedef struct
 {
-	FSC_U32 event;
+	uint32_t event;
     EventHandler event_handler;
     void *context;
 } Observer_t;
@@ -31,22 +31,22 @@ typedef struct
  */
 typedef struct
 {
-	FSC_U8 obs_count;
+	uint8_t obs_count;
     Observer_t list[MAX_OBSERVERS];
 } ObserversList_t;
 
 static ObserversList_t observers = {0};
 
-FSC_BOOL register_observer(FSC_U32 event, EventHandler handler, void *context)
+bool register_observer(uint32_t event, EventHandler handler, void *context)
 {
-    FSC_BOOL status = FALSE;
+    bool status = false;
     if (observers.obs_count < MAX_OBSERVERS)
     {
         observers.list[observers.obs_count].event = event;
         observers.list[observers.obs_count].event_handler = handler;
         observers.list[observers.obs_count].context = context;
         observers.obs_count++;
-        status = TRUE;
+        status = true;
     }
     return status;
 }
@@ -57,8 +57,8 @@ FSC_BOOL register_observer(FSC_U32 event, EventHandler handler, void *context)
  */
 void remove_observer(EventHandler handler)
 {
-	FSC_U32 i, j = 0;
-    FSC_BOOL status = FALSE;
+	uint32_t i, j = 0;
+    bool status = false;
 
     /* Move all the observer pointers in arary and over-write the
      * one being deleted */
@@ -67,7 +67,7 @@ void remove_observer(EventHandler handler)
         if (observers.list[i].event_handler == handler)
         {
             /* Object found */
-            status = TRUE;
+            status = true;
             continue;
         }
         observers.list[j] = observers.list[i];
@@ -75,15 +75,15 @@ void remove_observer(EventHandler handler)
     }
 
     /* If observer was found and removed decrement the count */
-    if (status == TRUE)
+    if (status == true)
     {
         observers.obs_count--;
     }
 }
 
-void notify_observers(FSC_U32 event, FSC_U8 portId, void *app_ctx)
+void notify_observers(uint32_t event, uint8_t portId, void *app_ctx)
 {
-    FSC_U32 i;
+    uint32_t i;
     for (i = 0; i < observers.obs_count; i++)
     {
         if (observers.list[i].event & event)

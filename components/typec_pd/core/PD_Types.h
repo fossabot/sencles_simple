@@ -19,9 +19,9 @@
 
 #include "platform.h"
 
-#ifdef FSC_DEBUG
+#ifdef CONFIG_CONFIG_FSC_DEBUG
 #define PDBUFSIZE               128
-#endif /* FSC_DEBUG */
+#endif /* CONFIG_CONFIG_FSC_DEBUG */
 
 #define STAT_BUSY               0
 #define STAT_SUCCESS            1
@@ -68,7 +68,7 @@
 #define DMTVenderDefined        0xf
 
 /* Extended message types opcode */
-#ifdef FSC_HAVE_EXT_MSG
+#ifdef CONFIG_FSC_HAVE_EXT_MSG
 #define EXTSourceCapExt         0x1
 #define EXTStatus               0x2
 #define EXTGetBatteryCap        0x3
@@ -89,7 +89,7 @@
  */
 #define EXT_STATUS_MSG_BYTES        5
 #define EXT_MAX_MSG_LEN             260
-#endif /* FSC_HAVE_EXT_MSG */
+#endif /* CONFIG_FSC_HAVE_EXT_MSG */
 #define EXT_MAX_MSG_LEGACY_LEN      26
 
 /* BIST Data Objects */
@@ -105,41 +105,41 @@
 
 /* USB PD Timing Parameters in milliseconds * scale factor */
 /* Some values are changed from spec to allow for processor response time. */
-#define tRetry                  3       * TICK_SCALE_TO_MS
-#define tNoResponse             5000    * TICK_SCALE_TO_MS
-#define tSenderResponse         24      * TICK_SCALE_TO_MS
-#define tTypeCSendSourceCap     150     * TICK_SCALE_TO_MS
-#define tSinkWaitCap            500     * TICK_SCALE_TO_MS
-#define tTypeCSinkWaitCap       350     * TICK_SCALE_TO_MS
-#define tSrcTransition          25      * TICK_SCALE_TO_MS
-#define tPSHardReset            30      * TICK_SCALE_TO_MS
-#define tPSHardResetMax         34      * TICK_SCALE_TO_MS
-#define tPSTransition           500     * TICK_SCALE_TO_MS
-#define tPSSourceOff            835     * TICK_SCALE_TO_MS
-#define tPSSourceOn             435     * TICK_SCALE_TO_MS
-#define tVCONNSourceOn          90      * TICK_SCALE_TO_MS
-#define tVCONNTransition        20      * TICK_SCALE_TO_MS
-#define tBISTContMode           50      * TICK_SCALE_TO_MS
-#define tSwapSourceStart        25      * TICK_SCALE_TO_MS
-#define tSrcRecover             675     * TICK_SCALE_TO_MS
-#define tSrcRecoverMax          1000    * TICK_SCALE_TO_MS
-#define tGoodCRCDelay           5       * TICK_SCALE_TO_MS
-#define t5To12VTransition       8       * TICK_SCALE_TO_MS
-#define tSafe0V                 650     * TICK_SCALE_TO_MS
-#define tSrcTurnOn              275     * TICK_SCALE_TO_MS
-#define tVBusSwitchDelay        5       * TICK_SCALE_TO_MS
-#define tVBusPollShort          10      * TICK_SCALE_TO_MS
-#define tVBusPollLong           100     * TICK_SCALE_TO_MS
-#define tSourceRiseTimeout      350     * TICK_SCALE_TO_MS
-#define tHardResetOverhead      0       * TICK_SCALE_TO_MS
-#define tPPSTimeout             14000   * TICK_SCALE_TO_MS
-#define tPPSRequest             10000   * TICK_SCALE_TO_MS
-#define tWaitCableReset         1       * TICK_SCALE_TO_MS
-#define tChunkReceiverRequest   15      * TICK_SCALE_TO_MS
-#define tChunkReceiverResponse  15      * TICK_SCALE_TO_MS
-#define tChunkSenderRequest     30      * TICK_SCALE_TO_MS
-#define tChunkSenderResponse    30      * TICK_SCALE_TO_MS
-#define tChunkingNotSupported   40      * TICK_SCALE_TO_MS
+#define tRetry                  3        
+#define tNoResponse             5000     
+#define tSenderResponse         24      
+#define tTypeCSendSourceCap     150     
+#define tSinkWaitCap            500      
+#define tTypeCSinkWaitCap       350      
+#define tSrcTransition          25       
+#define tPSHardReset            30       
+#define tPSHardResetMax         34       
+#define tPSTransition           500      
+#define tPSSourceOff            835      
+#define tPSSourceOn             435      
+#define tVCONNSourceOn          90       
+#define tVCONNTransition        20       
+#define tBISTContMode           50       
+#define tSwapSourceStart        25       
+#define tSrcRecover             675      
+#define tSrcRecoverMax          1000     
+#define tGoodCRCDelay           5        
+#define t5To12VTransition       8        
+#define tSafe0V                 650      
+#define tSrcTurnOn              275      
+#define tVBusSwitchDelay        5        
+#define tVBusPollShort          10       
+#define tVBusPollLong           100      
+#define tSourceRiseTimeout      350      
+#define tHardResetOverhead      0        
+#define tPPSTimeout             14000    
+#define tPPSRequest             10000    
+#define tWaitCableReset         1        
+#define tChunkReceiverRequest   15       
+#define tChunkReceiverResponse  15       
+#define tChunkSenderRequest     30       
+#define tChunkSenderResponse    30       
+#define tChunkingNotSupported   40       
 
 #define nHardResetCount         2
 #define nRetryCount             3
@@ -150,18 +150,18 @@
  */
 typedef union
 {
-    FSC_U16 word;
-    FSC_U8 byte[2];
+    uint16_t word;
+    uint8_t byte[2];
 
     struct
     {
-        FSC_U16 MessageType :5;         /* 0-4      : Message Type */
-        FSC_U16 PortDataRole :1;        /* 5        : Port Data Role */
-        FSC_U16 SpecRevision :2;        /* 6-7      : Specification Revision */
-        FSC_U16 PortPowerRole :1;       /* 8        : Port Power Role */
-        FSC_U16 MessageID :3;           /* 9-11     : Message ID */
-        FSC_U16 NumDataObjects :3;      /* 12-14    : Number of Data Objects */
-        FSC_U16 Extended :1;            /* 15       : Extended message */
+        uint16_t MessageType :5;         /* 0-4      : Message Type */
+        uint16_t PortDataRole :1;        /* 5        : Port Data Role */
+        uint16_t SpecRevision :2;        /* 6-7      : Specification Revision */
+        uint16_t PortPowerRole :1;       /* 8        : Port Power Role */
+        uint16_t MessageID :3;           /* 9-11     : Message ID */
+        uint16_t NumDataObjects :3;      /* 12-14    : Number of Data Objects */
+        uint16_t Extended :1;            /* 15       : Extended message */
     };
 } sopMainHeader_t;
 
@@ -170,17 +170,17 @@ typedef union
  */
 typedef union
 {
-    FSC_U16 word;
-    FSC_U8 byte[2];
+    uint16_t word;
+    uint8_t byte[2];
     struct
     {
-        FSC_U16 MessageType :5;         /* 0-4      : Message Type */
-        FSC_U16 :1;                     /* 5        : */
-        FSC_U16 SpecRevision :2;        /* 6-7      : Specification Revision */
-        FSC_U16 CablePlug :1;           /* 8        : Cable Plug */
-        FSC_U16 MessageID :3;           /* 9-11     : Message ID */
-        FSC_U16 NumDataObjects :3;      /* 12-14    : Number of Data Objects */
-        FSC_U16 Extended :1;            /* 15       : Extended message */
+        uint16_t MessageType :5;         /* 0-4      : Message Type */
+        uint16_t :1;                     /* 5        : */
+        uint16_t SpecRevision :2;        /* 6-7      : Specification Revision */
+        uint16_t CablePlug :1;           /* 8        : Cable Plug */
+        uint16_t MessageID :3;           /* 9-11     : Message ID */
+        uint16_t NumDataObjects :3;      /* 12-14    : Number of Data Objects */
+        uint16_t Extended :1;            /* 15       : Extended message */
     };
 } sopPlugHeader_t;
 
@@ -189,15 +189,15 @@ typedef union
  */
 typedef union
 {
-    FSC_U16 word;
-    FSC_U8 byte[2];
+    uint16_t word;
+    uint8_t byte[2];
     struct
     {
-        FSC_U16 DataSize :9;            /* Bit[0-8] Length of data in bytes */
-        FSC_U16 :1;                     /* Bit[9] */
-        FSC_U16 ReqChunk :1;            /* Bit[10] Request chunk boolean */
-        FSC_U16 ChunkNum :4;            /* Bit[11-14] Chunk Number */
-        FSC_U16 Chunked :1;             /* Bit[15] Chunked flag */
+        uint16_t DataSize :9;            /* Bit[0-8] Length of data in bytes */
+        uint16_t :1;                     /* Bit[9] */
+        uint16_t ReqChunk :1;            /* Bit[10] Request chunk boolean */
+        uint16_t ChunkNum :4;            /* Bit[11-14] Chunk Number */
+        uint16_t Chunked :1;             /* Bit[15] Chunked flag */
     };
 } ExtHeader_t;
 
@@ -206,146 +206,146 @@ typedef union
  */
 typedef union
 {
-    FSC_U32 object;
-    FSC_U16 word[2];
-    FSC_U8 byte[4];
+    uint32_t object;
+    uint16_t word[2];
+    uint8_t byte[4];
     struct
     {
-        FSC_U32 :30;
-        FSC_U32 SupplyType :2;
+        uint32_t :30;
+        uint32_t SupplyType :2;
     } PDO;                              /* General purpose PDO */
     struct
     {
-        FSC_U32 MaxCurrent :10;         /* Max current in 10mA units */
-        FSC_U32 Voltage :10;            /* Voltage in 50mV units */
-        FSC_U32 PeakCurrent :2;         /* Peak current (from Ioc ratings) */
-        FSC_U32 :3;
-        FSC_U32 DataRoleSwap :1;        /* Supports DR_Swap message */
-        FSC_U32 USBCommCapable :1;      /* USB communications capable */
-        FSC_U32 ExternallyPowered :1;   /* Externally powered  */
-        FSC_U32 USBSuspendSupport :1;   /* USB Suspend Supported */
-        FSC_U32 DualRolePower :1;       /* Dual-Role power */
-        FSC_U32 SupplyType :2;          /* Supply Type - Fixed: 0  */
+        uint32_t MaxCurrent :10;         /* Max current in 10mA units */
+        uint32_t Voltage :10;            /* Voltage in 50mV units */
+        uint32_t PeakCurrent :2;         /* Peak current (from Ioc ratings) */
+        uint32_t :3;
+        uint32_t DataRoleSwap :1;        /* Supports DR_Swap message */
+        uint32_t USBCommCapable :1;      /* USB communications capable */
+        uint32_t ExternallyPowered :1;   /* Externally powered  */
+        uint32_t USBSuspendSupport :1;   /* USB Suspend Supported */
+        uint32_t DualRolePower :1;       /* Dual-Role power */
+        uint32_t SupplyType :2;          /* Supply Type - Fixed: 0  */
     } FPDOSupply;                       /* Fixed PDO for Supplies */
     struct
     {
-        FSC_U32 OperationalCurrent :10; /* Operational current in 10mA units */
-        FSC_U32 Voltage :10;            /* Voltage in 50mV units */
-        FSC_U32 :5;
-        FSC_U32 DataRoleSwap :1;        /* Supports DR_Swap message */
-        FSC_U32 USBCommCapable :1;      /* USB communications capable */
-        FSC_U32 ExternallyPowered :1;   /* Externally powered  */
-        FSC_U32 HigherCapability :1;    /* Sink needs more than vSafe5V */
-        FSC_U32 DualRolePower :1;       /* Dual-Role power */
-        FSC_U32 SupplyType :2;          /* Supply Type - Fixed: 0  */
+        uint32_t OperationalCurrent :10; /* Operational current in 10mA units */
+        uint32_t Voltage :10;            /* Voltage in 50mV units */
+        uint32_t :5;
+        uint32_t DataRoleSwap :1;        /* Supports DR_Swap message */
+        uint32_t USBCommCapable :1;      /* USB communications capable */
+        uint32_t ExternallyPowered :1;   /* Externally powered  */
+        uint32_t HigherCapability :1;    /* Sink needs more than vSafe5V */
+        uint32_t DualRolePower :1;       /* Dual-Role power */
+        uint32_t SupplyType :2;          /* Supply Type - Fixed: 0  */
     } FPDOSink;                         /* Fixed Power Data Object for Sinks */
     struct
     {
-        FSC_U32 MaxCurrent :10;         /* Max current in 10mA units */
-        FSC_U32 MinVoltage :10;         /* Minimum Voltage in 50mV units */
-        FSC_U32 MaxVoltage :10;         /* Maximum Voltage in 50mV units */
-        FSC_U32 SupplyType :2;          /* Supply Type - Variable: 1 */
+        uint32_t MaxCurrent :10;         /* Max current in 10mA units */
+        uint32_t MinVoltage :10;         /* Minimum Voltage in 50mV units */
+        uint32_t MaxVoltage :10;         /* Maximum Voltage in 50mV units */
+        uint32_t SupplyType :2;          /* Supply Type - Variable: 1 */
     } VPDO;                             /* Variable Power Data Object */
     struct
     {
-        FSC_U32 MaxPower :10;           /* Max power in 250mW units */
-        FSC_U32 MinVoltage :10;         /* Minimum Voltage in 50mV units */
-        FSC_U32 MaxVoltage :10;         /* Maximum Voltage in 50mV units */
-        FSC_U32 SupplyType :2;          /* Supply Type - Battery: 2 */
+        uint32_t MaxPower :10;           /* Max power in 250mW units */
+        uint32_t MinVoltage :10;         /* Minimum Voltage in 50mV units */
+        uint32_t MaxVoltage :10;         /* Maximum Voltage in 50mV units */
+        uint32_t SupplyType :2;          /* Supply Type - Battery: 2 */
     } BPDO;                             /* Battery Power Data Object */
     struct
     {
-        FSC_U32 MaxCurrent :7;          /* Max current in 50mA units */
-        FSC_U32 :1;
-        FSC_U32 MinVoltage :8;          /* Min voltage in 100mV units */
-        FSC_U32 :1;
-        FSC_U32 MaxVoltage :8;          /* Max voltage in 100mV units */
-        FSC_U32 :5;
-        FSC_U32 SupplyType :2;          /* Apdo type 11b */
+        uint32_t MaxCurrent :7;          /* Max current in 50mA units */
+        uint32_t :1;
+        uint32_t MinVoltage :8;          /* Min voltage in 100mV units */
+        uint32_t :1;
+        uint32_t MaxVoltage :8;          /* Max voltage in 100mV units */
+        uint32_t :5;
+        uint32_t SupplyType :2;          /* Apdo type 11b */
     } PPSAPDO;
     struct
     {
-        FSC_U32 MinMaxCurrent :10;      /* Min/Max current in 10mA units */
-        FSC_U32 OpCurrent :10;          /* Operating current in 10mA units */
-        FSC_U32 :3;
-        FSC_U32 UnChnkExtMsgSupport :1; /* Unchunked extended msg supported */
-        FSC_U32 NoUSBSuspend :1;        /* USB suspend not available */
-        FSC_U32 USBCommCapable :1;      /* USB communications capable */
-        FSC_U32 CapabilityMismatch :1;  /* Sink cannot make valid request */
-        FSC_U32 GiveBack :1;            /* Sink will respond to the GotoMin */
-        FSC_U32 ObjectPosition :3;      /* Object being requested */
-        FSC_U32 :1;
+        uint32_t MinMaxCurrent :10;      /* Min/Max current in 10mA units */
+        uint32_t OpCurrent :10;          /* Operating current in 10mA units */
+        uint32_t :3;
+        uint32_t UnChnkExtMsgSupport :1; /* Unchunked extended msg supported */
+        uint32_t NoUSBSuspend :1;        /* USB suspend not available */
+        uint32_t USBCommCapable :1;      /* USB communications capable */
+        uint32_t CapabilityMismatch :1;  /* Sink cannot make valid request */
+        uint32_t GiveBack :1;            /* Sink will respond to the GotoMin */
+        uint32_t ObjectPosition :3;      /* Object being requested */
+        uint32_t :1;
     } FVRDO;                            /* Fixed/Variable Request Data Object*/
     struct
     {
-        FSC_U32 MinMaxPower :10;        /* Min/Max power in 250mW units */
-        FSC_U32 OpPower :10;            /* Operating power in 250mW units */
-        FSC_U32 :3;
-        FSC_U32 UnChnkExtMsgSupport :1; /* Unchunked extended msg supported */
-        FSC_U32 NoUSBSuspend :1;        /* USB suspend not available */
-        FSC_U32 USBCommCapable :1;      /* USB communications capable */
-        FSC_U32 CapabilityMismatch :1;  /* Sink cannot make valid request */
-        FSC_U32 GiveBack :1;            /* Sink will respond to the GotoMin */
-        FSC_U32 ObjectPosition :3;      /* Object being requested */
-        FSC_U32 :1;
+        uint32_t MinMaxPower :10;        /* Min/Max power in 250mW units */
+        uint32_t OpPower :10;            /* Operating power in 250mW units */
+        uint32_t :3;
+        uint32_t UnChnkExtMsgSupport :1; /* Unchunked extended msg supported */
+        uint32_t NoUSBSuspend :1;        /* USB suspend not available */
+        uint32_t USBCommCapable :1;      /* USB communications capable */
+        uint32_t CapabilityMismatch :1;  /* Sink cannot make valid request */
+        uint32_t GiveBack :1;            /* Sink will respond to the GotoMin */
+        uint32_t ObjectPosition :3;      /* Object being requested */
+        uint32_t :1;
     } BRDO;                             /* Battery Request Data Object */
     struct
     {
-        FSC_U32 OpCurrent :7;           /* Operating current in 50mA units */
-        FSC_U32 :2;
-        FSC_U32 Voltage :11;            /* Requested voltage in 20mV units */
-        FSC_U32 :3;
-        FSC_U32 UnChnkExtMsgSupport :1; /* Unchunked extended msg supported */
-        FSC_U32 NoUSBSuspend :1;        /* USB suspend not available */
-        FSC_U32 USBCommCapable :1;      /* USB communications capable */
-        FSC_U32 CapabilityMismatch :1;  /* Sink cannot make valid request */
-        FSC_U32 :1;
-        FSC_U32 ObjectPosition :3;      /* PDO object index */
-        FSC_U32 :1;
+        uint32_t OpCurrent :7;           /* Operating current in 50mA units */
+        uint32_t :2;
+        uint32_t Voltage :11;            /* Requested voltage in 20mV units */
+        uint32_t :3;
+        uint32_t UnChnkExtMsgSupport :1; /* Unchunked extended msg supported */
+        uint32_t NoUSBSuspend :1;        /* USB suspend not available */
+        uint32_t USBCommCapable :1;      /* USB communications capable */
+        uint32_t CapabilityMismatch :1;  /* Sink cannot make valid request */
+        uint32_t :1;
+        uint32_t ObjectPosition :3;      /* PDO object index */
+        uint32_t :1;
     } PPSRDO;                           /* PPS Request Data Object */
     struct {
-        FSC_U32 OutputVoltage: 16;      /* Output voltage in 20mV, or 0xFFFF */
-        FSC_U32 OutputCurrent: 8;       /* Output current in 50mA, or 0xFF */
-        FSC_U32 :1;
-        FSC_U32 Ptf:2;                  /* Temperature flag */
-        FSC_U32 Omf:1;                  /* Current foldback mode */
-        FSC_U32 :4;
+        uint32_t OutputVoltage: 16;      /* Output voltage in 20mV, or 0xFFFF */
+        uint32_t OutputCurrent: 8;       /* Output current in 50mA, or 0xFF */
+        uint32_t :1;
+        uint32_t Ptf:2;                  /* Temperature flag */
+        uint32_t Omf:1;                  /* Current foldback mode */
+        uint32_t :4;
     } PPSSDB;                           /* PPS Data block */
     struct {
-        FSC_U32 :16;
-        FSC_U32 HotSwapBat0:1;
-        FSC_U32 HotSwapBat1:1;
-        FSC_U32 HotSwapBat2:1;
-        FSC_U32 HotSwpaBat3:1;
-        FSC_U32 FixedBat4:1;
-        FSC_U32 FixedBat5:1;
-        FSC_U32 FixedBat6:1;
-        FSC_U32 FixedBat7:1;
-        FSC_U32 :1;
-        FSC_U32 Battery:1;              /* Battery status changed */
-        FSC_U32 OCP:1;                  /* Over current */
-        FSC_U32 OTP:1;                  /* Over temperature */
-        FSC_U32 OpCondition:1;          /* Operating condition */
-        FSC_U32 Input:1;                /* Input change event */
-        FSC_U32 OVP:1;                  /* Over Voltage */
-        FSC_U32 :1;
+        uint32_t :16;
+        uint32_t HotSwapBat0:1;
+        uint32_t HotSwapBat1:1;
+        uint32_t HotSwapBat2:1;
+        uint32_t HotSwpaBat3:1;
+        uint32_t FixedBat4:1;
+        uint32_t FixedBat5:1;
+        uint32_t FixedBat6:1;
+        uint32_t FixedBat7:1;
+        uint32_t :1;
+        uint32_t Battery:1;              /* Battery status changed */
+        uint32_t OCP:1;                  /* Over current */
+        uint32_t OTP:1;                  /* Over temperature */
+        uint32_t OpCondition:1;          /* Operating condition */
+        uint32_t Input:1;                /* Input change event */
+        uint32_t OVP:1;                  /* Over Voltage */
+        uint32_t :1;
     } ADO;                              /* Alert Data Object */
     struct
     {
-        FSC_U32 VendorDefined :15;      /* Defined by the vendor */
-        FSC_U32 VDMType :1;             /* Unstructured or structured header */
-        FSC_U32 VendorID :16;           /* Unique VID value */
+        uint32_t VendorDefined :15;      /* Defined by the vendor */
+        uint32_t VDMType :1;             /* Unstructured or structured header */
+        uint32_t VendorID :16;           /* Unique VID value */
     } UVDM;
     struct
     {
-        FSC_U32 Command :5;             /* VDM Command */
-        FSC_U32 :1;
-        FSC_U32 CommandType :2;         /* Init, ACK, NAK, BUSY... */
-        FSC_U32 ObjPos :3;              /* Object position */
-        FSC_U32 :2;
-        FSC_U32 Version :2;             /* Structured VDM version */
-        FSC_U32 VDMType :1;             /* Unstructured or structured header */
-        FSC_U32 SVID :16;               /* Unique SVID value */
+        uint32_t Command :5;             /* VDM Command */
+        uint32_t :1;
+        uint32_t CommandType :2;         /* Init, ACK, NAK, BUSY... */
+        uint32_t ObjPos :3;              /* Object position */
+        uint32_t :2;
+        uint32_t Version :2;             /* Structured VDM version */
+        uint32_t VDMType :1;             /* Unstructured or structured header */
+        uint32_t SVID :16;               /* Unique SVID value */
     } SVDM;
 } doDataObject_t;
 
@@ -354,12 +354,12 @@ typedef union
  */
 typedef struct
 {
-    FSC_U32 Voltage :10;
-    FSC_U32 Current :10;
-    FSC_U32 MinVoltage :10;
-    FSC_U32 MaxVoltage :10;
-    FSC_U32 MaxPower :10;
-    FSC_U32 SupplyType :2;
+    uint32_t Voltage :10;
+    uint32_t Current :10;
+    uint32_t MinVoltage :10;
+    uint32_t MaxVoltage :10;
+    uint32_t MaxPower :10;
+    uint32_t SupplyType :2;
 } doPDO_t;
 
 /**
@@ -367,26 +367,26 @@ typedef struct
  */
 typedef union
 {
-    FSC_U8 byte[5];
+    uint8_t byte[5];
     struct
     {
-        FSC_U8 InternalTemp :8;         /* Bit[0-7] Temperature (Deg C) */
-        FSC_U8 :1;                      /* Bit[0] */
-        FSC_U8 ExternalPower :1;        /* Bit[1] Externally powered */
-        FSC_U8 ACDC :1;                 /* Bit[2] Ext. Powered 0:DC 1:AC */
-        FSC_U8 InternalBattery :1;      /* Bit[3] Int. Powered - Battery */
-        FSC_U8 InternalNonBattery :1;   /* Bit[4] Int. Powered - Non-battery */
-        FSC_U8 :3;                      /* Bit[5-7] */
-        FSC_U8 PresentBatteryInput :8;  /* Bit[0-7] */
-        FSC_U8 :1;                      /* Bit[0] */
-        FSC_U8 EventOCP :1;             /* Bit[1] Chunk Number */
-        FSC_U8 EventOTP :1;             /* Bit[2] Chunk Number */
-        FSC_U8 EventOVP :1;             /* Bit[3] Chunk Number */
-        FSC_U8 EventCVCF :1;            /* Bit[4] Chunk Number */
-        FSC_U8 :3;                      /* Bit[5-7] */
-        FSC_U8 :1;                      /* Bit[0] */
-        FSC_U8 TemperatureStatus :2;    /* Bit[1-2] Temp Code */
-        FSC_U8 :5;                      /* Bit[3-7] */
+        uint8_t InternalTemp :8;         /* Bit[0-7] Temperature (Deg C) */
+        uint8_t :1;                      /* Bit[0] */
+        uint8_t ExternalPower :1;        /* Bit[1] Externally powered */
+        uint8_t ACDC :1;                 /* Bit[2] Ext. Powered 0:DC 1:AC */
+        uint8_t InternalBattery :1;      /* Bit[3] Int. Powered - Battery */
+        uint8_t InternalNonBattery :1;   /* Bit[4] Int. Powered - Non-battery */
+        uint8_t :3;                      /* Bit[5-7] */
+        uint8_t PresentBatteryInput :8;  /* Bit[0-7] */
+        uint8_t :1;                      /* Bit[0] */
+        uint8_t EventOCP :1;             /* Bit[1] Chunk Number */
+        uint8_t EventOTP :1;             /* Bit[2] Chunk Number */
+        uint8_t EventOVP :1;             /* Bit[3] Chunk Number */
+        uint8_t EventCVCF :1;            /* Bit[4] Chunk Number */
+        uint8_t :3;                      /* Bit[5-7] */
+        uint8_t :1;                      /* Bit[0] */
+        uint8_t TemperatureStatus :2;    /* Bit[1-2] Temp Code */
+        uint8_t :5;                      /* Bit[3-7] */
     };
 } Status_t;
 
@@ -395,17 +395,17 @@ typedef union
  */
 typedef union
 {
-    FSC_U32 object;
-    FSC_U16 word[2];
-    FSC_U8 byte[4];
+    uint32_t object;
+    uint16_t word[2];
+    uint8_t byte[4];
     struct
     {
-        FSC_U32 OutputVoltage :16;      /* Bit[0-15] Output Voltage (20mV) */
-        FSC_U32 OutputCurrent :8;       /* Bit[0-7] Output Current (50mA) */
-        FSC_U32 :4;                     /* Bit[4-7] */
-        FSC_U32 FlagOMF :1;             /* Bit[3] Operating Mode Flag */
-        FSC_U32 FlagPTF :2;             /* Bit[1-2] Present Temp Flag */
-        FSC_U32 :1;                     /* Bit[0] */
+        uint32_t OutputVoltage :16;      /* Bit[0-15] Output Voltage (20mV) */
+        uint32_t OutputCurrent :8;       /* Bit[0-7] Output Current (50mA) */
+        uint32_t :4;                     /* Bit[4-7] */
+        uint32_t FlagOMF :1;             /* Bit[3] Operating Mode Flag */
+        uint32_t FlagPTF :2;             /* Bit[1-2] Present Temp Flag */
+        uint32_t :1;                     /* Bit[0] */
     };
 } PPSStatus_t;
 
@@ -414,12 +414,12 @@ typedef union
  */
 typedef union
 {
-    FSC_U8 bytes[260];
+    uint8_t bytes[260];
     struct
     {
-        FSC_U8 CountryCode[2];
-        FSC_U8 Reserved[2];
-        FSC_U8 Data[256];
+        uint8_t CountryCode[2];
+        uint8_t Reserved[2];
+        uint8_t Data[256];
     };
 } CountryInfoResp;
 
@@ -428,11 +428,11 @@ typedef union
  */
 typedef union
 {
-    FSC_U8 bytes[4];
+    uint8_t bytes[4];
     struct
     {
-        FSC_U8 Reserved[2];
-        FSC_U8 CountryCode[2];
+        uint8_t Reserved[2];
+        uint8_t CountryCode[2];
     };
 } CountryInfoReq;
 

@@ -31,7 +31,7 @@ typedef enum
 struct devicePolicy_t
 {
     Port_t          *ports[NUM_PORTS];     ///< List of port managed
-    FSC_U8           num_ports;
+    uint8_t           num_ports;
     DpmState_t       dpm_state;
 };
 
@@ -82,10 +82,10 @@ doDataObject_t* DPM_GetSinkCap(DevicePolicy_t *dpm, Port_t *port)
     return port->snk_caps;
 }
 
-FSC_BOOL DPM_TransitionSource(DevicePolicy_t *dpm, Port_t *port, FSC_U8 index)
+bool DPM_TransitionSource(DevicePolicy_t *dpm, Port_t *port, uint8_t index)
 {
-    FSC_BOOL status = TRUE;
-    FSC_U32 voltage = 0;
+    bool status = true;
+    uint32_t voltage = 0;
 
     if (port->src_caps[index].PDO.SupplyType == pdoTypeFixed)
     {
@@ -96,14 +96,14 @@ FSC_BOOL DPM_TransitionSource(DevicePolicy_t *dpm, Port_t *port, FSC_U8 index)
       if (port->src_caps[index].FPDOSupply.Voltage == 100)
       {
           platform_set_pps_voltage(port->PortID, 250);
-          platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_5V, TRUE, TRUE);
+          platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_5V, true, true);
       }
       else
       {
           /* Convert 50mV units to 20mV for setting supply voltage */
           voltage = (port->src_caps[index].FPDOSupply.Voltage * 5) / 2;
           platform_set_pps_voltage(port->PortID, voltage);
-          platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_HV, TRUE, TRUE);
+          platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_HV, true, true);
       }
     }
     else if (port->src_caps[index].PDO.SupplyType == pdoTypeAugmented)
@@ -115,16 +115,16 @@ FSC_BOOL DPM_TransitionSource(DevicePolicy_t *dpm, Port_t *port, FSC_U8 index)
       /* Convert 50mA units to mA for setting supply current */
       platform_set_pps_current(port->PortID,
                                port->PolicyRxDataObj[0].PPSRDO.OpCurrent * 50);
-      platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_HV, TRUE, TRUE);
+      platform_set_vbus_lvl_enable(port->PortID, VBUS_LVL_HV, true, true);
     }
 
     return status;
 }
 
-FSC_BOOL DPM_IsSourceCapEnabled(DevicePolicy_t *dpm, Port_t *port, FSC_U8 index)
+bool DPM_IsSourceCapEnabled(DevicePolicy_t *dpm, Port_t *port, uint8_t index)
 {
-    FSC_BOOL status = FALSE;
-    FSC_U32 sourceVoltage = 0;
+    bool status = false;
+    uint32_t sourceVoltage = 0;
 
     if (port->src_caps[index].PDO.SupplyType == pdoTypeFixed)
     {
@@ -135,7 +135,7 @@ FSC_BOOL DPM_IsSourceCapEnabled(DevicePolicy_t *dpm, Port_t *port, FSC_U8 index)
           isVBUSOverVoltage(port,
             VBUS_MV_NEW_MIN(VBUS_PD_TO_MV(sourceVoltage))))
       {
-          status = TRUE;
+          status = true;
       }
     }
     else if (port->src_caps[index].PDO.SupplyType == pdoTypeAugmented)
@@ -147,7 +147,7 @@ FSC_BOOL DPM_IsSourceCapEnabled(DevicePolicy_t *dpm, Port_t *port, FSC_U8 index)
           isVBUSOverVoltage(port,
             VBUS_MV_NEW_MIN(VBUS_PPS_TO_MV(sourceVoltage))))
       {
-          status = TRUE;
+          status = true;
       }
     }
 
@@ -198,14 +198,14 @@ void DPM_SetSpecRev(Port_t *port, SopType sop, SpecRev rev)
     }
 }
 
-#ifdef FSC_HAVE_VDM
+#ifdef CONFIG_FSC_HAVE_VDM
 SvdmVersion DPM_SVdmVer(Port_t *port, SopType sop)
 {
     return (DPM_SpecRev(port, sop) == USBPDSPECREV2p0) ? V1P0 : V2P0;
 }
-#endif /* FSC_HAVE_VDM */
+#endif /* CONFIG_FSC_HAVE_VDM */
 
-FSC_U8 DPM_Retries(Port_t *port, SopType sop)
+uint8_t DPM_Retries(Port_t *port, SopType sop)
 {
     SpecRev rev = DPM_SpecRev(port, sop);
 
