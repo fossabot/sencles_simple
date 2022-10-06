@@ -25,7 +25,6 @@
 #include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_check.h"
-#include "driver/ledc.h"
 
 static const char *TAG = "gc9a01_hw";
 
@@ -214,6 +213,7 @@ static const lcd_init_cmd_t vendor_specific_init[] = {
     {0x99, {0x3e, 0x07}, 2},
     {0, {0}, 0xff},
 };
+
 
 static esp_err_t panel_gc9a01_init(esp_lcd_panel_t *panel)
 {

@@ -83,7 +83,7 @@ void led_task(void *pvParameters)
 
             ESP_ERROR_CHECK(color_breathe(led_chan, led_encoder, green, 0, 5, 1, 100, 2, &time, &tx_config));
             vTaskDelay(pdMS_TO_TICKS(3000 - time));
-            ESP_LOGI(TAG, "red_breathe");
+            ESP_LOGI(TAG, "green_breathe");
         }
     }
 }

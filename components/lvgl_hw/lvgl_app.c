@@ -1,4 +1,4 @@
-﻿// Copyright 2022 JeongYeham
+// Copyright 2022 JeongYeham
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -246,7 +246,8 @@ void ui_Screen1_screen_init(void)
 
     lv_obj_set_align(ui_Labeldegree, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_Labeldegree, "*C");
+    lv_label_set_text(ui_Labeldegree, "ºC");
+    lv_obj_set_style_text_font(ui_Labeldegree, &lv_font_dejavu_16_persian_hebrew, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // ui_Labelpercent
 
@@ -304,7 +305,7 @@ void ui_Screen1_screen_init(void)
 
     lv_obj_set_align(ui_btempLabeldegree, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_btempLabeldegree, "*C");
+    lv_label_set_text(ui_btempLabeldegree, "ºC");
 
     // ui_timeLabel
 

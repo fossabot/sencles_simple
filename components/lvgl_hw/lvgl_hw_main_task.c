@@ -194,16 +194,16 @@ void gui_task(void *pvParameters)
 
     ESP_LOGI(TAG, "Ready to display the LVGL screen");
 
-    vTaskDelay(pdMS_TO_TICKS(2000));
+    vTaskDelay(pdMS_TO_TICKS(500));
 
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
-    change_backlight(LEDC_CHANNEL_0, 0.1);
+    change_backlight(LEDC_CHANNEL_0, 0.2);
 
 
     while (1)
     {
         // raise the task priority of LVGL and/or reduce the handler period can improve the performance
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(1));
         // The task running lv_timer_handler should have lower priority than that running `lv_tick_inc`
         if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
         {

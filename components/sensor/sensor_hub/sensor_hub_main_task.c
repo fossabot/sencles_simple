@@ -55,7 +55,7 @@ static void sensorEventHandler(void *handler_args, esp_event_base_t base, int32_
         break;
     case SENSOR_TEMP_HUMI_DATA_READY:
         ESP_LOGI(TAG, "Timestamp = %llu - SENSOR_TEMP_HUMI_DATA_READY - "
-                      "humi=%.2f, temp=%.2f, body_temp=%.2f",
+                      "humi=%.2f %%, temp=%.2f ℃, body_temp=%.2f ℃",
                  sensor_data->timestamp,
                  sensor_data->humiture.humidity, sensor_data->humiture.temperature, sensor_data->humiture.body_temperature);
         xQueueOverwriteFromISR(signal->xQueueSenData, sensor_data, NULL);

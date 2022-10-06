@@ -37,7 +37,14 @@
 #define VEML7700_GAIN_OPTIONS_COUNT 4 /*!< Possible gain values count */
 #define VEML7700_IT_OPTIONS_COUNT 6   /*!< Possible integration time values count */
 
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
+
+typedef enum
+{
+    VEML7700_SEND_ALL = 0,  
+    VEML7700_SEND_GAIN = 1,  
+    VEML7700_SEND_ITIME = 2,  
+} veml7700_send_config_t;
 
 typedef enum
 {
@@ -84,8 +91,6 @@ typedef struct
     veml7700_irq_pre_t persistance;      /*!< Last result persistance on-sensor configuration */
     uint16_t interrupt_enable; /*!< Enable/disable interrupts */
     uint16_t shutdown;         /*!< Shutdown command configuration */
-    float resolution;          /*!< Current resolution and multiplier */
-    uint32_t maximum_lux;      /*!< Current maximum lux limit */
 } veml7700_config_t;
 
 typedef struct
@@ -130,17 +135,13 @@ extern "C"
      */
     esp_err_t veml7700_delete(veml7700_handle_t *sensor);
     esp_err_t veml7700_optimize_configuration(veml7700_handle_t sensor, float *lux);
-    uint32_t veml7700_get_current_maximum_lux();
-    uint32_t veml7700_get_lower_maximum_lux(veml7700_handle_t sensor, float *lux);
-    uint32_t veml7700_get_lowest_maximum_lux();
-    uint32_t veml7700_get_maximum_lux();
-    int veml7700_get_gain_index(uint8_t gain);
-    int veml7700_get_it_index(uint8_t integration_time);
-    uint8_t indexOf(uint8_t elm, const uint8_t *ar, uint8_t len);
-    void decrease_resolution(veml7700_handle_t sensor);
-    void increase_resolution(veml7700_handle_t sensor);
-    esp_err_t veml7700_send_config(veml7700_handle_t sensor);
-    float veml7700_get_resolution(veml7700_handle_t sensor);
+    esp_err_t veml7700_send_config(veml7700_handle_t sensor, veml7700_config_t *configuration, veml7700_send_config_t way);
+    float get_resolution(veml7700_handle_t sensor);
+    int getIntegrationTimeValue(veml7700_handle_t sensor);
+    float getGainValue(veml7700_handle_t sensor);
+    float get_resolution(veml7700_handle_t sensor);
+    float computeLux(veml7700_handle_t sensor, uint16_t rawALS, bool corrected);
+    esp_err_t veml7700_read_als_lux(veml7700_handle_t sensor, uint16_t *raw);
 
 /**implements of light sensor hal interface**/
 #ifdef CONFIG_SENSOR_LIGHT_INCLUDED_VEML7700
