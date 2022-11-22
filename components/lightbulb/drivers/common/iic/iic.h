@@ -1,5 +1,4 @@
-// Copyright 2019 Espressif Systems (Shanghai) PTE LTD
-// Copyright 2022 JeongYeham
+// Copyright 2020-2022 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "driver/i2c.h"
 #pragma once
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-#include "esp_err.h"
-#include "driver/rmt_tx.h"
-
-    typedef enum _led_strip_color_type
-    {
-        red,
-        green,
-        blue,
-    } led_strip_color_t;
-
-    void led_task(void *pvParameters);
-
-#ifdef __cplusplus
-}
-#endif
+esp_err_t iic_driver_init(i2c_port_t i2c_master_num, gpio_num_t sda_io_num, gpio_num_t scl_io_num, uint32_t clk_freq_hz);
+esp_err_t iic_driver_write(uint8_t addr, uint8_t *data_wr, size_t size);
+esp_err_t iic_driver_send_task_create(void);
+esp_err_t iic_driver_task_destroy(void);
+esp_err_t iic_driver_deinit(void);
