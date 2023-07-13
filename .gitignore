@@ -57,3 +57,4 @@ build/*
 *.old
 *.ps1
 key/*
+.idea/
