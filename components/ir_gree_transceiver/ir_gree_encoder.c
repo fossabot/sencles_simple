@@ -416,7 +416,7 @@ __always_inline void checksum(GreeProtocol_t *greeproc)
 /// Fix up any odd conditions for the current state.
 esp_err_t procotol_fixup(GreeProtocol_t *greeproc)
 {
-    esp_err_t ret1;
+    esp_err_t ret1 = 0;
     // X-Fan mode is only valid in COOL or DRY modes.
     if (greeproc->GreeProtocol_bit_t.Mode != opmode_Cool && greeproc->GreeProtocol_bit_t.Mode != opmode_Dry)
         ret1 = setXFan(greeproc, false);

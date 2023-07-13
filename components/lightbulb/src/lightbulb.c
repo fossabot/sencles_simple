@@ -406,7 +406,7 @@ static void print_func(void)
     ESP_LOGI(TAG, "status storage: %s", s_lb_obj->cap.enable_status_storage ? "enable" : "disable");
     ESP_LOGI(TAG, "status storage delay %d ms", s_lb_obj->cap.enable_status_storage == true ? s_lb_obj->cap.storage_delay_ms : 0);
     ESP_LOGI(TAG, "fade: %s", s_lb_obj->cap.enable_fades ? "enable" : "disable");
-    ESP_LOGI(TAG, "fade %d ms", s_lb_obj->cap.enable_fades == true ? s_lb_obj->cap.fades_ms : 0);
+    ESP_LOGI(TAG, "fade %ld ms", s_lb_obj->cap.enable_fades == true ? s_lb_obj->cap.fades_ms : 0);
     ESP_LOGI(TAG, "mode: %d", s_lb_obj->cap.mode_mask);
     if (CHECK_WHITE_CHANNEL_IS_SELECT()) {
         ESP_LOGI(TAG, "     white mode: enable");
@@ -802,7 +802,7 @@ esp_err_t lightbulb_set_hsv(uint16_t hue, uint8_t saturation, uint8_t value)
 
     // 3. according to power, re-calculate
     process_color_power_limit(color_value[0], color_value[1], color_value[2], &color_value[0], &color_value[1], &color_value[2]);
-    ESP_LOGI(TAG, "hal write value [r:%d g:%d b:%d], channel_mask:%d fade_ms:%d", color_value[0], color_value[1], color_value[2], channel_mask, fade_time);
+    ESP_LOGI(TAG, "hal write value [r:%d g:%d b:%d], channel_mask:%d fade_ms:%ld", color_value[0], color_value[1], color_value[2], channel_mask, fade_time);
 
     err = hal_set_channel_group(color_value, channel_mask, fade_time);
     LIGHTBULB_CHECK(err == ESP_OK, "set hal channel group fail", goto EXIT);
@@ -864,7 +864,7 @@ esp_err_t lightbulb_set_cctb(uint8_t cct, uint8_t brightness)
         white_value[4] = _brightness * 255 / 100;
         ESP_LOGI(TAG, "convert cct:%d brightness:%d", white_value[3], white_value[4]);
     }
-    ESP_LOGI(TAG, "hal write value [white1:%d white2:%d], channel_mask:%d fade_ms:%d", white_value[3], white_value[4], channel_mask, fade_time);
+    ESP_LOGI(TAG, "hal write value [white1:%d white2:%d], channel_mask:%d fade_ms:%ld", white_value[3], white_value[4], channel_mask, fade_time);
 
     err = hal_set_channel_group(white_value, channel_mask, fade_time);
     LIGHTBULB_CHECK(err == ESP_OK, "set hal channel group fail", goto EXIT);

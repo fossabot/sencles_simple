@@ -651,12 +651,12 @@ esp_err_t hal_set_channel(int channel, uint16_t value, uint32_t fade_ms)
     } else {
         fade_data.num = fade_ms / CHANGE_RATE_MS;
     }
-    if (abs(fade_data.cur - fade_data.final) == 0) {
+    if (fabs(fade_data.cur - fade_data.final) == 0.0) {
         fade_data.num = 1;
     }
 
     // 5. Count the step value required on each call to fade_ms
-    fade_data.step = abs(fade_data.cur - fade_data.final) / fade_data.num;
+    fade_data.step = fabs(fade_data.cur - fade_data.final) / fade_data.num;
 #ifdef CONFIG_ENABLE_DITHERING_CHECK
     // Allows to reduce fade time to increase resolution to avoid dithering
     if (fade_data.step <= 0.5 && (fade_data.num != 1)) {
@@ -683,7 +683,7 @@ esp_err_t hal_set_channel(int channel, uint16_t value, uint32_t fade_ms)
     fade_cb(NULL);
     esp_timer_start_periodic(s_hal_obj->fade_timer, 1000 * CHANGE_RATE_MS);
 
-    ESP_LOGD(TAG, "set channel:[%d] value:%d fade_ms:%d cur:%f final:%f step:%f num:%f", channel, value, fade_ms, fade_data.cur, fade_data.final, fade_data.step, fade_data.num);
+    ESP_LOGD(TAG, "set channel:[%d] value:%d fade_ms:%ld cur:%f final:%f step:%f num:%f", channel, value, fade_ms, fade_data.cur, fade_data.final, fade_data.step, fade_data.num);
     return ESP_OK;
 }
 
@@ -723,12 +723,12 @@ esp_err_t hal_set_channel_group(uint16_t value[], uint8_t channel_mask, uint32_t
         } else {
             fade_data[channel].num = fade_ms / CHANGE_RATE_MS;
         }
-        if (abs(fade_data[channel].cur - fade_data[channel].final) == 0) {
+        if (fabs(fade_data[channel].cur - fade_data[channel].final) == 0) {
             fade_data[channel].num = 1;
         }
 
         // 2.5 Count the step value required on each call to fade_ms
-        fade_data[channel].step = abs(fade_data[channel].cur - fade_data[channel].final) / fade_data[channel].num;
+        fade_data[channel].step = fabs(fade_data[channel].cur - fade_data[channel].final) / fade_data[channel].num;
 #ifdef CONFIG_ENABLE_DITHERING_CHECK
         // Allows to reduce fade time to increase resolution to avoid dithering
         if (fade_data[channel].step <= 0.5 && (fade_data[channel].num != 1)) {
@@ -749,7 +749,7 @@ esp_err_t hal_set_channel_group(uint16_t value[], uint8_t channel_mask, uint32_t
         if (fade_data[channel].num > 1) {
             need_timer = true;
         }
-        ESP_LOGD(TAG, "set group:[%d] value:%d fade_ms:%d cur:%f final:%f step:%f num:%f", channel, value[channel], fade_ms, fade_data[channel].cur, fade_data[channel].final, fade_data[channel].step, fade_data[channel].num);
+        ESP_LOGD(TAG, "set group:[%d] value:%d fade_ms:%ld cur:%f final:%f step:%f num:%f", channel, value[channel], fade_ms, fade_data[channel].cur, fade_data[channel].final, fade_data[channel].step, fade_data[channel].num);
     }
     memcpy(s_hal_obj->fade_data, fade_data, sizeof(fade_data));
     xSemaphoreGive(s_hal_obj->fade_mutex);
@@ -814,7 +814,7 @@ esp_err_t hal_start_channel_action(int channel, uint16_t value_min, uint16_t val
     fade_cb(NULL);
     esp_timer_start_periodic(s_hal_obj->fade_timer, 1000 * CHANGE_RATE_MS);
 
-    ESP_LOGD(TAG, "start action:[%d] value:%d period_ms:%d cur:%f final:%f step:%f num:%f cycle:%f", channel, value_min, period_ms, fade_data.cur, fade_data.final, fade_data.step, fade_data.num, fade_data.cycle);
+    ESP_LOGD(TAG, "start action:[%d] value:%d period_ms:%ld cur:%f final:%f step:%f num:%f cycle:%f", channel, value_min, period_ms, fade_data.cur, fade_data.final, fade_data.step, fade_data.num, fade_data.cycle);
     return ESP_OK;
 }
 
@@ -864,7 +864,7 @@ esp_err_t hal_start_channel_group_action(uint16_t value_min[], uint16_t value_ma
         // TODO Decrease
         // fade_data[channel].step = (fade_flag) ? (fade_data[channel].final - fade_data[channel].min) / fade_data[channel].num * -1 : 0;
 
-        ESP_LOGD(TAG, "start group action:[%d] value_min:%d value_max:%d period_ms:%d cur:%f final:%f step:%f num:%f cycle:%f", channel, value_min[channel], value_max[channel], period_ms, fade_data[channel].cur, fade_data[channel].final, fade_data[channel].step, fade_data[channel].num, fade_data[channel].cycle);
+        ESP_LOGD(TAG, "start group action:[%d] value_min:%d value_max:%d period_ms:%ld cur:%f final:%f step:%f num:%f cycle:%f", channel, value_min[channel], value_max[channel], period_ms, fade_data[channel].cur, fade_data[channel].final, fade_data[channel].step, fade_data[channel].num, fade_data[channel].cycle);
     };
     memcpy(s_hal_obj->fade_data, fade_data, sizeof(fade_data));
     xSemaphoreGive(s_hal_obj->fade_mutex);

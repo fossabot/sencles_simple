@@ -15,6 +15,7 @@
 #pragma once
 
 #include "driver/spi_master.h"
+#include "soc/spi_periph.h"
 #include "driver/gpio.h"
 
 #ifdef __cplusplus

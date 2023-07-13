@@ -20,7 +20,7 @@ extern "C"
 {
 #endif
 
-    void link_main(void *args);
+    void link_main(void *pvParameters);
 
 #if defined(__cplusplus)
 }

@@ -1,5 +1,5 @@
 set(include_dirs core core/sysdep core/utils components/data-model components/ota aliyun_main_task)
-file(GLOB c_srcs
+file(GLOB c_srcs 
     "aliyun_main_task/*.c"
     "components/data-model/*.c"
     "components/ota/*.c"
