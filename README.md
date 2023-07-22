@@ -1,4 +1,6 @@
 # Sencles
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjeongyeham%2Fsencles_simple.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjeongyeham%2Fsencles_simple?ref=badge_shield)
+
 
 ![](https://img.shields.io/badge/license-Apache-gree)
 
@@ -62,3 +64,6 @@ Small note: If editing the Readme, please conform to the [standard-readme](https
 ## License
 
 [MIT © Richard McRichface.](../LICENSE)
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjeongyeham%2Fsencles_simple.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjeongyeham%2Fsencles_simple?ref=badge_large)
